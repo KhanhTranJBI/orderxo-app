@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-dark overflow-x-hidden;
+    font-family: var(--font-dm), sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(90deg, #993C1D, #D85A30, #EF9F27);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-dot-bg {
+    background-image: radial-gradient(circle, rgba(216, 90, 48, 0.15) 1.5px, transparent 1.5px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(to left, rgba(0,0,0,0.6), transparent);
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-1 hover:shadow-xl;
+  }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+.animate-fade-up-1 { animation: fadeUp 0.5s 0.08s ease both; }
+.animate-fade-up-2 { animation: fadeUp 0.5s 0.16s ease both; }
+.animate-fade-up-3 { animation: fadeUp 0.5s 0.24s ease both; }
+.animate-fade-up-4 { animation: fadeUp 0.5s 0.32s ease both; }
