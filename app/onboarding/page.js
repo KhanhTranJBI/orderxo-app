@@ -1,12 +1,4 @@
-import OwnerShell from "../../components/OwnerShell";
-import OwnerForm from "../../components/OwnerForm";
+import { redirect } from "next/navigation";
 export default function Page() {
-  return (
-    <OwnerShell
-      title="Set up your restaurant"
-      description="Add your first location to get started."
-    >
-      <OwnerForm mode="onboarding" />
-    </OwnerShell>
-  );
+  redirect("/dashboard");
 }
