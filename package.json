@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "format": "prettier . --write"
   },
   "dependencies": {
     "@uploadthing/react": "^7.3.3",
@@ -14,6 +15,7 @@
     "mailgun.js": "^12.7.1",
     "mongodb": "^7.1.0",
     "next": "13.5.6",
+    "prettier": "^3.9.9",
     "react": "^18",
     "react-dom": "^18",
     "uploadthing": "^7.7.4"

@@ -1,2 +1,4 @@
 import { proxy } from "../../../../lib/apiRoute";
-export async function POST(req) { return proxy(req, "/api/auth/signup", false); }
+export async function POST(req) {
+  return proxy(req, "/api/auth/signup", false);
+}
