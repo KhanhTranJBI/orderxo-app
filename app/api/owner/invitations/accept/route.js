@@ -1,4 +1,5 @@
 import { proxy } from "../../../../../lib/apiRoute";
+
 export async function POST(req) {
-  return proxy(req, "/api/invitations/accept", true);
+  return proxy(req, "/api/invitations/accept", false);
 }
