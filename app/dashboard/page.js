@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
+import LogoutButton from "../../components/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
@@ -25,12 +26,15 @@ export default async function Dashboard() {
             <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
-          <Link
-            href="/onboarding"
-            className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
-          >
-            Add restaurant
-          </Link>
+          <div className="flex items-center gap-3">
+            <LogoutButton />
+            <Link
+              href="/restaurants/new"
+              className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+            >
+              Add restaurant
+            </Link>
+          </div>
         </div>
         {result.status !== 200 ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
@@ -41,7 +45,7 @@ export default async function Dashboard() {
             <h2 className="text-xl font-semibold">Welcome to OrderXO</h2>
             <p className="mt-2 text-slate-600">Create your first restaurant to begin setup.</p>
             <Link
-              href="/onboarding"
+              href="/restaurants/new"
               className="mt-5 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white"
             >
               Set up restaurant
@@ -61,6 +65,12 @@ export default async function Dashboard() {
                   </div>
                   <p className="mt-2 text-sm text-slate-500">Role: {org.role || "member"}</p>
                   <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                      href={`/dashboard/restaurants/${encodeURIComponent(id)}`}
+                    >
+                      Manage restaurant
+                    </Link>
                     <Link
                       className="rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700"
                       href={`/dashboard/settings/restaurant?organizationId=${encodeURIComponent(id)}`}

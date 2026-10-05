@@ -1,9 +1,12 @@
 import OwnerShell from "../../components/OwnerShell";
-import OwnerForm from "../../components/OwnerForm";
+import PasswordlessSignIn from "../../components/PasswordlessSignIn";
 export default function Page() {
   return (
-    <OwnerShell title="Welcome back" description="Sign in to your restaurant workspace.">
-      <OwnerForm mode="login" />
+    <OwnerShell
+      title="Welcome back"
+      description="Enter your owner email and we'll send you a secure sign-in link."
+    >
+      <PasswordlessSignIn />
     </OwnerShell>
   );
 }
