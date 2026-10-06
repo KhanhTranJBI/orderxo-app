@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronUp,
@@ -420,6 +421,153 @@ function ItemModal({ item, categoryId, categories, groups, onClose, onSave, onSa
   );
 }
 
+function CategoryModal({ category, onClose, onSave }) {
+  const slugify = (v) =>
+    v
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+  const [name, setName] = useState(category?.name || "");
+  const [slug, setSlug] = useState(category?.slug || "");
+  const [image, setImage] = useState(category?.image || "");
+  const [isActive, setIsActive] = useState(category?.isActive !== false);
+  const [slugTouched, setSlugTouched] = useState(Boolean(category));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const submit = async () => {
+    if (!name.trim()) return setError("Category name is required.");
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({
+        name: name.trim(),
+        slug: slugify(slug || name),
+        image: image.trim(),
+        isActive,
+      });
+      onClose();
+    } catch (e) {
+      setError(e.message || "Unable to save category");
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <h2 className="text-xl font-bold">{category ? "Edit Category" : "New Category"}</h2>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100">
+            <X size={22} />
+          </button>
+        </div>
+        <div className="space-y-4 p-6">
+          {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-600">Category Name</span>
+            <input
+              className="field"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (!slugTouched) setSlug(slugify(e.target.value));
+              }}
+              placeholder="Poke Bowls"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-600">Slug</span>
+            <input
+              className="field"
+              value={slug}
+              onChange={(e) => {
+                setSlugTouched(true);
+                setSlug(slugify(e.target.value));
+              }}
+              placeholder="poke-bowls"
+            />
+          </label>
+          <div className="flex items-end gap-4">
+            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-slate-50">
+              {image ? (
+                <img src={image} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full items-center justify-center text-[10px] text-slate-400">
+                  No Image
+                </div>
+              )}
+            </div>
+            <label className="block flex-1">
+              <span className="mb-1 block text-sm font-medium text-slate-600">Image URL</span>
+              <input
+                className="field"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                placeholder="https://..."
+              />
+            </label>
+          </div>
+          {category && (
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />{" "}
+              Active category
+            </label>
+          )}
+        </div>
+        <div className="flex justify-end gap-3 border-t bg-slate-50 px-6 py-4">
+          <button className="secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button className="primary" disabled={saving} onClick={submit}>
+            {saving ? "Saving…" : category ? "Save changes" : "Create category"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({
+  title,
+  description,
+  confirmLabel = "Delete",
+  loading,
+  onClose,
+  onConfirm,
+}) {
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <h2 className="text-lg font-bold">{title}</h2>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-slate-100">
+            <X size={20} />
+          </button>
+        </div>
+        <div className="px-6 py-5 text-slate-600">{description}</div>
+        <div className="flex justify-end gap-3 border-t bg-slate-50 px-6 py-4">
+          <button className="secondary" onClick={onClose} disabled={loading}>
+            Cancel
+          </button>
+          <button
+            className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+            onClick={onConfirm}
+            disabled={loading}
+          >
+            {loading ? "Deleting…" : confirmLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MenuManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const [categories, setCategories] = useState([]),
@@ -430,6 +578,9 @@ export default function MenuManager({ organizationId }) {
     [tab, setTab] = useState("items"),
     [editing, setEditing] = useState(null),
     [newFor, setNewFor] = useState(null),
+    [categoryModal, setCategoryModal] = useState(null),
+    [deleteTarget, setDeleteTarget] = useState(null),
+    [deleting, setDeleting] = useState(false),
     [error, setError] = useState("");
   const load = useCallback(async () => {
     if (!loc.locationId) return;
@@ -520,273 +671,315 @@ export default function MenuManager({ organizationId }) {
   if (loc.error || !loc.locationId)
     return <p className="text-red-600">{loc.error || "No location found"}</p>;
   return (
-    <div>
-      <div className="flex flex-wrap justify-between gap-3 items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Menu Manager</h1>
-          <p className="text-slate-500 mt-1">Manage categories, items and modifiers.</p>
-        </div>
-        <select
-          className="field max-w-xs"
-          value={loc.locationId}
-          onChange={(e) => loc.setLocationId(e.target.value)}
+    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+      <div className="mx-auto max-w-7xl">
+        <Link
+          href={`/dashboard/restaurants/${organizationId}`}
+          className="text-sm font-semibold text-orange-600"
         >
-          {loc.locations.map((l) => (
-            <option key={l._id || l.id} value={l._id || l.id}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex gap-2 mt-6">
-        <button
-          className={tab === "items" ? "primary" : "secondary"}
-          onClick={() => setTab("items")}
-        >
-          <MenuIcon size={16} className="inline mr-2" />
-          Menu Items
-        </button>
-        <button
-          className={tab === "modifiers" ? "primary" : "secondary"}
-          onClick={() => setTab("modifiers")}
-        >
-          <SlidersHorizontal size={16} className="inline mr-2" />
-          Modifiers
-        </button>
-      </div>
-      {error && <p className="mt-4 text-red-600">{error}</p>}
-      {tab === "items" ? (
-        <>
-          <div className="mt-5 flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-              <input
-                className="field pl-10"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search menu items..."
-              />
-            </div>
-            <button
-              className="primary"
-              onClick={async () => {
-                const name = prompt("Category name");
-                if (name) {
-                  await api("categories/create", organizationId, loc.locationId, "POST", { name });
-                  await load();
-                }
-              }}
-            >
-              <Plus size={17} className="inline" /> Category
-            </button>
+          ← Restaurant workspace
+        </Link>
+        <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
+          OrderXO Manager
+        </p>
+        <div className="mt-1 flex flex-wrap justify-between gap-3 items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Menu Manager</h1>
+            <p className="text-slate-500 mt-1">Manage categories, items and modifiers.</p>
           </div>
-          <DndContext collisionDetection={closestCenter} onDragEnd={catDrag}>
-            <SortableContext
-              items={grouped.map((x) => String(x.c._id))}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-4 mt-5">
-                {grouped.map(({ c, items: its }) => (
-                  <Sortable key={c._id} id={String(c._id)}>
-                    {(listeners, attrs) => (
-                      <section {...attrs} className="rounded-2xl border bg-white overflow-hidden">
-                        <div className="p-4 flex items-center justify-between bg-slate-50">
-                          <div className="flex items-center gap-3">
-                            <span {...listeners} className="cursor-grab text-gray-400">
-                              <GripVertical />
-                            </span>
-                            <button
-                              className="flex items-center gap-2 font-bold text-lg"
-                              onClick={() => setCollapsed((v) => ({ ...v, [c.slug]: !v[c.slug] }))}
-                            >
-                              {collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}
-                              {c.name}
-                              <span className="text-sm font-normal text-gray-400">
-                                ({its.length})
+          <select
+            className="field max-w-xs"
+            value={loc.locationId}
+            onChange={(e) => loc.setLocationId(e.target.value)}
+          >
+            {loc.locations.map((l) => (
+              <option key={l._id || l.id} value={l._id || l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2 mt-6">
+          <button
+            className={tab === "items" ? "primary" : "secondary"}
+            onClick={() => setTab("items")}
+          >
+            <MenuIcon size={16} className="inline mr-2" />
+            Menu Items
+          </button>
+          <button
+            className={tab === "modifiers" ? "primary" : "secondary"}
+            onClick={() => setTab("modifiers")}
+          >
+            <SlidersHorizontal size={16} className="inline mr-2" />
+            Modifiers
+          </button>
+        </div>
+        {error && <p className="mt-4 text-red-600">{error}</p>}
+        {tab === "items" ? (
+          <>
+            <div className="mt-5 flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                <input
+                  className="field pl-10"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search menu items..."
+                />
+              </div>
+              <button className="primary" onClick={() => setCategoryModal({ mode: "create" })}>
+                <Plus size={17} className="inline" /> Category
+              </button>
+            </div>
+            <DndContext collisionDetection={closestCenter} onDragEnd={catDrag}>
+              <SortableContext
+                items={grouped.map((x) => String(x.c._id))}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4 mt-5">
+                  {grouped.map(({ c, items: its }) => (
+                    <Sortable key={c._id} id={String(c._id)}>
+                      {(listeners, attrs) => (
+                        <section {...attrs} className="rounded-2xl border bg-white overflow-hidden">
+                          <div className="p-4 flex items-center justify-between bg-slate-50">
+                            <div className="flex items-center gap-3">
+                              <span {...listeners} className="cursor-grab text-gray-400">
+                                <GripVertical />
                               </span>
-                            </button>
-                          </div>
-                          <div className="flex gap-2">
-                            <button className="secondary" onClick={() => setNewFor(c._id)}>
-                              + Item
-                            </button>
-                            <button
-                              className="danger"
-                              onClick={async () => {
-                                if (confirm(`Delete ${c.name}?`)) {
-                                  await api(
-                                    "categories/delete",
-                                    organizationId,
-                                    loc.locationId,
-                                    "POST",
-                                    { id: c._id },
-                                  );
-                                  await load();
+                              <button
+                                className="flex items-center gap-2 font-bold text-lg"
+                                onClick={() =>
+                                  setCollapsed((v) => ({ ...v, [c.slug]: !v[c.slug] }))
                                 }
-                              }}
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                              >
+                                {collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}
+                                {c.name}
+                                <span className="text-sm font-normal text-gray-400">
+                                  ({its.length})
+                                </span>
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <button className="secondary" onClick={() => setNewFor(c._id)}>
+                                + Item
+                              </button>
+                              <button
+                                className="secondary"
+                                title="Edit category"
+                                onClick={() => setCategoryModal({ mode: "edit", category: c })}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className="danger"
+                                title="Delete category"
+                                onClick={() => setDeleteTarget({ type: "category", value: c })}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        {!collapsed[c.slug] && (
-                          <DndContext
-                            collisionDetection={closestCenter}
-                            onDragEnd={(e) => itemDrag(c, its, e)}
-                          >
-                            <SortableContext
-                              items={its.map((i) => String(i._id))}
-                              strategy={verticalListSortingStrategy}
+                          {!collapsed[c.slug] && (
+                            <DndContext
+                              collisionDetection={closestCenter}
+                              onDragEnd={(e) => itemDrag(c, its, e)}
                             >
-                              <div className="divide-y">
-                                {its.map((i) => (
-                                  <Sortable key={i._id} id={String(i._id)}>
-                                    {(il, ia) => (
-                                      <div
-                                        {...ia}
-                                        className={`p-4 flex flex-wrap items-center justify-between gap-3 ${i.isActive === false ? "opacity-50" : ""}`}
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <span {...il} className="cursor-grab text-gray-400">
-                                            <GripVertical size={18} />
-                                          </span>
-                                          {i.image && (
-                                            <img
-                                              src={i.image}
-                                              className="w-14 h-14 rounded-lg object-cover"
-                                              alt=""
-                                            />
-                                          )}
-                                          <div>
-                                            <div className="font-semibold">{i.name}</div>
-                                            <div className="text-sm text-gray-500">
-                                              {money(i.priceCents)} ·{" "}
-                                              {i.isActive !== false ? "Active" : "Inactive"}
+                              <SortableContext
+                                items={its.map((i) => String(i._id))}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                <div className="divide-y">
+                                  {its.map((i) => (
+                                    <Sortable key={i._id} id={String(i._id)}>
+                                      {(il, ia) => (
+                                        <div
+                                          {...ia}
+                                          className={`p-4 flex flex-wrap items-center justify-between gap-3 ${i.isActive === false ? "opacity-50" : ""}`}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <span {...il} className="cursor-grab text-gray-400">
+                                              <GripVertical size={18} />
+                                            </span>
+                                            {i.image && (
+                                              <img
+                                                src={i.image}
+                                                className="w-14 h-14 rounded-lg object-cover"
+                                                alt=""
+                                              />
+                                            )}
+                                            <div>
+                                              <div className="font-semibold">{i.name}</div>
+                                              <div className="text-sm text-gray-500">
+                                                {money(i.priceCents)} ·{" "}
+                                                {i.isActive !== false ? "Active" : "Inactive"}
+                                              </div>
                                             </div>
                                           </div>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <button
-                                            className="secondary"
-                                            onClick={async () => {
-                                              await api(
-                                                "menu/update-active",
-                                                organizationId,
-                                                loc.locationId,
-                                                "POST",
-                                                {
-                                                  menuItemId: i._id,
-                                                  isActive: i.isActive === false,
-                                                },
-                                              );
-                                              await load();
-                                            }}
-                                          >
-                                            {i.isActive === false ? "Activate" : "Deactivate"}
-                                          </button>
-                                          <button
-                                            className="secondary"
-                                            onClick={() =>
-                                              setEditing({ item: i, categoryId: c._id })
-                                            }
-                                          >
-                                            <Pencil size={16} />
-                                          </button>
-                                          <button
-                                            className="danger"
-                                            onClick={async () => {
-                                              if (confirm(`Delete ${i.name}?`)) {
+                                          <div className="flex gap-2">
+                                            <button
+                                              className="secondary"
+                                              onClick={async () => {
                                                 await api(
-                                                  "menu/delete",
+                                                  "menu/update-active",
                                                   organizationId,
                                                   loc.locationId,
                                                   "POST",
-                                                  { menuItemId: i._id },
+                                                  {
+                                                    menuItemId: i._id,
+                                                    isActive: i.isActive === false,
+                                                  },
                                                 );
                                                 await load();
+                                              }}
+                                            >
+                                              {i.isActive === false ? "Activate" : "Deactivate"}
+                                            </button>
+                                            <button
+                                              className="secondary"
+                                              onClick={() =>
+                                                setEditing({ item: i, categoryId: c._id })
                                               }
-                                            }}
-                                          >
-                                            <Trash2 size={16} />
-                                          </button>
+                                            >
+                                              <Pencil size={16} />
+                                            </button>
+                                            <button
+                                              className="danger"
+                                              onClick={() =>
+                                                setDeleteTarget({ type: "item", value: i })
+                                              }
+                                            >
+                                              <Trash2 size={16} />
+                                            </button>
+                                          </div>
                                         </div>
-                                      </div>
-                                    )}
-                                  </Sortable>
-                                ))}
-                              </div>
-                            </SortableContext>
-                          </DndContext>
-                        )}
-                      </section>
-                    )}
-                  </Sortable>
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </>
-      ) : (
-        <div className="mt-5 space-y-3">
-          <div className="flex justify-end">
-            <button className="primary" onClick={() => setEditing({ group: {} })}>
-              + New Modifier
-            </button>
-          </div>
-          {groups.map((g) => (
-            <div key={g._id} className="rounded-xl border bg-white p-4 flex justify-between">
-              <div>
-                <b>{g.title}</b>
-                <p className="text-sm text-gray-500">
-                  {g.required ? "Required" : "Optional"} · {(g.options || []).length} options
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button className="secondary" onClick={() => setEditing({ group: g })}>
-                  <Pencil size={16} />
-                </button>
-                <button
-                  className="danger"
-                  onClick={async () => {
-                    if (confirm(`Delete ${g.title}?`)) {
-                      await api("modifiers/delete", organizationId, loc.locationId, "POST", {
-                        id: g._id,
-                      });
-                      await load();
-                    }
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+                                      )}
+                                    </Sortable>
+                                  ))}
+                                </div>
+                              </SortableContext>
+                            </DndContext>
+                          )}
+                        </section>
+                      )}
+                    </Sortable>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </>
+        ) : (
+          <div className="mt-5 space-y-3">
+            <div className="flex justify-end">
+              <button className="primary" onClick={() => setEditing({ group: {} })}>
+                + New Modifier
+              </button>
             </div>
-          ))}
-        </div>
-      )}
-      {(editing?.item || newFor) && (
-        <ItemModal
-          item={editing?.item}
-          categoryId={editing?.categoryId || newFor}
-          categories={categories}
-          groups={groups}
-          onClose={() => {
-            setEditing(null);
-            setNewFor(null);
-          }}
-          onSave={saveItem}
-          onSaveGroup={saveGroup}
-        />
-      )}{" "}
-      {editing?.group && (
-        <ModifierEditor
-          group={editing.group._id ? editing.group : null}
-          onClose={() => setEditing(null)}
-          onSave={async (g) => {
-            await saveGroup(g, editing.group._id);
-            setEditing(null);
-          }}
-        />
-      )}
-    </div>
+            {groups.map((g) => (
+              <div key={g._id} className="rounded-xl border bg-white p-4 flex justify-between">
+                <div>
+                  <b>{g.title}</b>
+                  <p className="text-sm text-gray-500">
+                    {g.required ? "Required" : "Optional"} · {(g.options || []).length} options
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="secondary" onClick={() => setEditing({ group: g })}>
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    className="danger"
+                    onClick={() => setDeleteTarget({ type: "modifier", value: g })}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {(editing?.item || newFor) && (
+          <ItemModal
+            item={editing?.item}
+            categoryId={editing?.categoryId || newFor}
+            categories={categories}
+            groups={groups}
+            onClose={() => {
+              setEditing(null);
+              setNewFor(null);
+            }}
+            onSave={saveItem}
+            onSaveGroup={saveGroup}
+          />
+        )}{" "}
+        {editing?.group && (
+          <ModifierEditor
+            group={editing.group._id ? editing.group : null}
+            onClose={() => setEditing(null)}
+            onSave={async (g) => {
+              await saveGroup(g, editing.group._id);
+              setEditing(null);
+            }}
+          />
+        )}
+        {categoryModal && (
+          <CategoryModal
+            category={categoryModal.category || null}
+            onClose={() => setCategoryModal(null)}
+            onSave={async (data) => {
+              await api(
+                categoryModal.mode === "edit" ? "categories/update" : "categories/create",
+                organizationId,
+                loc.locationId,
+                "POST",
+                categoryModal.mode === "edit" ? { ...data, id: categoryModal.category._id } : data,
+              );
+              await load();
+            }}
+          />
+        )}
+        {deleteTarget && (
+          <ConfirmModal
+            title={
+              deleteTarget.type === "category"
+                ? "Delete category"
+                : deleteTarget.type === "item"
+                  ? "Delete menu item"
+                  : "Delete modifier"
+            }
+            description={
+              deleteTarget.type === "category"
+                ? `Delete “${deleteTarget.value.name}”? Remove all items from this category before deleting it.`
+                : `Delete “${deleteTarget.value.name || deleteTarget.value.title}”? This action cannot be undone.`
+            }
+            loading={deleting}
+            onClose={() => !deleting && setDeleteTarget(null)}
+            onConfirm={async () => {
+              setDeleting(true);
+              try {
+                if (deleteTarget.type === "category")
+                  await api("categories/delete", organizationId, loc.locationId, "POST", {
+                    id: deleteTarget.value._id,
+                  });
+                else if (deleteTarget.type === "item")
+                  await api("menu/delete", organizationId, loc.locationId, "POST", {
+                    menuItemId: deleteTarget.value._id,
+                  });
+                else
+                  await api("modifiers/delete", organizationId, loc.locationId, "POST", {
+                    id: deleteTarget.value._id,
+                  });
+                setDeleteTarget(null);
+                await load();
+              } catch (e) {
+                setError(e.message);
+              } finally {
+                setDeleting(false);
+              }
+            }}
+          />
+        )}
+      </div>
+    </main>
   );
 }
