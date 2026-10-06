@@ -20,8 +20,7 @@ export default function OrdersReportSection({ report, loading }) {
       promoDiscount: acc.promoDiscount + Number(d.promoDiscount || 0),
       tax: acc.tax + Number(d.tax || 0),
       tip: acc.tip + Number(d.tip || 0),
-      onlineOrderingFee:
-        acc.onlineOrderingFee + Number(d.onlineOrderingFee || 0),
+      onlineOrderingFee: acc.onlineOrderingFee + Number(d.onlineOrderingFee || 0),
       grossSales: acc.grossSales + Number(d.grossSales || 0),
       rewardsRedeemed: acc.rewardsRedeemed + Number(d.rewardsRedeemed || 0),
       refunded: acc.refunded + Number(d.refunded || 0),
@@ -58,34 +57,20 @@ export default function OrdersReportSection({ report, loading }) {
 
             <th className="px-4 py-3 text-right whitespace-nowrap">Tip</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Order Service Fee
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Order Service Fee</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Gross Sales
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Gross Sales</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Rewards Redeemed
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Rewards Redeemed</th>
 
             {/* 🎟️ Promotion */}
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Promotion Discount
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Promotion Discount</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Refunded Amount
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Refunded Amount</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Transaction Fee
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Transaction Fee</th>
 
-            <th className="px-4 py-3 text-right whitespace-nowrap">
-              Net Total
-            </th>
+            <th className="px-4 py-3 text-right whitespace-nowrap">Net Total</th>
           </tr>
         </thead>
 
@@ -99,9 +84,7 @@ export default function OrdersReportSection({ report, loading }) {
               <tr
                 key={day.date}
                 className={`border-t transition-colors ${
-                  isToday
-                    ? "bg-black text-white font-semibold"
-                    : "hover:bg-gray-50 text-gray-800"
+                  isToday ? "bg-black text-white font-semibold" : "hover:bg-gray-50 text-gray-800"
                 }`}
               >
                 {/* Date */}
@@ -111,77 +94,51 @@ export default function OrdersReportSection({ report, loading }) {
                 <td className="px-3 py-2 text-right">{day.orderCount}</td>
 
                 {/* Subtotal */}
-                <td className="px-3 py-2 text-right">
-                  ${Number(day.subtotal || 0).toFixed(2)}
-                </td>
+                <td className="px-3 py-2 text-right">${Number(day.subtotal || 0).toFixed(2)}</td>
 
                 {/* Tax */}
                 <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-blue-300" : "text-blue-600"
-                  }`}
+                  className={`px-3 py-2 text-right ${isToday ? "text-blue-300" : "text-blue-600"}`}
                 >
                   ${Number(day.tax || 0).toFixed(2)}
                 </td>
 
                 {/* Tip */}
                 <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-blue-300" : "text-blue-600"
-                  }`}
+                  className={`px-3 py-2 text-right ${isToday ? "text-blue-300" : "text-blue-600"}`}
                 >
                   ${Number(day.tip || 0).toFixed(2)}
                 </td>
 
                 {/* Service Fee */}
                 <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-blue-300" : "text-blue-600"
-                  }`}
+                  className={`px-3 py-2 text-right ${isToday ? "text-blue-300" : "text-blue-600"}`}
                 >
                   ${Number(day.onlineOrderingFee || 0).toFixed(2)}
                 </td>
 
                 {/* Gross Sales */}
-                <td className="px-3 py-2 text-right">
-                  ${Number(day.grossSales || 0).toFixed(2)}
-                </td>
+                <td className="px-3 py-2 text-right">${Number(day.grossSales || 0).toFixed(2)}</td>
 
                 {/* Rewards */}
-                <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-red-400" : "text-red-600"
-                  }`}
-                >
+                <td className={`px-3 py-2 text-right ${isToday ? "text-red-400" : "text-red-600"}`}>
                   -$
                   {Number(day.rewardsRedeemed || 0).toFixed(2)}
                 </td>
 
                 {/* 🎟️ Promotion Discount */}
-                <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-red-400" : "text-red-600"
-                  }`}
-                >
+                <td className={`px-3 py-2 text-right ${isToday ? "text-red-400" : "text-red-600"}`}>
                   {promoDiscount > 0 ? `-$${promoDiscount.toFixed(2)}` : "—"}
                 </td>
 
                 {/* Refunded */}
-                <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-red-400" : "text-red-600"
-                  }`}
-                >
+                <td className={`px-3 py-2 text-right ${isToday ? "text-red-400" : "text-red-600"}`}>
                   -$
                   {Number(day.refunded || 0).toFixed(2)}
                 </td>
 
                 {/* Transaction Fee */}
-                <td
-                  className={`px-3 py-2 text-right ${
-                    isToday ? "text-red-400" : "text-red-600"
-                  }`}
-                >
+                <td className={`px-3 py-2 text-right ${isToday ? "text-red-400" : "text-red-600"}`}>
                   -$
                   {Number(day.transactionFee || 0).toFixed(2)}
                 </td>
@@ -207,25 +164,17 @@ export default function OrdersReportSection({ report, loading }) {
 
               <td className="px-3 py-3 text-right">{totals.orderCount}</td>
 
-              <td className="px-3 py-3 text-right">
-                ${totals.subtotal.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right">${totals.subtotal.toFixed(2)}</td>
 
-              <td className="px-3 py-3 text-right text-blue-300">
-                ${totals.tax.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right text-blue-300">${totals.tax.toFixed(2)}</td>
 
-              <td className="px-3 py-3 text-right text-blue-300">
-                ${totals.tip.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right text-blue-300">${totals.tip.toFixed(2)}</td>
 
               <td className="px-3 py-3 text-right text-blue-300">
                 ${totals.onlineOrderingFee.toFixed(2)}
               </td>
 
-              <td className="px-3 py-3 text-right">
-                ${totals.grossSales.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right">${totals.grossSales.toFixed(2)}</td>
 
               <td className="px-3 py-3 text-right text-red-400">
                 -${totals.rewardsRedeemed.toFixed(2)}
@@ -233,22 +182,16 @@ export default function OrdersReportSection({ report, loading }) {
 
               {/* 🎟️ Promotion */}
               <td className="px-3 py-3 text-right text-red-400">
-                {totals.promoDiscount > 0
-                  ? `-$${totals.promoDiscount.toFixed(2)}`
-                  : "—"}
+                {totals.promoDiscount > 0 ? `-$${totals.promoDiscount.toFixed(2)}` : "—"}
               </td>
 
-              <td className="px-3 py-3 text-right text-red-400">
-                -${totals.refunded.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right text-red-400">-${totals.refunded.toFixed(2)}</td>
 
               <td className="px-3 py-3 text-right text-red-400">
                 -${totals.transactionFee.toFixed(2)}
               </td>
 
-              <td className="px-3 py-3 text-right text-green-400">
-                ${totals.netTotal.toFixed(2)}
-              </td>
+              <td className="px-3 py-3 text-right text-green-400">${totals.netTotal.toFixed(2)}</td>
             </tr>
           </tfoot>
         )}

@@ -6,11 +6,7 @@ import InfoTooltip from "@/components/InfoTooltip";
 import RefundSection from "@/components/admin/RefundSection";
 import OrderTypeBadge from "@/components/admin/OrderTypeBadge";
 import PaymentChannelBadge from "@/components/admin/PaymentChannelBadge";
-import {
-  POINTS_PER_DOLLAR,
-  REWARD_THRESHOLD,
-  REWARD_VALUE,
-} from "@/lib/environment";
+import { POINTS_PER_DOLLAR, REWARD_THRESHOLD, REWARD_VALUE } from "@/lib/environment";
 
 export default function HistoryOrderDetailsModal({ order, onClose }) {
   if (!order) return null;
@@ -26,10 +22,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
       >
         {/* 🔒 Fixed Header Bar */}
         <div className="sticky top-0 z-10 flex justify-end bg-white rounded-t-2xl border-b px-4 py-3">
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-black text-xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-black text-xl">
             ✕
           </button>
         </div>
@@ -47,8 +40,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                 <PaymentChannelBadge paymentChannel={order.paymentChannel} />
               </div>
               <p className="text-sm text-gray-500">
-                {new Date(order.createdAt).toLocaleDateString()} ·{" "}
-                {order.pickupTime}
+                {new Date(order.createdAt).toLocaleDateString()} · {order.pickupTime}
               </p>
             </div>
 
@@ -71,19 +63,13 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                   <span>Total Refunded</span>
                   <span className="font-bold">
                     -$
-                    {order.refunds
-                      .reduce((sum, r) => sum + (r.amount || 0), 0)
-                      .toFixed(2)}
+                    {order.refunds.reduce((sum, r) => sum + (r.amount || 0), 0).toFixed(2)}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-xs text-gray-500">
                   <span>{order.refunds.length} refund(s)</span>
-                  <span>
-                    {formatDateTime(
-                      order.refunds[order.refunds.length - 1]?.createdAt,
-                    )}
-                  </span>
+                  <span>{formatDateTime(order.refunds[order.refunds.length - 1]?.createdAt)}</span>
                 </div>
               </div>
             </div>
@@ -93,10 +79,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
           <div className="flex justify-between">
             <span className="text-blue-600">Total Items</span>
             <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
-              {order.items?.reduce(
-                (sum, item) => sum + (item.quantity || 1),
-                0,
-              )}
+              {order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0)}
             </span>
           </div>
 
@@ -107,27 +90,19 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
             <div className="space-y-1 text-blue-900">
               <div className="flex justify-between">
                 <span className="text-blue-600">Name</span>
-                <span className="font-medium">
-                  {order.customer?.name || "—"}
-                </span>
+                <span className="font-medium">{order.customer?.name || "—"}</span>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-blue-600">Email</span>
-                <a
-                  href={`mailto:${order.customer?.email}`}
-                  className="font-medium underline"
-                >
+                <a href={`mailto:${order.customer?.email}`} className="font-medium underline">
                   {order.customer?.email || "—"}
                 </a>
               </div>
 
               <div className="flex justify-between">
                 <span className="text-blue-600">Phone</span>
-                <a
-                  href={`tel:${order.customer?.phone}`}
-                  className="font-medium underline"
-                >
+                <a href={`tel:${order.customer?.phone}`} className="font-medium underline">
                   {order.customer?.phone || "—"}
                 </a>
               </div>
@@ -146,36 +121,28 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
             {order.preparedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">👍 Confirmed</span>
-                <span className="font-medium">
-                  {formatTime(order.preparedAt)}
-                </span>
+                <span className="font-medium">{formatTime(order.preparedAt)}</span>
               </div>
             )}
 
             {order.completedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">✅ Ready for Pickup</span>
-                <span className="font-medium">
-                  {formatTime(order.completedAt)}
-                </span>
+                <span className="font-medium">{formatTime(order.completedAt)}</span>
               </div>
             )}
 
             {order.pickedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">🥡 Picked up</span>
-                <span className="font-medium">
-                  {formatTime(order.pickedAt)}
-                </span>
+                <span className="font-medium">{formatTime(order.pickedAt)}</span>
               </div>
             )}
 
             {order.cancelledAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">❌ Cancelled</span>
-                <span className="font-medium">
-                  {formatTime(order.cancelledAt)}
-                </span>
+                <span className="font-medium">{formatTime(order.cancelledAt)}</span>
               </div>
             )}
 
@@ -185,9 +152,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                   💸 Refunded -$
                   {refund.amount.toFixed(2)}
                 </span>
-                <span className="font-medium">
-                  {formatTime(refund.createdAt)}
-                </span>
+                <span className="font-medium">{formatTime(refund.createdAt)}</span>
               </div>
             ))}
           </div>
@@ -195,12 +160,8 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
           {/* Special Instructions */}
           {order.specialInstructions && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
-              <p className="font-bold text-orange-700 mb-1">
-                📝 Special Instructions
-              </p>
-              <p className="text-orange-800 italic">
-                {order.specialInstructions}
-              </p>
+              <p className="font-bold text-orange-700 mb-1">📝 Special Instructions</p>
+              <p className="text-orange-800 italic">{order.specialInstructions}</p>
             </div>
           )}
 
@@ -211,12 +172,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                 {/* Image */}
                 <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                   {item.image && (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                   )}
                 </div>
 
@@ -226,9 +182,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                     <p className="font-semibold text-gray-900">
                       {item.quantity}× {item.name}
                     </p>
-                    <p className="font-semibold text-primary">
-                      ${item.totalPrice.toFixed(2)}
-                    </p>
+                    <p className="font-semibold text-primary">${item.totalPrice.toFixed(2)}</p>
                   </div>
 
                   {/* Modifiers */}
@@ -247,8 +201,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                             {group.selections.map((sel, i) => (
                               <span key={i}>
                                 {sel.name}
-                                {sel.price > 0 &&
-                                  ` (+$${sel.price.toFixed(2)})`}
+                                {sel.price > 0 && ` (+$${sel.price.toFixed(2)})`}
                                 {i < group.selections.length - 1 ? ", " : ""}
                               </span>
                             ))}
@@ -286,24 +239,16 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                   process.env.NEXT_PUBLIC_POINTS_REWARD_THRESHOLD || 100,
                 );
 
-                const REWARD_VALUE = Number(
-                  process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5,
-                );
+                const REWARD_VALUE = Number(process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5);
 
-                const redeemedBlocks = Math.floor(
-                  order.pointsRedeemed / REWARD_THRESHOLD,
-                );
+                const redeemedBlocks = Math.floor(order.pointsRedeemed / REWARD_THRESHOLD);
 
                 const redeemedDollars = redeemedBlocks * REWARD_VALUE;
 
                 return (
                   <div className="flex justify-between py-2 text-gray-700">
-                    <span>
-                      Loyalty Reward Applied ({order.pointsRedeemed} pts)
-                    </span>
-                    <span className="text-green-700">
-                      -${redeemedDollars.toFixed(2)}
-                    </span>
+                    <span>Loyalty Reward Applied ({order.pointsRedeemed} pts)</span>
+                    <span className="text-green-700">-${redeemedDollars.toFixed(2)}</span>
                   </div>
                 );
               })()}
@@ -313,26 +258,20 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
               <div className="flex justify-between py-2 text-gray-700">
                 <span>Promotion ({order.promoCode})</span>
 
-                <span className="text-green-700">
-                  -${Number(order.promoDiscount).toFixed(2)}
-                </span>
+                <span className="text-green-700">-${Number(order.promoDiscount).toFixed(2)}</span>
               </div>
             )}
 
             <div className="flex justify-between font-bold py-2">
               <span>Total</span>
 
-              <p className="font-bold text-primary">
-                ${order.totalAmount.toFixed(2)}
-              </p>
+              <p className="font-bold text-primary">${order.totalAmount.toFixed(2)}</p>
             </div>
 
             {/* 💳 Payment info */}
             <div className="flex justify-between py-2">
               <span>Payment Method</span>
-              <span className="font-medium">
-                {order.paymentMethod || "Gift Card"}
-              </span>
+              <span className="font-medium">{order.paymentMethod || "Gift Card"}</span>
             </div>
 
             {/* 🎟️ Gift Card */}
@@ -359,9 +298,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                 <span>Total Refunded</span>
                 <span>
                   -$
-                  {order.refunds
-                    .reduce((sum, r) => sum + (r.amount || 0), 0)
-                    .toFixed(2)}
+                  {order.refunds.reduce((sum, r) => sum + (r.amount || 0), 0).toFixed(2)}
                 </span>
               </div>
             )}
@@ -373,8 +310,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                 <span className="text-green-700">
                   $
                   {(
-                    (order.amountPaid || 0) -
-                    order.refunds.reduce((sum, r) => sum + r.amount, 0)
+                    (order.amountPaid || 0) - order.refunds.reduce((sum, r) => sum + r.amount, 0)
                   ).toFixed(2)}
                 </span>
               </div>
@@ -395,9 +331,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                   />
                 </div>
 
-                <span className="font-medium text-green-700">
-                  +{order.pointsEarned} pts
-                </span>
+                <span className="font-medium text-green-700">+{order.pointsEarned} pts</span>
               </div>
             )}
 
@@ -408,18 +342,14 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                 {order.pointsRedeemed > 0 && (
                   <div className="flex justify-between">
                     <span>Redeemed Points Restored</span>
-                    <span className="text-green-700">
-                      +{order.pointsRedeemed} pts
-                    </span>
+                    <span className="text-green-700">+{order.pointsRedeemed} pts</span>
                   </div>
                 )}
 
                 {order.pointsEarned > 0 && (
                   <div className="flex justify-between">
                     <span>Earned Points Removed</span>
-                    <span className="text-red-600">
-                      -{order.pointsEarned} pts
-                    </span>
+                    <span className="text-red-600">-{order.pointsEarned} pts</span>
                   </div>
                 )}
               </div>
@@ -431,10 +361,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
 
                 <div className="space-y-3">
                   {order.refunds.map((refund, idx) => (
-                    <div
-                      key={idx}
-                      className="border rounded-lg p-3 bg-white space-y-1"
-                    >
+                    <div key={idx} className="border rounded-lg p-3 bg-white space-y-1">
                       <div className="flex justify-between">
                         <span className="font-medium text-red-600">
                           -${refund.amount.toFixed(2)}
@@ -446,9 +373,7 @@ export default function HistoryOrderDetailsModal({ order, onClose }) {
                       </div>
 
                       {refund.reason && (
-                        <p className="text-gray-600 italic text-xs">
-                          {refund.reason}
-                        </p>
+                        <p className="text-gray-600 italic text-xs">{refund.reason}</p>
                       )}
                     </div>
                   ))}

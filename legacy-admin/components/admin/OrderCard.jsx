@@ -3,11 +3,7 @@ import clsx from "clsx";
 import InfoTooltip from "../InfoTooltip";
 import OrderTypeBadge from "@/components/admin/OrderTypeBadge";
 import PaymentChannelBadge from "@/components/admin/PaymentChannelBadge";
-import {
-  POINTS_PER_DOLLAR,
-  REWARD_THRESHOLD,
-  REWARD_VALUE,
-} from "@/lib/environment";
+import { POINTS_PER_DOLLAR, REWARD_THRESHOLD, REWARD_VALUE } from "@/lib/environment";
 import Image from "next/image";
 
 const orderStatusStyles = {
@@ -152,8 +148,7 @@ export default function OrderCard({
           </div>
 
           <p className="text-sm text-gray-500">
-            {new Date(order.createdAt).toLocaleDateString()} ·{" "}
-            {order.pickupTime}
+            {new Date(order.createdAt).toLocaleDateString()} · {order.pickupTime}
           </p>
 
           {/* Countdown */}
@@ -165,9 +160,7 @@ export default function OrderCard({
                 <span className="text-red-600">READY IN {minutes} MIN</span>
               )}
 
-              {minutes >= 10 && (
-                <span className="text-yellow-700">READY IN {minutes} MIN</span>
-              )}
+              {minutes >= 10 && <span className="text-yellow-700">READY IN {minutes} MIN</span>}
             </p>
           )}
         </div>
@@ -211,20 +204,14 @@ export default function OrderCard({
 
           <div className="flex justify-between">
             <span className="text-blue-600">Email</span>
-            <a
-              href={`mailto:${order.customer?.email}`}
-              className="font-medium underline"
-            >
+            <a href={`mailto:${order.customer?.email}`} className="font-medium underline">
               {order.customer?.email || "—"}
             </a>
           </div>
 
           <div className="flex justify-between">
             <span className="text-blue-600">Phone</span>
-            <a
-              href={`tel:${order.customer?.phone}`}
-              className="font-medium underline"
-            >
+            <a href={`tel:${order.customer?.phone}`} className="font-medium underline">
               {order.customer?.phone || "—"}
             </a>
           </div>
@@ -272,9 +259,7 @@ export default function OrderCard({
       {/* Special Instructions */}
       {order.specialInstructions && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
-          <p className="font-bold text-orange-700 mb-1">
-            📝 Special Instructions
-          </p>
+          <p className="font-bold text-orange-700 mb-1">📝 Special Instructions</p>
 
           <p className="text-orange-800 italic">{order.specialInstructions}</p>
         </div>
@@ -287,12 +272,7 @@ export default function OrderCard({
             {/* Image */}
             <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
               {item.image && (
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
+                <Image src={item.image} alt={item.name} fill className="object-cover" />
               )}
             </div>
 
@@ -303,9 +283,7 @@ export default function OrderCard({
                   {item.quantity}× {item.name}
                 </p>
 
-                <p className="font-semibold text-primary ">
-                  ${item.totalPrice.toFixed(2)}
-                </p>
+                <p className="font-semibold text-primary ">${item.totalPrice.toFixed(2)}</p>
               </div>
 
               {/* Modifiers */}
@@ -362,17 +340,11 @@ export default function OrderCard({
         {/* Loyalty Redeemed */}
         {order.pointsRedeemed > 0 &&
           (() => {
-            const REWARD_THRESHOLD = Number(
-              process.env.NEXT_PUBLIC_POINTS_REWARD_THRESHOLD || 100,
-            );
+            const REWARD_THRESHOLD = Number(process.env.NEXT_PUBLIC_POINTS_REWARD_THRESHOLD || 100);
 
-            const REWARD_VALUE = Number(
-              process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5,
-            );
+            const REWARD_VALUE = Number(process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5);
 
-            const redeemedBlocks = Math.floor(
-              order.pointsRedeemed / REWARD_THRESHOLD,
-            );
+            const redeemedBlocks = Math.floor(order.pointsRedeemed / REWARD_THRESHOLD);
 
             const redeemedDollars = redeemedBlocks * REWARD_VALUE;
 
@@ -380,22 +352,16 @@ export default function OrderCard({
               <div className="flex justify-between py-2 text-gray-700">
                 <span>Loyalty Reward Applied ({order.pointsRedeemed} pts)</span>
 
-                <span className="text-green-700">
-                  -${redeemedDollars.toFixed(2)}
-                </span>
+                <span className="text-green-700">-${redeemedDollars.toFixed(2)}</span>
               </div>
             );
           })()}
 
         {order.promoCode && (
           <div className="flex items-center justify-between gap-2 py-2">
-            <span className="text-sm font-semibold text-gray-700">
-              Promo: {order.promoCode}
-            </span>
+            <span className="text-sm font-semibold text-gray-700">Promo: {order.promoCode}</span>
 
-            <span className="text-green-700">
-              -${Number(order.promoDiscount || 0).toFixed(2)}
-            </span>
+            <span className="text-green-700">-${Number(order.promoDiscount || 0).toFixed(2)}</span>
           </div>
         )}
 
@@ -409,9 +375,7 @@ export default function OrderCard({
         <div className="pt-2 space-y-1 text-gray-600">
           <div className="flex justify-between">
             <span>Payment Method</span>
-            <span className="font-medium">
-              {order.paymentMethod || "Gift Card"}
-            </span>
+            <span className="font-medium">{order.paymentMethod || "Gift Card"}</span>
           </div>
 
           {order.giftCard?.amountUsed > 0 && (
@@ -445,9 +409,7 @@ Tax, tip, service fees, and gift cards do not earn points.`}
                 />
               </div>
 
-              <span className="font-medium text-green-700">
-                +{order.pointsEarned} pts
-              </span>
+              <span className="font-medium text-green-700">+{order.pointsEarned} pts</span>
             </div>
           )}
         </div>
@@ -468,9 +430,7 @@ Tax, tip, service fees, and gift cards do not earn points.`}
         ) : null}
 
         {/* Row 2: actions (right) */}
-        <div className="flex justify-end gap-2 flex-wrap">
-          {renderActionButton(order)}
-        </div>
+        <div className="flex justify-end gap-2 flex-wrap">{renderActionButton(order)}</div>
       </div>
     </div>
   );

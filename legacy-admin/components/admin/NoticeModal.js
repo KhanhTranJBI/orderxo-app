@@ -3,12 +3,7 @@
 import { Loader2, X } from "lucide-react";
 import { useState } from "react";
 
-export default function NoticeModal({
-  notice,
-  onClose,
-  onSave,
-  loading = false,
-}) {
+export default function NoticeModal({ notice, onClose, onSave, loading = false }) {
   const [key, setKey] = useState(notice?.key || "");
   const [message, setMessage] = useState(notice?.message || "");
   const [isActive, setIsActive] = useState(notice?.isActive ?? true);
@@ -18,9 +13,7 @@ export default function NoticeModal({
       <div className="bg-white w-full max-w-4xl rounded-2xl px-2 md:px-6 space-y-4 max-h-[90vh] overflow-y-auto">
         {/* HEADER */}
         <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
-          <h2 className="font-bold text-lg">
-            {notice ? "Edit Notice" : "New Notice"}
-          </h2>
+          <h2 className="font-bold text-lg">{notice ? "Edit Notice" : "New Notice"}</h2>
 
           <button onClick={onClose}>
             <X />
@@ -38,9 +31,7 @@ export default function NoticeModal({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-500 font-medium">
-            HTML Message
-          </label>
+          <label className="text-sm text-gray-500 font-medium">HTML Message</label>
           <textarea
             className="w-full input h-40 border p-2 rounded"
             placeholder="HTML message"

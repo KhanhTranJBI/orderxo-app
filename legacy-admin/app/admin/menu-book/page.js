@@ -87,9 +87,8 @@ export default function MenuBookPage() {
               {/* RAW WARNING */}
               {["signature", "custom", "sushi"].includes(category.slug) && (
                 <div className="text-gray-400 mb-4 text-sm">
-                  (*) These menu items are served raw. Consuming raw or
-                  undercooked seafood may increase your risk of foodborne
-                  illness.
+                  (*) These menu items are served raw. Consuming raw or undercooked seafood may
+                  increase your risk of foodborne illness.
                 </div>
               )}
 
@@ -106,9 +105,7 @@ export default function MenuBookPage() {
                       {/* LEFT TEXT */}
                       <div className="flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h3 className="text-2xl text-primary font-bold">
-                            {item.name}
-                          </h3>
+                          <h3 className="text-2xl text-primary font-bold">{item.name}</h3>
                           <span className="text-primary font-bold text-xl">
                             ${item.price.toFixed(2)}
                           </span>
@@ -126,16 +123,13 @@ export default function MenuBookPage() {
 
                         {/* INGREDIENTS */}
                         {item.ingredients && (
-                          <p className="text-gray-300 mt-2">
-                            {item.ingredients}
-                          </p>
+                          <p className="text-gray-300 mt-2">{item.ingredients}</p>
                         )}
 
                         {/* SAUCE */}
                         {item.sauce && (
                           <p className="text-gray-300 mt-2 italic">
-                            <span className="underline">Sauce:</span>{" "}
-                            {item.sauce}
+                            <span className="underline">Sauce:</span> {item.sauce}
                           </p>
                         )}
                       </div>
@@ -160,8 +154,8 @@ export default function MenuBookPage() {
 
         {/* FOOTER */}
         <div className="mt-10 bg-gray-800 text-gray-200 p-4 text-sm text-center rounded">
-          (*) These menu items are served raw. Consuming raw or undercooked
-          seafood may increase your risk of foodborne illness.
+          (*) These menu items are served raw. Consuming raw or undercooked seafood may increase
+          your risk of foodborne illness.
         </div>
       </div>
 

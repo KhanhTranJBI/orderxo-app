@@ -2,13 +2,7 @@
 
 import { deleteHeroSlide, reorderHeroSlides } from "@/store/heroSlidesSlice";
 
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 
 import {
   SortableContext,
@@ -27,8 +21,9 @@ import HeroSlideModal from "./HeroSlideModal";
 import { toast } from "react-toastify";
 
 function SortableSlide({ slide, onEdit, onDelete }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: slide._id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: slide._id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -46,11 +41,7 @@ function SortableSlide({ slide, onEdit, onDelete }) {
         <GripVertical size={18} />
       </div>
 
-      <img
-        src={slide.image}
-        alt={slide.title}
-        className="w-24 h-16 object-cover rounded-md"
-      />
+      <img src={slide.image} alt={slide.title} className="w-24 h-16 object-cover rounded-md" />
 
       <div className="flex-1">
         <div className="font-semibold">{slide.title}</div>
@@ -159,15 +150,8 @@ export default function HeroSlidesManager({ session, slides }) {
           </button>
         </div>
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={items.map((s) => s._id)}
-            strategy={verticalListSortingStrategy}
-          >
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map((s) => s._id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-3">
               {items.map((slide) => (
                 <SortableSlide
@@ -184,10 +168,7 @@ export default function HeroSlidesManager({ session, slides }) {
 
       {/* CREATE */}
       {showCreate && (
-        <HeroSlideModal
-          onClose={() => setShowCreate(false)}
-          onSaved={() => setShowCreate(false)}
-        />
+        <HeroSlideModal onClose={() => setShowCreate(false)} onSaved={() => setShowCreate(false)} />
       )}
 
       {/* EDIT */}

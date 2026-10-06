@@ -1,9 +1,4 @@
-export default function TransactionsTable({
-  data,
-  pagination,
-  onPageChange,
-  onRowClick,
-}) {
+export default function TransactionsTable({ data, pagination, onPageChange, onRowClick }) {
   return (
     <div className="space-y-4">
       <div className="overflow-x-auto">
@@ -36,9 +31,7 @@ export default function TransactionsTable({
                 >
                   {tx.orderNumber}
                 </td>
-                <td className="py-3 whitespace-nowrap">
-                  {new Date(tx.date).toLocaleString()}
-                </td>
+                <td className="py-3 whitespace-nowrap">{new Date(tx.date).toLocaleString()}</td>
                 <td>{tx.customer}</td>
 
                 <td>
@@ -60,20 +53,12 @@ export default function TransactionsTable({
                 <td className="text-right">${tx.subtotal}</td>
                 <td className="text-right text-blue-600">${tx.tax}</td>
                 <td className="text-right text-blue-600">${tx.tip}</td>
-                <td className="text-right text-blue-600">
-                  ${tx.onlineServiceFee}
-                </td>
+                <td className="text-right text-blue-600">${tx.onlineServiceFee}</td>
                 <td className="text-right">${tx.grossSales}</td>
-                <td className="text-right text-red-600">
-                  -${tx.rewardsRedeemed}
-                </td>
-                <td className="text-right text-red-600">
-                  -${tx.refundedAmount}
-                </td>
+                <td className="text-right text-red-600">-${tx.rewardsRedeemed}</td>
+                <td className="text-right text-red-600">-${tx.refundedAmount}</td>
                 <td className="text-right text-red-600">-${tx.stripeFee}</td>
-                <td className="text-right font-bold text-green-600">
-                  ${tx.netAfterRefund}
-                </td>
+                <td className="text-right font-bold text-green-600">${tx.netAfterRefund}</td>
               </tr>
             ))}
 
@@ -93,8 +78,8 @@ export default function TransactionsTable({
         <div className="flex items-center justify-between text-sm">
           <div className="text-gray-500">
             Page <span className="font-medium">{pagination.page}</span> of{" "}
-            <span className="font-medium">{pagination.totalPages}</span> •{" "}
-            {pagination.total} transactions
+            <span className="font-medium">{pagination.totalPages}</span> • {pagination.total}{" "}
+            transactions
           </div>
 
           <div className="flex gap-2">
@@ -102,9 +87,7 @@ export default function TransactionsTable({
               onClick={() => onPageChange(pagination.page - 1)}
               disabled={!pagination.hasPrev}
               className={`px-3 py-1 rounded border ${
-                pagination.hasPrev
-                  ? "hover:bg-gray-100"
-                  : "opacity-40 cursor-not-allowed"
+                pagination.hasPrev ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
               }`}
             >
               ← Previous
@@ -114,9 +97,7 @@ export default function TransactionsTable({
               onClick={() => onPageChange(pagination.page + 1)}
               disabled={!pagination.hasNext}
               className={`px-3 py-1 rounded border ${
-                pagination.hasNext
-                  ? "hover:bg-gray-100"
-                  : "opacity-40 cursor-not-allowed"
+                pagination.hasNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
               }`}
             >
               Next →

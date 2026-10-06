@@ -11,7 +11,7 @@ export const fetchModifierGroups = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err?.message || "Failed to load modifiers");
     }
-  }
+  },
 );
 
 /* ================= CREATE / UPDATE ================= */
@@ -25,13 +25,13 @@ export const upsertModifierGroup = createAsyncThunk(
           method: "POST",
           body: JSON.stringify(data),
         },
-        token
+        token,
       );
       return res.group;
     } catch (err) {
       return rejectWithValue(err?.message || "Save failed");
     }
-  }
+  },
 );
 
 /* ================= DELETE ================= */
@@ -45,13 +45,13 @@ export const deleteModifierGroup = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ id }),
         },
-        token
+        token,
       );
       return id;
     } catch (err) {
       return rejectWithValue(err?.message || "Delete failed");
     }
-  }
+  },
 );
 
 const modifierSlice = createSlice({

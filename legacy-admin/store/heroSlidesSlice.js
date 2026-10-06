@@ -131,9 +131,7 @@ const heroSlidesSlice = createSlice({
 
       /* UPDATE */
       .addCase(updateHeroSlide.fulfilled, (state, action) => {
-        const index = state.slides.findIndex(
-          (s) => s._id === action.payload._id,
-        );
+        const index = state.slides.findIndex((s) => s._id === action.payload._id);
         if (index !== -1) state.slides[index] = action.payload;
       })
 

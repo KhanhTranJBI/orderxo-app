@@ -58,3 +58,18 @@
 .animate-fade-up-4 {
   animation: fadeUp 0.5s 0.32s ease both;
 }
+
+@layer components {
+  .field {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 disabled:bg-slate-100;
+  }
+  .primary {
+    @apply rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .secondary {
+    @apply rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50;
+  }
+  .danger {
+    @apply rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50;
+  }
+}

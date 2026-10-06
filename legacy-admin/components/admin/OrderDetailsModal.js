@@ -2,11 +2,7 @@
 
 import Image from "next/image";
 import InfoTooltip from "../InfoTooltip";
-import {
-  POINTS_PER_DOLLAR,
-  REWARD_THRESHOLD,
-  REWARD_VALUE,
-} from "@/lib/environment";
+import { POINTS_PER_DOLLAR, REWARD_THRESHOLD, REWARD_VALUE } from "@/lib/environment";
 import { formatDateTime } from "@/lib/utils";
 
 export default function OrderDetailsModal({
@@ -47,9 +43,7 @@ export default function OrderDetailsModal({
           {/* Header */}
           <div className="flex justify-between items-start">
             <div>
-              <p className="font-bold text-2xl">
-                Order #{selectedOrder.orderNumber}
-              </p>
+              <p className="font-bold text-2xl">Order #{selectedOrder.orderNumber}</p>
               <p className="text-sm text-gray-500">
                 {new Date(selectedOrder.createdAt).toLocaleDateString()} ·{" "}
                 {selectedOrder.pickupTime}
@@ -71,16 +65,12 @@ export default function OrderDetailsModal({
 
               <div className="flex justify-between">
                 <span>Total Refunded</span>
-                <span className="font-bold text-red-600">
-                  -${totalRefunded.toFixed(2)}
-                </span>
+                <span className="font-bold text-red-600">-${totalRefunded.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>{refunds.length} refund(s)</span>
-                <span>
-                  {formatDateTime(refunds[refunds.length - 1]?.createdAt)}
-                </span>
+                <span>{formatDateTime(refunds[refunds.length - 1]?.createdAt)}</span>
               </div>
             </div>
           )}
@@ -89,10 +79,7 @@ export default function OrderDetailsModal({
           <div className="flex justify-between">
             <span className="text-blue-600">Total Items</span>
             <span className="inline-flex items-center px-2 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
-              {selectedOrder.items?.reduce(
-                (sum, item) => sum + (item.quantity || 1),
-                0,
-              )}
+              {selectedOrder.items?.reduce((sum, item) => sum + (item.quantity || 1), 0)}
             </span>
           </div>
 
@@ -103,9 +90,7 @@ export default function OrderDetailsModal({
             <div className="space-y-1 text-blue-900">
               <div className="flex justify-between">
                 <span className="text-blue-600">Name</span>
-                <span className="font-medium">
-                  {selectedOrder.customer?.name || "—"}
-                </span>
+                <span className="font-medium">{selectedOrder.customer?.name || "—"}</span>
               </div>
 
               <div className="flex justify-between">
@@ -120,10 +105,7 @@ export default function OrderDetailsModal({
 
               <div className="flex justify-between">
                 <span className="text-blue-600">Phone</span>
-                <a
-                  href={`tel:${selectedOrder.customer?.phone}`}
-                  className="font-medium underline"
-                >
+                <a href={`tel:${selectedOrder.customer?.phone}`} className="font-medium underline">
                   {selectedOrder.customer?.phone || "—"}
                 </a>
               </div>
@@ -136,44 +118,34 @@ export default function OrderDetailsModal({
 
             <div className="flex justify-between py-2">
               <span className="text-gray-500">🧾 Ordered</span>
-              <span className="font-medium">
-                {formatTime(selectedOrder.createdAt)}
-              </span>
+              <span className="font-medium">{formatTime(selectedOrder.createdAt)}</span>
             </div>
 
             {selectedOrder.preparedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">👍 Confirmed</span>
-                <span className="font-medium">
-                  {formatTime(selectedOrder.preparedAt)}
-                </span>
+                <span className="font-medium">{formatTime(selectedOrder.preparedAt)}</span>
               </div>
             )}
 
             {selectedOrder.completedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">✅ Ready for Pickup</span>
-                <span className="font-medium">
-                  {formatTime(selectedOrder.completedAt)}
-                </span>
+                <span className="font-medium">{formatTime(selectedOrder.completedAt)}</span>
               </div>
             )}
 
             {selectedOrder.pickedAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">🥡 Picked up</span>
-                <span className="font-medium">
-                  {formatTime(selectedOrder.pickedAt)}
-                </span>
+                <span className="font-medium">{formatTime(selectedOrder.pickedAt)}</span>
               </div>
             )}
 
             {selectedOrder.cancelledAt && (
               <div className="flex justify-between py-2">
                 <span className="text-gray-500">❌ Cancelled</span>
-                <span className="font-medium">
-                  {formatTime(selectedOrder.cancelledAt)}
-                </span>
+                <span className="font-medium">{formatTime(selectedOrder.cancelledAt)}</span>
               </div>
             )}
 
@@ -188,12 +160,8 @@ export default function OrderDetailsModal({
           {/* Special Instructions */}
           {selectedOrder.specialInstructions && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
-              <p className="font-bold text-orange-700 mb-1">
-                📝 Special Instructions
-              </p>
-              <p className="text-orange-800 italic">
-                {selectedOrder.specialInstructions}
-              </p>
+              <p className="font-bold text-orange-700 mb-1">📝 Special Instructions</p>
+              <p className="text-orange-800 italic">{selectedOrder.specialInstructions}</p>
             </div>
           )}
 
@@ -203,12 +171,7 @@ export default function OrderDetailsModal({
               <div key={idx} className="flex gap-4 items-start py-4 text-sm">
                 <div className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
                   {item.image && (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                   )}
                 </div>
 
@@ -217,9 +180,7 @@ export default function OrderDetailsModal({
                     <p className="font-semibold text-gray-900">
                       {item.quantity}× {item.name}
                     </p>
-                    <p className="font-semibold text-primary">
-                      ${item.totalPrice.toFixed(2)}
-                    </p>
+                    <p className="font-semibold text-primary">${item.totalPrice.toFixed(2)}</p>
                   </div>
 
                   {Object.values(item.selectedModifiers || {})
@@ -236,8 +197,7 @@ export default function OrderDetailsModal({
                             {group.selections.map((sel, j) => (
                               <span key={j}>
                                 {sel.name}
-                                {sel.price > 0 &&
-                                  ` (+$${sel.price.toFixed(2)})`}
+                                {sel.price > 0 && ` (+$${sel.price.toFixed(2)})`}
                                 {j < group.selections.length - 1 ? ", " : ""}
                               </span>
                             ))}
@@ -262,9 +222,7 @@ export default function OrderDetailsModal({
             </div>
             <div className="flex justify-between py-2">
               <span>Order Service Fee</span>
-              <span>
-                ${selectedOrder.onlineServiceFee?.toFixed(2) ?? "0.00"}
-              </span>
+              <span>${selectedOrder.onlineServiceFee?.toFixed(2) ?? "0.00"}</span>
             </div>
             <div className="flex justify-between py-2">
               <span>Tip</span>
@@ -278,40 +236,30 @@ export default function OrderDetailsModal({
                   process.env.NEXT_PUBLIC_POINTS_REWARD_THRESHOLD || 100,
                 );
 
-                const REWARD_VALUE = Number(
-                  process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5,
-                );
+                const REWARD_VALUE = Number(process.env.NEXT_PUBLIC_POINTS_REWARD_VALUE || 5);
 
-                const redeemedBlocks = Math.floor(
-                  selectedOrder.pointsRedeemed / REWARD_THRESHOLD,
-                );
+                const redeemedBlocks = Math.floor(selectedOrder.pointsRedeemed / REWARD_THRESHOLD);
 
                 const redeemedDollars = redeemedBlocks * REWARD_VALUE;
 
                 return (
                   <div className="flex justify-between py-2 text-gray-700">
-                    <span>
-                      Loyalty Reward Applied ({selectedOrder.pointsRedeemed}{" "}
-                      pts)
-                    </span>
-                    <span className="text-green-700">
-                      -${redeemedDollars.toFixed(2)}
-                    </span>
+                    <span>Loyalty Reward Applied ({selectedOrder.pointsRedeemed} pts)</span>
+                    <span className="text-green-700">-${redeemedDollars.toFixed(2)}</span>
                   </div>
                 );
               })()}
 
             {/* 🎟️ Promotion */}
-            {selectedOrder.promoCode &&
-              Number(selectedOrder.promoDiscount || 0) > 0 && (
-                <div className="flex justify-between py-2 text-gray-700">
-                  <span>Promotion ({selectedOrder.promoCode})</span>
+            {selectedOrder.promoCode && Number(selectedOrder.promoDiscount || 0) > 0 && (
+              <div className="flex justify-between py-2 text-gray-700">
+                <span>Promotion ({selectedOrder.promoCode})</span>
 
-                  <span className="text-green-700">
-                    -${Number(selectedOrder.promoDiscount).toFixed(2)}
-                  </span>
-                </div>
-              )}
+                <span className="text-green-700">
+                  -${Number(selectedOrder.promoDiscount).toFixed(2)}
+                </span>
+              </div>
+            )}
 
             <div className="flex justify-between font-bold py-2">
               <span>Total</span>
@@ -322,9 +270,7 @@ export default function OrderDetailsModal({
 
             <div className="flex justify-between py-2">
               <span>Payment Method</span>
-              <span className="font-medium">
-                {selectedOrder.paymentMethod || "Gift Card"}
-              </span>
+              <span className="font-medium">{selectedOrder.paymentMethod || "Gift Card"}</span>
             </div>
             {/* 🎟️ Gift Card */}
             {selectedOrder.giftCard?.amountUsed > 0 && (
@@ -385,18 +331,14 @@ Tax, tip, service fees, and gift cards do not earn points.`}
               {selectedOrder.pointsRedeemed > 0 && (
                 <div className="flex justify-between">
                   <span>Redeemed Points Restored</span>
-                  <span className="text-green-700">
-                    +{selectedOrder.pointsRedeemed} pts
-                  </span>
+                  <span className="text-green-700">+{selectedOrder.pointsRedeemed} pts</span>
                 </div>
               )}
 
               {selectedOrder.pointsEarned > 0 && (
                 <div className="flex justify-between">
                   <span>Earned Points Removed</span>
-                  <span className="text-red-600">
-                    -{selectedOrder.pointsEarned} pts
-                  </span>
+                  <span className="text-red-600">-{selectedOrder.pointsEarned} pts</span>
                 </div>
               )}
             </div>
@@ -407,10 +349,7 @@ Tax, tip, service fees, and gift cards do not earn points.`}
               <p className="font-bold">Refund Details</p>
 
               {refunds.map((refund, idx) => (
-                <div
-                  key={idx}
-                  className="border rounded-lg p-3 bg-white space-y-1"
-                >
+                <div key={idx} className="border rounded-lg p-3 bg-white space-y-1">
                   <div className="flex justify-between">
                     <span className="font-medium text-red-600">
                       -${Number(refund.amount || 0).toFixed(2)}
@@ -421,11 +360,7 @@ Tax, tip, service fees, and gift cards do not earn points.`}
                     </span>
                   </div>
 
-                  {refund.reason && (
-                    <p className="text-gray-600 italic text-xs">
-                      {refund.reason}
-                    </p>
-                  )}
+                  {refund.reason && <p className="text-gray-600 italic text-xs">{refund.reason}</p>}
                 </div>
               ))}
             </div>

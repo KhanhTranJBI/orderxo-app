@@ -87,41 +87,30 @@ export default function OrdersHistorySection({
                       {new Date(order.createdAt).toLocaleString()}
                     </td>
 
-                    <td className="px-4 py-3">
-                      {order.customer?.name || "Guest"}
-                    </td>
+                    <td className="px-4 py-3">{order.customer?.name || "Guest"}</td>
 
                     <td className="px-4 py-3">
                       <OrderTypeBadge orderType={order.orderType} />
                     </td>
 
                     <td className="px-4 py-3">
-                      <PaymentChannelBadge
-                        paymentChannel={order.paymentChannel}
-                      />
+                      <PaymentChannelBadge paymentChannel={order.paymentChannel} />
                     </td>
 
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          statusColors[order.status]
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs ${statusColors[order.status]}`}
                       >
                         {order.status}
                       </span>
                     </td>
 
                     <td className="px-4 py-3">
-                      {order.items?.reduce(
-                        (sum, i) => sum + (i.quantity || 1),
-                        0,
-                      )}
+                      {order.items?.reduce((sum, i) => sum + (i.quantity || 1), 0)}
                     </td>
 
                     {/* Subtotal */}
-                    <td className="px-4 py-3">
-                      ${Number(order.subtotal || 0).toFixed(2)}
-                    </td>
+                    <td className="px-4 py-3">${Number(order.subtotal || 0).toFixed(2)}</td>
 
                     {/* Tax */}
                     <td className="px-4 py-3 text-blue-600">
@@ -152,13 +141,9 @@ export default function OrdersHistorySection({
                     <td className="px-4 py-3">
                       {order.promoCode && promoDiscount > 0 ? (
                         <div className="flex flex-col">
-                          <span className="font-medium text-green-700">
-                            {order.promoCode}
-                          </span>
+                          <span className="font-medium text-green-700">{order.promoCode}</span>
 
-                          <span className="text-red-600">
-                            -${promoDiscount.toFixed(2)}
-                          </span>
+                          <span className="text-red-600">-${promoDiscount.toFixed(2)}</span>
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>

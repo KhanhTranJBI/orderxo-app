@@ -17,8 +17,7 @@ export default function RefundSection({ order, onRefunded }) {
 
   const totalPaid = (order.amountPaid || 0) + (order.giftCard?.amountUsed || 0);
 
-  const alreadyRefunded =
-    order.refunds?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+  const alreadyRefunded = order.refunds?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
 
   const nonRefundableFees = order.onlineServiceFee || 0;
 
@@ -31,10 +30,7 @@ export default function RefundSection({ order, onRefunded }) {
       const itemSubtotal = item.totalPrice || 0;
 
       // 🧠 proportional tax
-      const itemTax =
-        order.subtotal > 0
-          ? (itemSubtotal / order.subtotal) * (order.tax || 0)
-          : 0;
+      const itemTax = order.subtotal > 0 ? (itemSubtotal / order.subtotal) * (order.tax || 0) : 0;
 
       return sum + itemSubtotal + itemTax;
     }, 0);
@@ -143,17 +139,12 @@ export default function RefundSection({ order, onRefunded }) {
 
                   const itemSubtotal = item.totalPrice || 0;
                   const itemTax =
-                    order.subtotal > 0
-                      ? (itemSubtotal / order.subtotal) * (order.tax || 0)
-                      : 0;
+                    order.subtotal > 0 ? (itemSubtotal / order.subtotal) * (order.tax || 0) : 0;
 
                   const itemTotalWithTax = itemSubtotal + itemTax;
 
                   return (
-                    <label
-                      key={id}
-                      className="flex justify-between items-center mb-2"
-                    >
+                    <label key={id} className="flex justify-between items-center mb-2">
                       <div>
                         {item.name} x{item.quantity}
                         <div className="text-xs text-gray-500">
@@ -168,9 +159,7 @@ export default function RefundSection({ order, onRefunded }) {
                           if (e.target.checked) {
                             setSelectedItems([...selectedItems, id]);
                           } else {
-                            setSelectedItems(
-                              selectedItems.filter((i) => i !== id),
-                            );
+                            setSelectedItems(selectedItems.filter((i) => i !== id));
                           }
                         }}
                       />
@@ -194,10 +183,7 @@ export default function RefundSection({ order, onRefunded }) {
 
             {/* ACTIONS */}
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setOpen(false)}
-                className="px-4 py-2 border rounded-lg"
-              >
+              <button onClick={() => setOpen(false)} className="px-4 py-2 border rounded-lg">
                 Cancel
               </button>
 

@@ -7,8 +7,7 @@ export default function ActiveCartsSection({ carts }) {
     return <p className="text-gray-500">No active carts</p>;
   }
 
-  const isHot = (cart) =>
-    Date.now() - new Date(cart.lastActivityAt) < 2 * 60 * 1000;
+  const isHot = (cart) => Date.now() - new Date(cart.lastActivityAt) < 2 * 60 * 1000;
 
   return (
     <div className="space-y-4">
@@ -27,15 +26,11 @@ export default function ActiveCartsSection({ carts }) {
                 <p className="font-bold">{cart.customer?.name || "Guest"}</p>
                 <SourceBadge source={cart.source} />
               </div>
-              <p className="text-sm text-gray-500">
-                {cart.customer?.email || "No email"}
-              </p>
+              <p className="text-sm text-gray-500">{cart.customer?.email || "No email"}</p>
             </div>
 
             <div className="text-right">
-              <p className="font-bold">
-                ${cart.subtotal?.toFixed(2) || "0.00"}
-              </p>
+              <p className="font-bold">${cart.subtotal?.toFixed(2) || "0.00"}</p>
               <p className="text-xs text-gray-500">
                 {new Date(cart.lastActivityAt).toLocaleTimeString()}
               </p>
@@ -49,12 +44,7 @@ export default function ActiveCartsSection({ carts }) {
                 {/* Image */}
                 <div className="relative w-12 h-12 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
                   {item.image && (
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
+                    <Image src={item.image} alt={item.name} fill className="object-cover" />
                   )}
                 </div>
 
@@ -86,8 +76,7 @@ export default function ActiveCartsSection({ carts }) {
                             {group.selections.map((sel, j) => (
                               <span key={j}>
                                 {sel.name}
-                                {sel.price > 0 &&
-                                  ` (+$${sel.price.toFixed(2)})`}
+                                {sel.price > 0 && ` (+$${sel.price.toFixed(2)})`}
                                 {j < group.selections.length - 1 ? ", " : ""}
                               </span>
                             ))}

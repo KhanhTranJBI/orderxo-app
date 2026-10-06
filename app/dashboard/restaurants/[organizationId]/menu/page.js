@@ -1,2 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
-export default function Page({ params }) { return <ManagementPage organizationId={params.organizationId} section="menu" />; }
+import MenuManager from "../../../../../components/management/MenuManager";
+export default function Page({ params }) {
+  return <MenuManager organizationId={params.organizationId} />;
+}

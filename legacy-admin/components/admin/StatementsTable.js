@@ -109,11 +109,7 @@ export default function StatementsTable({
 
             <div
               className={`mt-1 text-xl font-bold ${
-                card.highlight
-                  ? "text-green-600"
-                  : card.negative
-                    ? "text-red-600"
-                    : "text-gray-900"
+                card.highlight ? "text-green-600" : card.negative ? "text-red-600" : "text-gray-900"
               }`}
             >
               {card.negative ? `-${money(card.value)}` : money(card.value)}
@@ -169,46 +165,27 @@ export default function StatementsTable({
 
                     <td className="text-right">{money(stmt.subtotal)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(stmt.tax)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(stmt.tax)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(stmt.tips)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(stmt.tips)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(stmt.onlineFees)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(stmt.onlineFees)}</td>
 
-                    <td className="text-right font-medium">
-                      {money(stmt.grossSales)}
-                    </td>
+                    <td className="text-right font-medium">{money(stmt.grossSales)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(stmt.rewardsRedeemed)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(stmt.rewardsRedeemed)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(stmt.refunds)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(stmt.refunds)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(stmt.stripeFees)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(stmt.stripeFees)}</td>
 
-                    <td className="text-right font-bold text-green-600">
-                      {money(stmt.netTotal)}
-                    </td>
+                    <td className="text-right font-bold text-green-600">{money(stmt.netTotal)}</td>
                   </tr>
                 ))}
 
                 {data.length === 0 && (
                   <tr>
-                    <td
-                      colSpan="10"
-                      className="text-center py-10 text-gray-400"
-                    >
+                    <td colSpan="10" className="text-center py-10 text-gray-400">
                       No statements found
                     </td>
                   </tr>
@@ -222,35 +199,21 @@ export default function StatementsTable({
 
                     <td className="text-right">{money(summary.subtotal)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(summary.tax)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(summary.tax)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(summary.tips)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(summary.tips)}</td>
 
-                    <td className="text-right text-blue-600">
-                      {money(summary.onlineFees)}
-                    </td>
+                    <td className="text-right text-blue-600">{money(summary.onlineFees)}</td>
 
                     <td className="text-right">{money(summary.grossSales)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(summary.rewardsRedeemed)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(summary.rewardsRedeemed)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(summary.refunds)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(summary.refunds)}</td>
 
-                    <td className="text-right text-red-600">
-                      -{money(summary.stripeFees)}
-                    </td>
+                    <td className="text-right text-red-600">-{money(summary.stripeFees)}</td>
 
-                    <td className="text-right text-green-600">
-                      {money(summary.netTotal)}
-                    </td>
+                    <td className="text-right text-green-600">{money(summary.netTotal)}</td>
                   </tr>
                 </tfoot>
               )}
@@ -259,11 +222,7 @@ export default function StatementsTable({
         </div>
 
         {pagination && (
-          <Pagination
-            pagination={pagination}
-            onPageChange={onPageChange}
-            label="years"
-          />
+          <Pagination pagination={pagination} onPageChange={onPageChange} label="years" />
         )}
       </div>
     );
@@ -308,45 +267,25 @@ export default function StatementsTable({
           <tbody>
             {data.map((stmt) => (
               <tr key={stmt.month} className="border-b hover:bg-gray-50">
-                <td className="py-3 font-medium text-gray-800">
-                  {formatMonth(stmt.month)}
-                </td>
+                <td className="py-3 font-medium text-gray-800">{formatMonth(stmt.month)}</td>
 
-                <td className="text-right font-medium">
-                  {money(stmt.subtotal)}
-                </td>
+                <td className="text-right font-medium">{money(stmt.subtotal)}</td>
 
-                <td className="text-right font-medium text-blue-600">
-                  {money(stmt.tax)}
-                </td>
+                <td className="text-right font-medium text-blue-600">{money(stmt.tax)}</td>
 
-                <td className="text-right font-medium text-blue-600">
-                  {money(stmt.tips)}
-                </td>
+                <td className="text-right font-medium text-blue-600">{money(stmt.tips)}</td>
 
-                <td className="text-right font-medium text-blue-600">
-                  {money(stmt.onlineFees)}
-                </td>
+                <td className="text-right font-medium text-blue-600">{money(stmt.onlineFees)}</td>
 
-                <td className="text-right font-medium">
-                  {money(stmt.grossSales)}
-                </td>
+                <td className="text-right font-medium">{money(stmt.grossSales)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(stmt.rewardsRedeemed)}
-                </td>
+                <td className="text-right text-red-600">-{money(stmt.rewardsRedeemed)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(stmt.refunds)}
-                </td>
+                <td className="text-right text-red-600">-{money(stmt.refunds)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(stmt.stripeFees)}
-                </td>
+                <td className="text-right text-red-600">-{money(stmt.stripeFees)}</td>
 
-                <td className="text-right font-bold text-green-600">
-                  {money(stmt.netTotal)}
-                </td>
+                <td className="text-right font-bold text-green-600">{money(stmt.netTotal)}</td>
 
                 <td className="text-right">
                   <button
@@ -367,35 +306,21 @@ export default function StatementsTable({
 
                 <td className="text-right">{money(summary.subtotal)}</td>
 
-                <td className="text-right text-blue-600">
-                  {money(summary.tax)}
-                </td>
+                <td className="text-right text-blue-600">{money(summary.tax)}</td>
 
-                <td className="text-right text-blue-600">
-                  {money(summary.tips)}
-                </td>
+                <td className="text-right text-blue-600">{money(summary.tips)}</td>
 
-                <td className="text-right text-blue-600">
-                  {money(summary.onlineFees)}
-                </td>
+                <td className="text-right text-blue-600">{money(summary.onlineFees)}</td>
 
                 <td className="text-right">{money(summary.grossSales)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(summary.rewardsRedeemed)}
-                </td>
+                <td className="text-right text-red-600">-{money(summary.rewardsRedeemed)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(summary.refunds)}
-                </td>
+                <td className="text-right text-red-600">-{money(summary.refunds)}</td>
 
-                <td className="text-right text-red-600">
-                  -{money(summary.stripeFees)}
-                </td>
+                <td className="text-right text-red-600">-{money(summary.stripeFees)}</td>
 
-                <td className="text-right text-green-600">
-                  {money(summary.netTotal)}
-                </td>
+                <td className="text-right text-green-600">{money(summary.netTotal)}</td>
 
                 <td />
               </tr>
@@ -405,11 +330,7 @@ export default function StatementsTable({
       </div>
 
       {pagination && (
-        <Pagination
-          pagination={pagination}
-          onPageChange={onPageChange}
-          label="months"
-        />
+        <Pagination pagination={pagination} onPageChange={onPageChange} label="months" />
       )}
     </div>
   );
@@ -424,8 +345,8 @@ function Pagination({ pagination, onPageChange, label }) {
     <div className="flex items-center justify-between text-sm">
       <div className="text-gray-500">
         Page <span className="font-medium">{pagination.page}</span> of{" "}
-        <span className="font-medium">{pagination.totalPages}</span> •{" "}
-        {pagination.totalStatements} {label}
+        <span className="font-medium">{pagination.totalPages}</span> • {pagination.totalStatements}{" "}
+        {label}
       </div>
 
       <div className="flex gap-2">
@@ -433,9 +354,7 @@ function Pagination({ pagination, onPageChange, label }) {
           onClick={() => onPageChange(pagination.page - 1)}
           disabled={!pagination.hasPrev}
           className={`px-3 py-1 rounded border ${
-            pagination.hasPrev
-              ? "hover:bg-gray-100"
-              : "opacity-40 cursor-not-allowed"
+            pagination.hasPrev ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
           }`}
         >
           ← Previous
@@ -445,9 +364,7 @@ function Pagination({ pagination, onPageChange, label }) {
           onClick={() => onPageChange(pagination.page + 1)}
           disabled={!pagination.hasNext}
           className={`px-3 py-1 rounded border ${
-            pagination.hasNext
-              ? "hover:bg-gray-100"
-              : "opacity-40 cursor-not-allowed"
+            pagination.hasNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
           }`}
         >
           Next →

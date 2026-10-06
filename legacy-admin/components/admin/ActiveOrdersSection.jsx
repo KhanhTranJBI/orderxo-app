@@ -17,9 +17,7 @@ export default function ActiveOrdersSection({
       {/* 🔥 ASAP */}
       {asapOrders.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold text-red-600 mb-4">
-            🔥 MAKE NOW (ASAP)
-          </h2>
+          <h2 className="text-xl font-bold text-red-600 mb-4">🔥 MAKE NOW (ASAP)</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {asapOrders.map((order) => (
@@ -41,9 +39,7 @@ export default function ActiveOrdersSection({
       {/* ⏰ Scheduled */}
       {scheduledOrders.length > 0 && (
         <div>
-          <h2 className="text-xl font-bold text-yellow-700 mb-4">
-            ⏰ SCHEDULED PICKUP
-          </h2>
+          <h2 className="text-xl font-bold text-yellow-700 mb-4">⏰ SCHEDULED PICKUP</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {scheduledOrders.map((order) => (

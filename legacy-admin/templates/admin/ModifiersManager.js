@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Pencil,
-  Trash2,
-  Plus,
-  X,
-  Search,
-  Lock,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Pencil, Trash2, Plus, X, Search, Lock, ChevronDown, ChevronUp } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { deleteModifierGroup } from "@/store/modifierSlice";
 import { toast } from "react-toastify";
@@ -35,9 +26,7 @@ export default function ModifiersManager() {
 
   const modifierGroups = useSelector((s) =>
     Object.values(s.modifiers.all)
-      .filter((g) =>
-        query ? g.title?.toLowerCase().includes(query.toLowerCase()) : true,
-      )
+      .filter((g) => (query ? g.title?.toLowerCase().includes(query.toLowerCase()) : true))
       .sort((a, b) => a.order - b.order),
   );
 
@@ -61,9 +50,7 @@ export default function ModifiersManager() {
      */
     if ((groupToDelete.usedByItemCount || 0) > 0) {
       toast.error(
-        `"${groupToDelete.title}" is used by ${
-          groupToDelete.usedByItemCount
-        } menu item${
+        `"${groupToDelete.title}" is used by ${groupToDelete.usedByItemCount} menu item${
           groupToDelete.usedByItemCount === 1 ? "" : "s"
         } and cannot be deleted.`,
       );
@@ -87,9 +74,7 @@ export default function ModifiersManager() {
     } catch (error) {
       if (error?.usedByItemCount > 0) {
         toast.error(
-          `"${groupToDelete.title}" is used by ${
-            error.usedByItemCount
-          } menu item${
+          `"${groupToDelete.title}" is used by ${error.usedByItemCount} menu item${
             error.usedByItemCount === 1 ? "" : "s"
           } and cannot be deleted.`,
         );
@@ -170,9 +155,7 @@ export default function ModifiersManager() {
                       {usedByItemCount === 1 ? "" : "s"}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-400 mt-1">
-                      Not used by any menu item
-                    </div>
+                    <div className="text-sm text-gray-400 mt-1">Not used by any menu item</div>
                   )}
                 </div>
 
@@ -190,16 +173,12 @@ export default function ModifiersManager() {
                   {/* Delete */}
                   <button
                     className={`p-2 rounded ${
-                      isUsed
-                        ? "text-gray-300 cursor-not-allowed"
-                        : "text-red-600 hover:bg-red-50"
+                      isUsed ? "text-gray-300 cursor-not-allowed" : "text-red-600 hover:bg-red-50"
                     }`}
                     onClick={() => {
                       if (isUsed) {
                         toast.info(
-                          `"${group.title}" is used by ${
-                            usedByItemCount
-                          } menu item${
+                          `"${group.title}" is used by ${usedByItemCount} menu item${
                             usedByItemCount === 1 ? "" : "s"
                           } and cannot be deleted.`,
                         );
@@ -211,9 +190,7 @@ export default function ModifiersManager() {
                     disabled={isUsed}
                     title={
                       isUsed
-                        ? `Used by ${usedByItemCount} menu item${
-                            usedByItemCount === 1 ? "" : "s"
-                          }`
+                        ? `Used by ${usedByItemCount} menu item${usedByItemCount === 1 ? "" : "s"}`
                         : "Delete group"
                     }
                   >
@@ -235,11 +212,7 @@ export default function ModifiersManager() {
                   hover:text-gray-900
                 "
                   >
-                    {isExpanded ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
 
                     {isExpanded ? "Hide menu items" : "Show menu items"}
                   </button>
@@ -268,9 +241,7 @@ export default function ModifiersManager() {
                       </div>
 
                       {usedByItems.length === 0 && (
-                        <div className="text-sm text-gray-400">
-                          No menu items found.
-                        </div>
+                        <div className="text-sm text-gray-400">No menu items found.</div>
                       )}
                     </div>
                   )}
@@ -291,11 +262,7 @@ export default function ModifiersManager() {
       <ConfirmDeleteModal
         open={!!groupToDelete}
         title="Delete modifier"
-        description={
-          groupToDelete
-            ? `Delete "${groupToDelete.title}"? This cannot be undone.`
-            : ""
-        }
+        description={groupToDelete ? `Delete "${groupToDelete.title}"? This cannot be undone.` : ""}
         confirmText="Delete"
         loading={deleting}
         onConfirm={handleDelete}

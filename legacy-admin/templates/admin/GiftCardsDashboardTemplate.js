@@ -253,13 +253,10 @@ export default function AdminGiftCardsDashboardTemplate() {
         </div>
 
         <main className="mx-auto">
-          {(activeTab === "active-gift-cards" ||
-            activeTab === "gift-cards-history") && (
+          {(activeTab === "active-gift-cards" || activeTab === "gift-cards-history") && (
             <>
               <div className="max-w-xl mx-auto bg-white rounded-2xl shadow p-6 space-y-4">
-                <h2 className="text-lg font-bold text-primary ">
-                  🎟️ Gift Card Lookup
-                </h2>
+                <h2 className="text-lg font-bold text-primary ">🎟️ Gift Card Lookup</h2>
 
                 <p className="text-sm text-gray-500">
                   Enter the gift card code <b>after</b>{" "}
@@ -279,10 +276,7 @@ export default function AdminGiftCardsDashboardTemplate() {
                     />
 
                     {code && (
-                      <button
-                        onClick={clearSearch}
-                        className="absolute right-2 top-0 p-2"
-                      >
+                      <button onClick={clearSearch} className="absolute right-2 top-0 p-2">
                         ✕
                       </button>
                     )}
@@ -311,9 +305,7 @@ export default function AdminGiftCardsDashboardTemplate() {
                     <Loader2 className="animate-spin text-primary" size={32} />
                   </div>
                 ) : giftCards.length === 0 ? (
-                  <p className="text-center text-gray-500 py-10">
-                    No gift cards found
-                  </p>
+                  <p className="text-center text-gray-500 py-10">No gift cards found</p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {giftCards.map((gc) => (
@@ -384,9 +376,7 @@ export default function AdminGiftCardsDashboardTemplate() {
                         {gc.redeemedAt && (
                           <div className="flex justify-between text-red-600">
                             <span>Redeemed</span>
-                            <span>
-                              {new Date(gc.redeemedAt).toLocaleString()}
-                            </span>
+                            <span>{new Date(gc.redeemedAt).toLocaleString()}</span>
                           </div>
                         )}
 
@@ -402,9 +392,7 @@ export default function AdminGiftCardsDashboardTemplate() {
 
                         {/* RECIPIENT */}
                         <div>
-                          <p className="font-semibold text-gray-700">
-                            Recipient
-                          </p>
+                          <p className="font-semibold text-gray-700">Recipient</p>
                           <p className="text-gray-600">
                             {gc.recipientName} · {gc.recipientEmail}
                           </p>
@@ -413,12 +401,8 @@ export default function AdminGiftCardsDashboardTemplate() {
                         {/* MESSAGE */}
                         {gc.message && (
                           <div className="bg-gray-50 border rounded-lg p-3 mt-2">
-                            <p className="font-semibold text-gray-700 mb-1">
-                              Message
-                            </p>
-                            <p className="italic text-gray-600">
-                              "{gc.message}"
-                            </p>
+                            <p className="font-semibold text-gray-700 mb-1">Message</p>
+                            <p className="italic text-gray-600">"{gc.message}"</p>
                           </div>
                         )}
                       </div>
@@ -430,12 +414,9 @@ export default function AdminGiftCardsDashboardTemplate() {
                 {pagination && !isSearching && (
                   <div className="flex items-center justify-between text-sm">
                     <div className="text-gray-500">
-                      Page{" "}
-                      <span className="font-medium">{pagination.page}</span> of{" "}
-                      <span className="font-medium">
-                        {pagination.totalPages}
-                      </span>{" "}
-                      • {pagination.total} gift cards
+                      Page <span className="font-medium">{pagination.page}</span> of{" "}
+                      <span className="font-medium">{pagination.totalPages}</span> •{" "}
+                      {pagination.total} gift cards
                     </div>
 
                     <div className="flex gap-2">
@@ -443,9 +424,7 @@ export default function AdminGiftCardsDashboardTemplate() {
                         onClick={() => onPageChange(pagination.page - 1)}
                         disabled={!pagination.hasPrev}
                         className={`px-3 py-1 rounded border ${
-                          pagination.hasPrev
-                            ? "hover:bg-gray-100"
-                            : "opacity-40 cursor-not-allowed"
+                          pagination.hasPrev ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                         }`}
                       >
                         ← Previous
@@ -455,9 +434,7 @@ export default function AdminGiftCardsDashboardTemplate() {
                         onClick={() => onPageChange(pagination.page + 1)}
                         disabled={!pagination.hasNext}
                         className={`px-3 py-1 rounded border ${
-                          pagination.hasNext
-                            ? "hover:bg-gray-100"
-                            : "opacity-40 cursor-not-allowed"
+                          pagination.hasNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                         }`}
                       >
                         Next →

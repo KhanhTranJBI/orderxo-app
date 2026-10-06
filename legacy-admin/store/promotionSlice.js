@@ -138,9 +138,7 @@ export const evaluatePromotion = createAsyncThunk(
         discountAmount: Number(res.discountAmount || 0),
       };
     } catch (err) {
-      return rejectWithValue(
-        err?.message || "Something went wrong. Please try again.",
-      );
+      return rejectWithValue(err?.message || "Something went wrong. Please try again.");
     }
   },
 );
@@ -221,9 +219,7 @@ const promotionSlice = createSlice({
       .addCase(updatePromotion.fulfilled, (state, action) => {
         const updated = action.payload;
 
-        const index = state.allPromotions.findIndex(
-          (promotion) => promotion._id === updated._id,
-        );
+        const index = state.allPromotions.findIndex((promotion) => promotion._id === updated._id);
 
         if (index !== -1) {
           // FULL replacement

@@ -39,13 +39,10 @@ export default function DeleteOrderModal({ order, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-xl">
-        <h2 className="text-xl font-bold mb-4 text-red-600">
-          Delete Order #{order.orderNumber}
-        </h2>
+        <h2 className="text-xl font-bold mb-4 text-red-600">Delete Order #{order.orderNumber}</h2>
 
         <p className="text-gray-600 mb-4">
-          This action <b>cannot be undone</b>. Are you sure you want to delete
-          this order?
+          This action <b>cannot be undone</b>. Are you sure you want to delete this order?
         </p>
 
         <div className="bg-gray-50 rounded-lg p-3 text-sm mb-4">
@@ -56,9 +53,7 @@ export default function DeleteOrderModal({ order, onClose, onSuccess }) {
 
           <div className="flex justify-between">
             <span>Total</span>
-            <span className="font-bold text-primary">
-              ${order.totalAmount.toFixed(2)}
-            </span>
+            <span className="font-bold text-primary">${order.totalAmount.toFixed(2)}</span>
           </div>
         </div>
 

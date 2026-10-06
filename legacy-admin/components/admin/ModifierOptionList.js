@@ -11,8 +11,9 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 function SortableOption({ option, onChange, onRemove }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: option._id || option._cid });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+    id: option._id || option._cid,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -20,9 +21,7 @@ function SortableOption({ option, onChange, onRemove }) {
   };
 
   const preview =
-    option.image instanceof File
-      ? URL.createObjectURL(option.image)
-      : option.image || null;
+    option.image instanceof File ? URL.createObjectURL(option.image) : option.image || null;
 
   return (
     <div
@@ -38,10 +37,7 @@ function SortableOption({ option, onChange, onRemove }) {
   `}
     >
       {/* Drag handle */}
-      <div
-        {...listeners}
-        className="cursor-grab text-gray-400 p-2 touch-manipulation"
-      >
+      <div {...listeners} className="cursor-grab text-gray-400 p-2 touch-manipulation">
         <GripVertical size={18} />
       </div>
 
@@ -55,11 +51,7 @@ function SortableOption({ option, onChange, onRemove }) {
   "
       >
         {preview ? (
-          <img
-            src={preview}
-            alt={option.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={preview} alt={option.name} className="w-full h-full object-cover" />
         ) : (
           <span className="text-[10px] sm:text-xs text-gray-400 text-center leading-tight px-1 w-full flex items-center justify-center h-full">
             No Image
@@ -70,9 +62,7 @@ function SortableOption({ option, onChange, onRemove }) {
       <div className="flex flex-col gap-2 min-w-0">
         {/* Name */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs sm:text-sm text-gray-500 font-medium">
-            Name
-          </label>
+          <label className="text-xs sm:text-sm text-gray-500 font-medium">Name</label>
           <input
             className="input p-2 border rounded text-sm sm:text-base"
             value={option.name}
@@ -83,9 +73,7 @@ function SortableOption({ option, onChange, onRemove }) {
 
         {/* Image URL */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs sm:text-sm text-gray-500 font-medium">
-            Image URL
-          </label>
+          <label className="text-xs sm:text-sm text-gray-500 font-medium">Image URL</label>
           <input
             type="text"
             value={option.image || ""}
@@ -107,11 +95,7 @@ function SortableOption({ option, onChange, onRemove }) {
   "
         >
           {preview ? (
-            <img
-              src={preview}
-              alt={option.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={preview} alt={option.name} className="w-full h-full object-cover" />
           ) : (
             <span className="text-[10px] sm:text-xs text-gray-400 text-center leading-tight px-1 w-full flex items-center justify-center h-full">
               No Image
@@ -121,9 +105,7 @@ function SortableOption({ option, onChange, onRemove }) {
 
         {/* Price */}
         <div className="flex items-center gap-1 p-2 border rounded">
-          <span className="text-orange-700 font-semibold text-sm sm:text-base">
-            $
-          </span>
+          <span className="text-orange-700 font-semibold text-sm sm:text-base">$</span>
           <input
             type="number"
             className="
@@ -133,9 +115,7 @@ function SortableOption({ option, onChange, onRemove }) {
         text-sm sm:text-base p-2 border rounded
       "
             value={option.price}
-            onChange={(e) =>
-              onChange({ ...option, price: Number(e.target.value) })
-            }
+            onChange={(e) => onChange({ ...option, price: Number(e.target.value) })}
           />
         </div>
 
@@ -144,9 +124,7 @@ function SortableOption({ option, onChange, onRemove }) {
           type="button"
           onClick={() => onChange({ ...option, isActive: !option.isActive })}
           className={`px-2 py-1 rounded text-xs font-semibold ${
-            option.isActive
-              ? "bg-green-100 text-green-700"
-              : "bg-gray-200 text-gray-500"
+            option.isActive ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"
           }`}
         >
           {option.isActive ? "Active" : "Hidden"}
@@ -170,11 +148,7 @@ export default function ModifierOptionList({ options, onChange, showImage }) {
   const getId = (o) => o._id || o._cid;
 
   const handleOptionChange = (updatedOption) => {
-    onChange(
-      options.map((opt) =>
-        getId(opt) === getId(updatedOption) ? updatedOption : opt,
-      ),
-    );
+    onChange(options.map((opt) => (getId(opt) === getId(updatedOption) ? updatedOption : opt)));
   };
 
   const handleRemove = (optionToRemove) => {
@@ -202,10 +176,7 @@ export default function ModifierOptionList({ options, onChange, showImage }) {
         );
       }}
     >
-      <SortableContext
-        items={options.map(getId)}
-        strategy={verticalListSortingStrategy}
-      >
+      <SortableContext items={options.map(getId)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {options.map((opt) => (
             <SortableOption

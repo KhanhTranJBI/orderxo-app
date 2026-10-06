@@ -1,3 +1,39 @@
 import Link from "next/link";
-const labels={orders:"Orders",menu:"Menu",store:"Store settings",homepage:"Homepage slides",promotions:"Promotions","gift-cards":"Gift cards",financials:"Financials"};
-export default function ManagementPage({organizationId,section}) {return <main className="min-h-screen bg-slate-50 px-4 py-10"><div className="mx-auto max-w-6xl"><Link className="font-semibold text-orange-600" href={`/dashboard/restaurants/${organizationId}`}>← Restaurant workspace</Link><div className="mt-6 rounded-2xl border bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wider text-orange-600">OrderXO Manager</p><h1 className="mt-2 text-3xl font-bold">{labels[section]||section}</h1><p className="mt-3 max-w-2xl text-slate-600">This section is now scoped to this restaurant. The extracted YoYo Poke admin UI is included in <code>legacy-admin/</code> as the migration source; its old NextAuth/Redux single-tenant API calls must be converted to the owner-session proxy before enabling mutations.</p><p className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">Organization: {organizationId}</p></div></div></main>}
+const labels = {
+  orders: "Orders",
+  menu: "Menu",
+  store: "Store settings",
+  homepage: "Homepage slides",
+  promotions: "Promotions",
+  "gift-cards": "Gift cards",
+  financials: "Financials",
+};
+export default function ManagementPage({ organizationId, section }) {
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <Link
+          className="font-semibold text-orange-600"
+          href={`/dashboard/restaurants/${organizationId}`}
+        >
+          ← Restaurant workspace
+        </Link>
+        <div className="mt-6 rounded-2xl border bg-white p-8 shadow-sm">
+          <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
+            OrderXO Manager
+          </p>
+          <h1 className="mt-2 text-3xl font-bold">{labels[section] || section}</h1>
+          <p className="mt-3 max-w-2xl text-slate-600">
+            This section is now scoped to this restaurant. The extracted YoYo Poke admin UI is
+            included in <code>legacy-admin/</code> as the migration source; its old NextAuth/Redux
+            single-tenant API calls must be converted to the owner-session proxy before enabling
+            mutations.
+          </p>
+          <p className="mt-5 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+            Organization: {organizationId}
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}

@@ -21,14 +21,14 @@ export const toggleMenuItemActive = createAsyncThunk(
             isActive,
           }),
         },
-        token
+        token,
       );
 
       return { id, isActive: res.isActive };
     } catch (err) {
       return rejectWithValue(err?.message || "Update failed");
     }
-  }
+  },
 );
 
 /* ================= UPDATE MENU ITEM (EDIT MODAL) ================= */
@@ -45,13 +45,13 @@ export const updateMenuItem = createAsyncThunk(
             ...data,
           }),
         },
-        token
+        token,
       );
       return res.item; // return FULL updated item
     } catch (err) {
       return rejectWithValue(err?.message || "Update failed");
     }
-  }
+  },
 );
 
 export const reorderItems = createAsyncThunk(
@@ -64,13 +64,13 @@ export const reorderItems = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ categorySlug, orders }),
         },
-        token
+        token,
       );
       return { categorySlug, orders };
     } catch (err) {
       return rejectWithValue(err?.message || "Reorder failed");
     }
-  }
+  },
 );
 
 export const createMenuItem = createAsyncThunk(
@@ -83,14 +83,14 @@ export const createMenuItem = createAsyncThunk(
           method: "POST",
           body: JSON.stringify(data),
         },
-        token
+        token,
       );
 
       return res.item;
     } catch (err) {
       return rejectWithValue(err.message);
     }
-  }
+  },
 );
 
 export const deleteMenuItem = createAsyncThunk(
@@ -103,13 +103,13 @@ export const deleteMenuItem = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ menuItemId: id }),
         },
-        token
+        token,
       );
       return id;
     } catch (err) {
       return rejectWithValue(err?.message || "Delete failed");
     }
-  }
+  },
 );
 
 const menuSlice = createSlice({
@@ -204,9 +204,7 @@ const menuSlice = createSlice({
       })
 
       .addCase(deleteMenuItem.fulfilled, (state, action) => {
-        state.allItems = state.allItems.filter(
-          (item) => item._id !== action.payload
-        );
+        state.allItems = state.allItems.filter((item) => item._id !== action.payload);
       });
   },
 });

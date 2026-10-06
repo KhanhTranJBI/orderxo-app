@@ -59,9 +59,7 @@ export default function HeroSlideModal({ slide = null, onClose, onSaved }) {
 
       onSaved?.();
     } catch {
-      toast.error(
-        slide ? "Failed to update hero slide" : "Failed to create hero slide",
-      );
+      toast.error(slide ? "Failed to update hero slide" : "Failed to create hero slide");
     } finally {
       setSaving(false);
     }
@@ -72,9 +70,7 @@ export default function HeroSlideModal({ slide = null, onClose, onSaved }) {
       <div className="bg-white w-full max-w-4xl rounded-2xl px-2 md:px-6 space-y-4 max-h-[90vh] overflow-y-auto">
         {/* HEADER */}
         <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
-          <h2 className="font-bold text-lg">
-            {slide ? "Edit Hero Slide" : "New Hero Slide"}
-          </h2>
+          <h2 className="font-bold text-lg">{slide ? "Edit Hero Slide" : "New Hero Slide"}</h2>
 
           <button onClick={onClose}>
             <X />
@@ -93,10 +89,7 @@ export default function HeroSlideModal({ slide = null, onClose, onSaved }) {
             {title && <h3 className="text-xl font-bold">{title}</h3>}
             {subtitle && <p className="text-sm opacity-90">{subtitle}</p>}
             {cta && (
-              <a
-                href={link}
-                className="mt-3 px-4 py-2 bg-primary rounded-lg text-sm font-semibold"
-              >
+              <a href={link} className="mt-3 px-4 py-2 bg-primary rounded-lg text-sm font-semibold">
                 {cta}
               </a>
             )}

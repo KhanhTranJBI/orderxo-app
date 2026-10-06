@@ -49,8 +49,7 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
   const validateGroup = () => {
     if (!form.title.trim()) return "Title required";
 
-    if (form.required && form.min === 0)
-      return "Required group must have min ≥ 1";
+    if (form.required && form.min === 0) return "Required group must have min ≥ 1";
 
     if (form.displayType === "radio" && (form.min !== 1 || form.max !== 1))
       return "Radio groups must have min=1 and max=1";
@@ -124,9 +123,7 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
       <div className="bg-white w-full max-w-2xl rounded-2xl px-2 md:px-6 space-y-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
-          <h2 className="text-lg font-bold">
-            {form._id ? "Edit Modifier" : "New Modifier"}
-          </h2>
+          <h2 className="text-lg font-bold">{form._id ? "Edit Modifier" : "New Modifier"}</h2>
           <button onClick={onClose}>
             <X />
           </button>
@@ -134,9 +131,7 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
 
         {/* Title */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-500 font-medium">
-            Modifier Name
-          </label>
+          <label className="text-sm text-gray-500 font-medium">Modifier Name</label>
           <input
             className="w-full input p-2 border rounded"
             value={form.title}

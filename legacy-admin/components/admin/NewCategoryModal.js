@@ -5,11 +5,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
-export default function NewCategoryModal({
-  onClose,
-  onCreated,
-  category = null,
-}) {
+export default function NewCategoryModal({ onClose, onCreated, category = null }) {
   const [name, setName] = useState(category?.name || "");
   const [slug, setSlug] = useState(category?.slug || "");
   const [slugTouched, setSlugTouched] = useState(!!category);
@@ -80,9 +76,7 @@ export default function NewCategoryModal({
       onCreated?.();
       onClose();
     } catch {
-      toast.error(
-        category ? "Failed to update category" : "Failed to create category",
-      );
+      toast.error(category ? "Failed to update category" : "Failed to create category");
     } finally {
       setCreating(false);
     }
@@ -92,9 +86,7 @@ export default function NewCategoryModal({
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-2xl rounded-2xl px-2 md:px-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
-          <h2 className="font-bold text-lg">
-            {category ? "Edit Category" : "New Category"}
-          </h2>
+          <h2 className="font-bold text-lg">{category ? "Edit Category" : "New Category"}</h2>
 
           <button onClick={onClose}>
             <X />
@@ -102,9 +94,7 @@ export default function NewCategoryModal({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-sm text-gray-500 font-medium">
-            Category Name
-          </label>
+          <label className="text-sm text-gray-500 font-medium">Category Name</label>
           <input
             className="w-full input p-2 border rounded"
             placeholder="Category Name"
@@ -133,11 +123,7 @@ export default function NewCategoryModal({
   "
         >
           {image ? (
-            <img
-              src={image}
-              alt={name}
-              className="w-full h-full object-cover"
-            />
+            <img src={image} alt={name} className="w-full h-full object-cover" />
           ) : (
             <span className="text-[10px] sm:text-xs text-gray-400 text-center leading-tight px-1 w-full flex items-center justify-center h-full">
               No Image

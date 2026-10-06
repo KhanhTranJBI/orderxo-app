@@ -1,2 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
-export default function Page({ params }) { return <ManagementPage organizationId={params.organizationId} section="store" />; }
+import StoreSettingsManager from "../../../../../components/management/StoreSettingsManager";
+export default function Page({ params }) {
+  return <StoreSettingsManager organizationId={params.organizationId} />;
+}

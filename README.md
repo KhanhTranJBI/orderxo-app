@@ -37,4 +37,5 @@ The owner portal now expects these authenticated/admin-api routes in addition to
 The dashboard's OrderXO hostname uses the restaurant/organization slug (for example `yoyo-poke.orderxo.com`) rather than the location slug (`main.orderxo.com`). Additional locations use `<restaurant-slug>-<location-slug>.orderxo.com` in the current UI.
 
 ## Restaurant management migration
+
 The owner dashboard now has a restaurant-scoped workspace at `/dashboard/restaurants/[organizationId]` for Orders, Menu, Store settings, Homepage slides, Promotions, Gift cards and Financials. The original YoYo Poke admin source is preserved under `legacy-admin/` for conversion. Do not expose those legacy components directly: they use the old single-tenant NextAuth/Redux APIs. New management requests should go through `/api/owner/manage/*` and include `organizationId`; the server proxy supplies the HttpOnly owner JWT to admin-api.

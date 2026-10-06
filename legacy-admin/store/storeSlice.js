@@ -12,7 +12,7 @@ export const fetchStoreStatus = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.message);
     }
-  }
+  },
 );
 
 /* ---------------- UPDATE CONFIG ---------------- */
@@ -30,14 +30,14 @@ export const updateStoreConfig = createAsyncThunk(
             hours,
           }),
         },
-        token
+        token,
       );
 
       return updatedConfig;
     } catch (err) {
       return rejectWithValue(err.message);
     }
-  }
+  },
 );
 
 /* ---------------- FETCH NOTICES (PUBLIC) ---------------- */
@@ -50,7 +50,7 @@ export const fetchNotices = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err?.message || "Failed to fetch notices");
     }
-  }
+  },
 );
 
 /* ---------------- CREATE NOTICE (ADMIN) ---------------- */
@@ -64,14 +64,14 @@ export const createNotice = createAsyncThunk(
           method: "POST",
           body: JSON.stringify(data),
         },
-        token
+        token,
       );
 
       return res.notice;
     } catch (err) {
       return rejectWithValue(err?.message || "Failed to create notice");
     }
-  }
+  },
 );
 
 /* ---------------- UPDATE NOTICE (ADMIN) ---------------- */
@@ -85,14 +85,14 @@ export const updateNotice = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ id, ...data }),
         },
-        token
+        token,
       );
 
       return res.notice;
     } catch (err) {
       return rejectWithValue(err?.message || "Failed to update notice");
     }
-  }
+  },
 );
 
 export const deleteNotice = createAsyncThunk(
@@ -105,13 +105,13 @@ export const deleteNotice = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ id }),
         },
-        token
+        token,
       );
       return id;
     } catch (err) {
       return rejectWithValue("Delete failed");
     }
-  }
+  },
 );
 
 /* ---------------- UPDATE STORE STATUS ONLY ---------------- */
@@ -125,14 +125,14 @@ export const updateStoreStatus = createAsyncThunk(
           method: "POST",
           body: JSON.stringify({ isOpenManual }),
         },
-        token
+        token,
       );
 
       return res; // { success, isOpenManual }
     } catch (err) {
       return rejectWithValue(err?.message || "Failed to update store status");
     }
-  }
+  },
 );
 
 const storeSlice = createSlice({
@@ -201,9 +201,7 @@ const storeSlice = createSlice({
 
       /* ---------- UPDATE NOTICE ---------- */
       .addCase(updateNotice.fulfilled, (state, action) => {
-        const index = state.notices.findIndex(
-          (n) => n._id === action.payload._id
-        );
+        const index = state.notices.findIndex((n) => n._id === action.payload._id);
         if (index !== -1) {
           state.notices[index] = action.payload;
         }

@@ -29,10 +29,7 @@ import { toast } from "react-toastify";
 
 import { DndContext, closestCenter } from "@dnd-kit/core";
 
-import {
-  deleteCategory,
-  fetchAdminCategories,
-} from "@/store/categoryAdminSlice";
+import { deleteCategory, fetchAdminCategories } from "@/store/categoryAdminSlice";
 
 import {
   SortableContext,
@@ -52,8 +49,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ModifiersManager from "./ModifiersManager";
 
 function SortableCategory({ id, children }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -68,8 +64,7 @@ function SortableCategory({ id, children }) {
 }
 
 function SortableItem({ id, children }) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -134,15 +129,12 @@ export default function AdminMenuManagerTemplate() {
           category,
           items: allItems
             .filter((i) => {
-              const itemCategoryId =
-                typeof i.category === "string" ? i.category : i.category?._id;
+              const itemCategoryId = typeof i.category === "string" ? i.category : i.category?._id;
 
               return itemCategoryId === category._id;
             })
 
-            .filter((i) =>
-              query ? i.name.toLowerCase().includes(query.toLowerCase()) : true,
-            )
+            .filter((i) => (query ? i.name.toLowerCase().includes(query.toLowerCase()) : true))
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
         }))
     );
@@ -289,11 +281,7 @@ export default function AdminMenuManagerTemplate() {
     if (!over || active.id === over.id) return;
 
     const current = itemOrder[categorySlug];
-    const next = arrayMove(
-      current,
-      current.indexOf(active.id),
-      current.indexOf(over.id),
-    );
+    const next = arrayMove(current, current.indexOf(active.id), current.indexOf(over.id));
 
     const prevState = itemOrder;
 
@@ -433,19 +421,11 @@ export default function AdminMenuManagerTemplate() {
           </div>
 
           {/* Categories */}
-          <DndContext
-            collisionDetection={closestCenter}
-            onDragEnd={handleCategoryDragEnd}
-          >
-            <SortableContext
-              items={categoryOrder}
-              strategy={verticalListSortingStrategy}
-            >
+          <DndContext collisionDetection={closestCenter} onDragEnd={handleCategoryDragEnd}>
+            <SortableContext items={categoryOrder} strategy={verticalListSortingStrategy}>
               <div className="space-y-4">
                 {categoryOrder.map((id) => {
-                  const group = sortedCategories.find(
-                    (c) => c.category._id === id,
-                  );
+                  const group = sortedCategories.find((c) => c.category._id === id);
                   if (!group) return null;
 
                   const { category, items } = group;
@@ -485,11 +465,7 @@ export default function AdminMenuManagerTemplate() {
                                   />
                                 )}
 
-                                <span
-                                  className={clsx(
-                                    !category.isActive && "text-gray-400 ",
-                                  )}
-                                >
+                                <span className={clsx(!category.isActive && "text-gray-400 ")}>
                                   {category.name}
                                 </span>
 
@@ -504,8 +480,7 @@ export default function AdminMenuManagerTemplate() {
                                 {items.length} items
                                 {items.some((i) => !i.isActive) && (
                                   <span className="ml-2 text-red-600">
-                                    · {items.filter((i) => !i.isActive).length}{" "}
-                                    out of stock
+                                    · {items.filter((i) => !i.isActive).length} out of stock
                                   </span>
                                 )}
                               </div>
@@ -571,126 +546,107 @@ export default function AdminMenuManagerTemplate() {
                             <div className="divide-y">
                               <DndContext
                                 collisionDetection={closestCenter}
-                                onDragEnd={(e) =>
-                                  handleItemDragEnd(category.slug, e)
-                                }
+                                onDragEnd={(e) => handleItemDragEnd(category.slug, e)}
                               >
                                 <SortableContext
                                   items={itemOrder[category.slug] || []}
                                   strategy={verticalListSortingStrategy}
                                 >
-                                  {(itemOrder[category.slug] || []).map(
-                                    (itemId) => {
-                                      const item = items.find(
-                                        (i) => i._id === itemId,
-                                      );
+                                  {(itemOrder[category.slug] || []).map((itemId) => {
+                                    const item = items.find((i) => i._id === itemId);
 
-                                      if (!item) return null;
+                                    if (!item) return null;
 
-                                      return (
-                                        <SortableItem
-                                          key={item._id}
-                                          id={item._id}
-                                        >
-                                          {(listeners) => (
-                                            <div className="flex items-center gap-4 p-4">
-                                              {/* DRAG HANDLE */}
-                                              <div
-                                                {...listeners}
-                                                className="cursor-grab active:cursor-grabbing text-gray-400"
-                                                title="Drag to reorder item"
-                                              >
-                                                <GripVertical size={16} />
-                                              </div>
+                                    return (
+                                      <SortableItem key={item._id} id={item._id}>
+                                        {(listeners) => (
+                                          <div className="flex items-center gap-4 p-4">
+                                            {/* DRAG HANDLE */}
+                                            <div
+                                              {...listeners}
+                                              className="cursor-grab active:cursor-grabbing text-gray-400"
+                                              title="Drag to reorder item"
+                                            >
+                                              <GripVertical size={16} />
+                                            </div>
 
-                                              <div className="w-full flex flex-col md:flex-row gap-2">
-                                                <div className="w-full flex flex-row gap-2">
-                                                  {/* Image */}
-                                                  <div className="relative w-14 h-14 rounded-md overflow-hidden bg-gray-100">
-                                                    {item.image && (
-                                                      <Image
-                                                        src={item.image}
-                                                        alt={item.name}
-                                                        fill
-                                                        className="object-cover"
-                                                      />
+                                            <div className="w-full flex flex-col md:flex-row gap-2">
+                                              <div className="w-full flex flex-row gap-2">
+                                                {/* Image */}
+                                                <div className="relative w-14 h-14 rounded-md overflow-hidden bg-gray-100">
+                                                  {item.image && (
+                                                    <Image
+                                                      src={item.image}
+                                                      alt={item.name}
+                                                      fill
+                                                      className="object-cover"
+                                                    />
+                                                  )}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 flex flex-col gap-2">
+                                                  <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
+                                                    <span className="font-medium">{item.name}</span>
+                                                    {item.bestSeller && (
+                                                      <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                                                        Best Seller
+                                                      </span>
+                                                    )}
+                                                    {item.newItem && (
+                                                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
+                                                        New
+                                                      </span>
                                                     )}
                                                   </div>
-
-                                                  {/* Info */}
-                                                  <div className="flex-1 flex flex-col gap-2">
-                                                    <div className="flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-2">
-                                                      <span className="font-medium">
-                                                        {item.name}
-                                                      </span>
-                                                      {item.bestSeller && (
-                                                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-                                                          Best Seller
-                                                        </span>
-                                                      )}
-                                                      {item.newItem && (
-                                                        <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                                                          New
-                                                        </span>
-                                                      )}
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                      ${item.price.toFixed(2)}
-                                                    </div>
+                                                  <div className="text-sm text-gray-500">
+                                                    ${item.price.toFixed(2)}
                                                   </div>
                                                 </div>
-                                                <div className="flex gap-4 shrink-0">
-                                                  {/* STATUS TOGGLE */}
-                                                  <button
-                                                    disabled={
-                                                      updatingId === item._id
-                                                    }
-                                                    onClick={() =>
-                                                      handleToggleActive(item)
-                                                    }
-                                                    className={clsx(
-                                                      "px-3 py-1 rounded-full text-sm transition",
-                                                      item.isActive
-                                                        ? "bg-green-100 text-green-700 hover:bg-green-200"
-                                                        : "bg-gray-200 text-gray-500 hover:bg-gray-300",
-                                                      updatingId === item._id &&
-                                                        "opacity-50 cursor-wait",
-                                                    )}
-                                                  >
-                                                    {item.isActive
-                                                      ? "In stock"
-                                                      : "Out of stock"}
-                                                  </button>
+                                              </div>
+                                              <div className="flex gap-4 shrink-0">
+                                                {/* STATUS TOGGLE */}
+                                                <button
+                                                  disabled={updatingId === item._id}
+                                                  onClick={() => handleToggleActive(item)}
+                                                  className={clsx(
+                                                    "px-3 py-1 rounded-full text-sm transition",
+                                                    item.isActive
+                                                      ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                                      : "bg-gray-200 text-gray-500 hover:bg-gray-300",
+                                                    updatingId === item._id &&
+                                                      "opacity-50 cursor-wait",
+                                                  )}
+                                                >
+                                                  {item.isActive ? "In stock" : "Out of stock"}
+                                                </button>
 
-                                                  {/* Actions */}
-                                                  <button
-                                                    className="p-2 hover:bg-gray-100 rounded"
-                                                    onClick={() =>
-                                                      setEditingItem(item)
-                                                    }
-                                                  >
-                                                    <Pencil size={20} />
-                                                  </button>
-                                                  <button
-                                                    className="p-2 hover:bg-red-50 rounded text-red-600"
-                                                    onClick={() => {
-                                                      setItemToDelete(item);
-                                                      setShowDelete(true);
-                                                    }}
-                                                  >
-                                                    <Trash2 size={20} />
-                                                  </button>
-                                                  {/* <button className="p-2 hover:bg-gray-100 rounded">
+                                                {/* Actions */}
+                                                <button
+                                                  className="p-2 hover:bg-gray-100 rounded"
+                                                  onClick={() => setEditingItem(item)}
+                                                >
+                                                  <Pencil size={20} />
+                                                </button>
+                                                <button
+                                                  className="p-2 hover:bg-red-50 rounded text-red-600"
+                                                  onClick={() => {
+                                                    setItemToDelete(item);
+                                                    setShowDelete(true);
+                                                  }}
+                                                >
+                                                  <Trash2 size={20} />
+                                                </button>
+                                                {/* <button className="p-2 hover:bg-gray-100 rounded">
                                             <MoreHorizontal className="w-4 h-4" />
                                           </button> */}
-                                                </div>
                                               </div>
                                             </div>
-                                          )}
-                                        </SortableItem>
-                                      );
-                                    },
-                                  )}
+                                          </div>
+                                        )}
+                                      </SortableItem>
+                                    );
+                                  })}
                                 </SortableContext>
                               </DndContext>
                             </div>

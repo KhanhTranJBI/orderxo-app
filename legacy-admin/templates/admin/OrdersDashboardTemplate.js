@@ -29,11 +29,7 @@ export default function AdminOrdersDashboardTemplate() {
 
     const tab = params.get("tab");
 
-    if (
-      ["active-orders", "active-carts", "orders-history", "report"].includes(
-        tab,
-      )
-    ) {
+    if (["active-orders", "active-carts", "orders-history", "report"].includes(tab)) {
       return tab;
     }
 
@@ -83,11 +79,7 @@ export default function AdminOrdersDashboardTemplate() {
     try {
       setReportLoading(true);
 
-      const res = await apiFetch(
-        "/api/admin/reports",
-        { method: "GET" },
-        session?.jwt,
-      );
+      const res = await apiFetch("/api/admin/reports", { method: "GET" }, session?.jwt);
 
       setReport(res || null);
       setPagination(null);
@@ -152,11 +144,7 @@ export default function AdminOrdersDashboardTemplate() {
   /* ---------------------------------- */
   const checkForNewOrders = async () => {
     try {
-      const res = await apiFetch(
-        "/api/admin/orders",
-        { method: "GET" },
-        session?.jwt,
-      );
+      const res = await apiFetch("/api/admin/orders", { method: "GET" }, session?.jwt);
 
       const data = res?.orders || [];
 
@@ -214,10 +202,7 @@ export default function AdminOrdersDashboardTemplate() {
       }
     };
 
-    if (
-      typeof document === "undefined" ||
-      document.visibilityState === "visible"
-    ) {
+    if (typeof document === "undefined" || document.visibilityState === "visible") {
       start();
     }
 
@@ -287,11 +272,7 @@ export default function AdminOrdersDashboardTemplate() {
     try {
       setLoading(true);
 
-      const res = await apiFetch(
-        "/api/admin/carts",
-        { method: "GET" },
-        session?.jwt,
-      );
+      const res = await apiFetch("/api/admin/carts", { method: "GET" }, session?.jwt);
 
       const data = res?.carts || [];
 
@@ -326,10 +307,7 @@ export default function AdminOrdersDashboardTemplate() {
     if (activeTab === "active-carts") {
       // Pause this one too when the tab is hidden, same reasoning as the heartbeat above.
       const tick = () => {
-        if (
-          typeof document === "undefined" ||
-          document.visibilityState === "visible"
-        ) {
+        if (typeof document === "undefined" || document.visibilityState === "visible") {
           fetchCarts();
         }
       };
@@ -362,18 +340,9 @@ export default function AdminOrdersDashboardTemplate() {
           ? {
               ...order,
               status: nextStatus,
-              preparedAt:
-                nextStatus === "preparing"
-                  ? new Date().toISOString()
-                  : order.preparedAt,
-              completedAt:
-                nextStatus === "ready"
-                  ? new Date().toISOString()
-                  : order.completedAt,
-              pickedAt:
-                nextStatus === "completed"
-                  ? new Date().toISOString()
-                  : order.pickedAt,
+              preparedAt: nextStatus === "preparing" ? new Date().toISOString() : order.preparedAt,
+              completedAt: nextStatus === "ready" ? new Date().toISOString() : order.completedAt,
+              pickedAt: nextStatus === "completed" ? new Date().toISOString() : order.pickedAt,
             }
           : order,
       ),
@@ -425,8 +394,7 @@ export default function AdminOrdersDashboardTemplate() {
 
   const now = useNow();
 
-  const isASAP = (order) =>
-    !order.pickupTime || order.pickupTime.toLowerCase().includes("asap");
+  const isASAP = (order) => !order.pickupTime || order.pickupTime.toLowerCase().includes("asap");
 
   const asapOrders = activeOrders
     .filter(isASAP)
@@ -444,8 +412,7 @@ export default function AdminOrdersDashboardTemplate() {
   const initAudio = async () => {
     try {
       if (!alertContextRef.current) {
-        alertContextRef.current = new (window.AudioContext ||
-          window.webkitAudioContext)();
+        alertContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
 
       if (alertContextRef.current.state === "suspended") {
@@ -457,8 +424,7 @@ export default function AdminOrdersDashboardTemplate() {
 
         const arrayBuffer = await res.arrayBuffer();
 
-        alertBufferRef.current =
-          await alertContextRef.current.decodeAudioData(arrayBuffer);
+        alertBufferRef.current = await alertContextRef.current.decodeAudioData(arrayBuffer);
       }
 
       setAudioUnlocked(true);
@@ -610,8 +576,8 @@ export default function AdminOrdersDashboardTemplate() {
               <div className="flex items-center justify-between text-sm">
                 <div className="text-gray-500">
                   Page <span className="font-medium">{pagination.page}</span> of{" "}
-                  <span className="font-medium">{pagination.totalPages}</span> •{" "}
-                  {pagination.total} orders
+                  <span className="font-medium">{pagination.totalPages}</span> • {pagination.total}{" "}
+                  orders
                 </div>
 
                 <div className="flex gap-2">
@@ -619,9 +585,7 @@ export default function AdminOrdersDashboardTemplate() {
                     onClick={() => onPageChange(pagination.page - 1)}
                     disabled={!pagination.hasPrev}
                     className={`px-3 py-1 rounded border ${
-                      pagination.hasPrev
-                        ? "hover:bg-gray-100"
-                        : "opacity-40 cursor-not-allowed"
+                      pagination.hasPrev ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                     }`}
                   >
                     ← Previous
@@ -631,9 +595,7 @@ export default function AdminOrdersDashboardTemplate() {
                     onClick={() => onPageChange(pagination.page + 1)}
                     disabled={!pagination.hasNext}
                     className={`px-3 py-1 rounded border ${
-                      pagination.hasNext
-                        ? "hover:bg-gray-100"
-                        : "opacity-40 cursor-not-allowed"
+                      pagination.hasNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                     }`}
                   >
                     Next →
@@ -669,9 +631,7 @@ export default function AdminOrdersDashboardTemplate() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-md text-center">
             <h2 className="text-xl font-bold mb-2">🔥 New Order Received</h2>
-            <p className="text-gray-600 mb-4">
-              A new order just came in. Click to view it.
-            </p>
+            <p className="text-gray-600 mb-4">A new order just came in. Click to view it.</p>
 
             <button
               onClick={handleNewOrderClick}

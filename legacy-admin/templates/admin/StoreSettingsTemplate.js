@@ -15,29 +15,13 @@ import {
   updateStoreConfig,
   updateStoreStatus,
 } from "@/store/storeSlice";
-import {
-  Clock,
-  ImageIcon,
-  Info,
-  Loader2,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Clock, ImageIcon, Info, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import NoticeModal from "@/components/admin/NoticeModal";
 import ConfirmDeleteModal from "@/components/modals/ConfirmDeleteModal";
 import HeroSlidesManager from "@/components/admin/HeroSlidesManager";
 import { fetchHeroSlides } from "@/store/heroSlidesSlice";
 
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export default function StoreSettingsTemplate() {
   const { data: session } = useSession();
@@ -47,9 +31,7 @@ export default function StoreSettingsTemplate() {
 
   const [saving, setSaving] = useState(false);
 
-  const { slides, loading: slidesLoading } = useSelector(
-    (state) => state.heroSlides,
-  );
+  const { slides, loading: slidesLoading } = useSelector((state) => state.heroSlides);
 
   /* ---------- LOCAL FORM STATE ---------- */
   const [isOpenManual, setIsOpenManual] = useState(true);
@@ -157,9 +139,7 @@ export default function StoreSettingsTemplate() {
 
   /* ---------- UPDATE HOURS ---------- */
   const updateHour = (index, field, value) => {
-    setHours((prev) =>
-      prev.map((h, i) => (i === index ? { ...h, [field]: value } : h)),
-    );
+    setHours((prev) => prev.map((h, i) => (i === index ? { ...h, [field]: value } : h)));
   };
 
   /* ---------- SAVE ---------- */
@@ -307,9 +287,7 @@ export default function StoreSettingsTemplate() {
                     <input
                       type="checkbox"
                       checked={h.isClosed}
-                      onChange={(e) =>
-                        updateHour(i, "isClosed", e.target.checked)
-                      }
+                      onChange={(e) => updateHour(i, "isClosed", e.target.checked)}
                     />
                     Closed
                   </label>
@@ -384,9 +362,7 @@ export default function StoreSettingsTemplate() {
                   <div className="flex items-center gap-2 mb-1">
                     <span
                       className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                        notice.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-600"
+                        notice.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
                       }`}
                     >
                       {notice.isActive ? "Active" : "Inactive"}
@@ -439,9 +415,7 @@ export default function StoreSettingsTemplate() {
         </div>
       )}
 
-      {activeTab === "hero" && (
-        <HeroSlidesManager session={session} slides={slides} />
-      )}
+      {activeTab === "hero" && <HeroSlidesManager session={session} slides={slides} />}
     </div>
   );
 }

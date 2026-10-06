@@ -6,11 +6,7 @@ export const fetchAdminCategories = createAsyncThunk(
   "categoryAdmin/fetchAll",
   async (token, { rejectWithValue }) => {
     try {
-      const res = await apiFetch(
-        "/api/admin/categories",
-        { method: "GET" },
-        token,
-      );
+      const res = await apiFetch("/api/admin/categories", { method: "GET" }, token);
       return res.categories;
     } catch (err) {
       return rejectWithValue(err?.message || "Fetch failed");
@@ -145,16 +141,12 @@ const categoryAdminSlice = createSlice({
 
       /* -------- DELETE -------- */
       .addCase(deleteCategory.fulfilled, (state, action) => {
-        state.categories = state.categories.filter(
-          (c) => c._id !== action.payload,
-        );
+        state.categories = state.categories.filter((c) => c._id !== action.payload);
       })
 
       /* -------- OPTIMISTIC REORDER -------- */
       .addCase(reorderCategories.pending, (state, action) => {
-        const orderMap = new Map(
-          action.meta.arg.orders.map((o) => [o.id, o.order]),
-        );
+        const orderMap = new Map(action.meta.arg.orders.map((o) => [o.id, o.order]));
 
         state.categories.forEach((cat) => {
           if (orderMap.has(cat._id)) {

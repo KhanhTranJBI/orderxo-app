@@ -2,15 +2,21 @@ import { NextResponse } from "next/server";
 import { backendRequest } from "../../../../../lib/backend";
 
 async function handle(req, { params }) {
-  const organizationId = new URL(req.url).searchParams.get("organizationId");
+  const url = new URL(req.url);
+  const organizationId = url.searchParams.get("organizationId");
   if (!organizationId)
     return NextResponse.json({ error: "organizationId is required" }, { status: 400 });
-  const path = `/api/owner/${params.path.join("/")}`;
+
+  // The browser only talks to this owner-session proxy. The backend endpoints
+  // themselves are tenant-safe and live at /api/menu, /api/categories, etc.
+  const path = `/api/${params.path.join("/")}`;
   const body = req.method === "GET" ? undefined : await req.json().catch(() => ({}));
-  const query = new URL(req.url).searchParams;
-  query.delete("organizationId");
+  const query = url.searchParams;
   query.set("organizationId", organizationId);
-  const result = await backendRequest(`${path}?${query.toString()}`, {
+  if (body && typeof body === "object") body.organizationId = organizationId;
+
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  const result = await backendRequest(`${path}${suffix}`, {
     method: req.method,
     body,
     authenticated: true,

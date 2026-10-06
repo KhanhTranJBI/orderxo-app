@@ -4,14 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/api";
 import { toast } from "react-toastify";
-import {
-  Loader2,
-  Search,
-  X,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-} from "lucide-react";
+import { Loader2, Search, X, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 
 export default function ManageUsersTemplate() {
   const { data: session } = useSession();
@@ -214,12 +207,8 @@ export default function ManageUsersTemplate() {
                   <td className="p-2 border">{user.email}</td>
                   <td className="p-2 border">{user.phone || "-"}</td>
                   <td className="p-2 border">{user.role || "-"}</td>
-                  <td className="p-2 border font-medium">
-                    {user.loyaltyPoints || 0}
-                  </td>
-                  <td className="p-2 border text-gray-500">
-                    {user.reservedPoints || 0}
-                  </td>
+                  <td className="p-2 border font-medium">{user.loyaltyPoints || 0}</td>
+                  <td className="p-2 border text-gray-500">{user.reservedPoints || 0}</td>
                   <td className="p-2 border font-medium text-green-700">
                     {user.availablePoints ?? 0}
                   </td>
@@ -231,37 +220,26 @@ export default function ManageUsersTemplate() {
                       className="accent-primary"
                     />
                   </td>
-                  <td className="p-2 border capitalize">
-                    {user.emailSubscriberSource || "-"}
-                  </td>
+                  <td className="p-2 border capitalize">{user.emailSubscriberSource || "-"}</td>
                   <td className="p-2 border">
                     {user.emailSubscriberSubscribedAt
-                      ? new Date(
-                          user.emailSubscriberSubscribedAt,
-                        ).toLocaleString()
+                      ? new Date(user.emailSubscriberSubscribedAt).toLocaleString()
                       : "-"}
                   </td>
                   <td className="p-2 border">
                     {user.emailSubscriberUnsubscribedAt
-                      ? new Date(
-                          user.emailSubscriberUnsubscribedAt,
-                        ).toLocaleString()
+                      ? new Date(user.emailSubscriberUnsubscribedAt).toLocaleString()
                       : "-"}
                   </td>
                   <td className="p-2 border">
-                    {user.createdAt
-                      ? new Date(user.createdAt).toLocaleString()
-                      : "-"}
+                    {user.createdAt ? new Date(user.createdAt).toLocaleString() : "-"}
                   </td>
                 </tr>
               ))}
 
               {users.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={11}
-                    className="p-6 text-center text-gray-400 italic"
-                  >
+                  <td colSpan={11} className="p-6 text-center text-gray-400 italic">
                     No users found
                   </td>
                 </tr>
@@ -273,8 +251,8 @@ export default function ManageUsersTemplate() {
             <div className="flex items-center justify-between text-sm mt-4">
               <div className="text-gray-500">
                 Page <span className="font-medium">{pagination.page}</span> of{" "}
-                <span className="font-medium">{pagination.totalPages}</span> •{" "}
-                {pagination.total} users
+                <span className="font-medium">{pagination.totalPages}</span> • {pagination.total}{" "}
+                users
               </div>
 
               <div className="flex gap-2">
@@ -282,9 +260,7 @@ export default function ManageUsersTemplate() {
                   onClick={() => onPageChange(pagination.page - 1)}
                   disabled={!pagination.hasPrev}
                   className={`px-3 py-1 rounded border ${
-                    pagination.hasPrev
-                      ? "hover:bg-gray-100"
-                      : "opacity-40 cursor-not-allowed"
+                    pagination.hasPrev ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                   }`}
                 >
                   ← Previous
@@ -294,9 +270,7 @@ export default function ManageUsersTemplate() {
                   onClick={() => onPageChange(pagination.page + 1)}
                   disabled={!pagination.hasNext}
                   className={`px-3 py-1 rounded border ${
-                    pagination.hasNext
-                      ? "hover:bg-gray-100"
-                      : "opacity-40 cursor-not-allowed"
+                    pagination.hasNext ? "hover:bg-gray-100" : "opacity-40 cursor-not-allowed"
                   }`}
                 >
                   Next →

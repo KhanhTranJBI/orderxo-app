@@ -91,28 +91,21 @@ export default function AdminPromotionManagerTemplate() {
 
       discountType: promotion.discountType || "percent",
 
-      discountValue:
-        promotion.discountValue != null ? String(promotion.discountValue) : "",
+      discountValue: promotion.discountValue != null ? String(promotion.discountValue) : "",
 
       maxDiscountAmount:
-        promotion.maxDiscountAmount != null
-          ? String(promotion.maxDiscountAmount)
-          : "",
+        promotion.maxDiscountAmount != null ? String(promotion.maxDiscountAmount) : "",
 
-      minSubtotal:
-        promotion.minSubtotal != null ? String(promotion.minSubtotal) : "",
+      minSubtotal: promotion.minSubtotal != null ? String(promotion.minSubtotal) : "",
 
       startsAt: promotion.startsAt ? toDateTimeLocal(promotion.startsAt) : "",
 
       endsAt: promotion.endsAt ? toDateTimeLocal(promotion.endsAt) : "",
 
-      usageLimit:
-        promotion.usageLimit != null ? String(promotion.usageLimit) : "",
+      usageLimit: promotion.usageLimit != null ? String(promotion.usageLimit) : "",
 
       perCustomerLimit:
-        promotion.perCustomerLimit != null
-          ? String(promotion.perCustomerLimit)
-          : "1",
+        promotion.perCustomerLimit != null ? String(promotion.perCustomerLimit) : "1",
 
       channels:
         Array.isArray(promotion.channels) && promotion.channels.length
@@ -224,8 +217,7 @@ export default function AdminPromotionManagerTemplate() {
 
       usageLimit: form.usageLimit !== "" ? Number(form.usageLimit) : null,
 
-      perCustomerLimit:
-        form.perCustomerLimit !== "" ? Number(form.perCustomerLimit) : 1,
+      perCustomerLimit: form.perCustomerLimit !== "" ? Number(form.perCustomerLimit) : 1,
 
       channels: form.channels,
 
@@ -260,9 +252,7 @@ export default function AdminPromotionManagerTemplate() {
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        err || `Failed to ${editingPromotion ? "update" : "create"} promotion`,
-      );
+      toast.error(err || `Failed to ${editingPromotion ? "update" : "create"} promotion`);
     }
   };
 
@@ -355,9 +345,7 @@ export default function AdminPromotionManagerTemplate() {
         <div>
           <h1 className="text-xl font-bold">Promotions</h1>
 
-          <p className="text-sm text-gray-500 mt-1">
-            Create and manage promo codes
-          </p>
+          <p className="text-sm text-gray-500 mt-1">Create and manage promo codes</p>
         </div>
 
         <button
@@ -404,10 +392,7 @@ export default function AdminPromotionManagerTemplate() {
           promotions.map((promotion) => (
             <div
               key={promotion._id}
-              className={clsx(
-                "bg-white border rounded-xl p-4",
-                !promotion.active && "opacity-70",
-              )}
+              className={clsx("bg-white border rounded-xl p-4", !promotion.active && "opacity-70")}
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 {/* INFO */}
@@ -433,15 +418,11 @@ export default function AdminPromotionManagerTemplate() {
                     </div>
 
                     {promotion.description && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        {promotion.description}
-                      </p>
+                      <p className="text-sm text-gray-500 mt-1">{promotion.description}</p>
                     )}
 
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm mt-2">
-                      <span className="font-semibold">
-                        {formatDiscount(promotion)}
-                      </span>
+                      <span className="font-semibold">{formatDiscount(promotion)}</span>
 
                       {Number(promotion.minSubtotal) > 0 && (
                         <span className="text-gray-500">
@@ -449,22 +430,16 @@ export default function AdminPromotionManagerTemplate() {
                         </span>
                       )}
 
-                      <span className="text-gray-500">
-                        {promotion.channels?.join(" + ")}
-                      </span>
+                      <span className="text-gray-500">{promotion.channels?.join(" + ")}</span>
 
                       <span className="text-gray-500">
                         Usage: {promotion.usageCount || 0}
-                        {promotion.usageLimit != null
-                          ? ` / ${promotion.usageLimit}`
-                          : " / ∞"}
+                        {promotion.usageLimit != null ? ` / ${promotion.usageLimit}` : " / ∞"}
                       </span>
 
                       <span className="text-gray-500">
                         Per Customer Limit:{" "}
-                        {promotion.perCustomerLimit != null
-                          ? promotion.perCustomerLimit
-                          : "∞"}
+                        {promotion.perCustomerLimit != null ? promotion.perCustomerLimit : "∞"}
                       </span>
                     </div>
 
@@ -577,9 +552,7 @@ export default function AdminPromotionManagerTemplate() {
                 </h2>
 
                 <p className="text-sm text-gray-500">
-                  {editingPromotion
-                    ? "Update this promo code"
-                    : "Create a new promo code"}
+                  {editingPromotion ? "Update this promo code" : "Create a new promo code"}
                 </p>
               </div>
 
@@ -605,9 +578,7 @@ export default function AdminPromotionManagerTemplate() {
               {/* CODE */}
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Promo Code
-                </label>
+                <label className="block text-sm font-semibold mb-1">Promo Code</label>
 
                 <input
                   name="code"
@@ -624,17 +595,13 @@ export default function AdminPromotionManagerTemplate() {
                   disabled={creating || updating}
                 />
 
-                <p className="text-xs text-gray-500 mt-1">
-                  Example: SAVE10, WELCOME5
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Example: SAVE10, WELCOME5</p>
               </div>
 
               {/* DESCRIPTION */}
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-semibold mb-1">Description</label>
 
                 <input
                   name="description"
@@ -655,9 +622,7 @@ export default function AdminPromotionManagerTemplate() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Discount Type
-                  </label>
+                  <label className="block text-sm font-semibold mb-1">Discount Type</label>
 
                   <select
                     name="discountType"
@@ -679,9 +644,7 @@ export default function AdminPromotionManagerTemplate() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Discount Value
-                  </label>
+                  <label className="block text-sm font-semibold mb-1">Discount Value</label>
 
                   <div className="relative">
                     <input
@@ -715,10 +678,7 @@ export default function AdminPromotionManagerTemplate() {
                 <div>
                   <label className="block text-sm font-semibold mb-1">
                     Maximum Discount
-                    <span className="font-normal text-gray-500">
-                      {" "}
-                      (optional)
-                    </span>
+                    <span className="font-normal text-gray-500"> (optional)</span>
                   </label>
 
                   <div className="relative">
@@ -745,9 +705,7 @@ export default function AdminPromotionManagerTemplate() {
                     />
                   </div>
 
-                  <p className="text-xs text-gray-500 mt-1">
-                    Example: 20% off, maximum $10.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Example: 20% off, maximum $10.</p>
                 </div>
               )}
 
@@ -760,9 +718,7 @@ export default function AdminPromotionManagerTemplate() {
                 </label>
 
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                    $
-                  </span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
 
                   <input
                     name="minSubtotal"
@@ -787,9 +743,7 @@ export default function AdminPromotionManagerTemplate() {
               {/* CHANNELS */}
 
               <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Available On
-                </label>
+                <label className="block text-sm font-semibold mb-2">Available On</label>
 
                 <div className="flex gap-3">
                   {[
@@ -830,10 +784,7 @@ export default function AdminPromotionManagerTemplate() {
                 <div>
                   <label className="block text-sm font-semibold mb-1">
                     Total Usage Limit
-                    <span className="font-normal text-gray-500">
-                      {" "}
-                      (optional)
-                    </span>
+                    <span className="font-normal text-gray-500"> (optional)</span>
                   </label>
 
                   <input
@@ -853,15 +804,11 @@ export default function AdminPromotionManagerTemplate() {
                     disabled={creating || updating}
                   />
 
-                  <p className="text-xs text-gray-500 mt-1">
-                    Leave empty for unlimited.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for unlimited.</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Per Customer Limit
-                  </label>
+                  <label className="block text-sm font-semibold mb-1">Per Customer Limit</label>
 
                   <input
                     name="perCustomerLimit"
@@ -885,9 +832,7 @@ export default function AdminPromotionManagerTemplate() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Starts
-                  </label>
+                  <label className="block text-sm font-semibold mb-1">Starts</label>
 
                   <input
                     name="startsAt"
@@ -905,9 +850,7 @@ export default function AdminPromotionManagerTemplate() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Ends
-                  </label>
+                  <label className="block text-sm font-semibold mb-1">Ends</label>
 
                   <input
                     name="endsAt"
@@ -940,9 +883,7 @@ export default function AdminPromotionManagerTemplate() {
                 <div>
                   <div className="font-semibold text-sm">Active</div>
 
-                  <div className="text-xs text-gray-500">
-                    Customers can use this promotion.
-                  </div>
+                  <div className="text-xs text-gray-500">Customers can use this promotion.</div>
                 </div>
               </label>
             </form>
@@ -991,9 +932,7 @@ export default function AdminPromotionManagerTemplate() {
             flex items-center gap-2
           "
               >
-                {(creating || updating) && (
-                  <Loader2 size={17} className="animate-spin" />
-                )}
+                {(creating || updating) && <Loader2 size={17} className="animate-spin" />}
 
                 {editingPromotion ? "Save Changes" : "Create Promotion"}
               </button>
@@ -1006,9 +945,7 @@ export default function AdminPromotionManagerTemplate() {
           <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-6 py-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Deactivate Promotion
-              </h2>
+              <h2 className="text-lg font-semibold text-gray-900">Deactivate Promotion</h2>
 
               <button
                 type="button"
@@ -1024,15 +961,11 @@ export default function AdminPromotionManagerTemplate() {
             <div className="px-6 py-6">
               <p className="text-gray-700">
                 Are you sure you want to deactivate{" "}
-                <span className="font-semibold text-gray-900">
-                  "{deactivatePromotion.code}"
-                </span>
-                ?
+                <span className="font-semibold text-gray-900">"{deactivatePromotion.code}"</span>?
               </p>
 
               <p className="mt-2 text-sm text-gray-500">
-                Customers will no longer be able to use this promotion. You can
-                reactivate it later.
+                Customers will no longer be able to use this promotion. You can reactivate it later.
               </p>
             </div>
 
@@ -1053,9 +986,7 @@ export default function AdminPromotionManagerTemplate() {
                 disabled={deactivatingId === deactivatePromotion._id}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {deactivatingId === deactivatePromotion._id
-                  ? "Deactivating..."
-                  : "Deactivate"}
+                {deactivatingId === deactivatePromotion._id ? "Deactivating..." : "Deactivate"}
               </button>
             </div>
           </div>

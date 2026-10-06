@@ -72,11 +72,7 @@ export default function AdminFinancialsTemplate() {
     try {
       setOrderLoading(true);
 
-      const res = await apiFetch(
-        `/api/admin/orders/${orderId}`,
-        { method: "GET" },
-        session.jwt,
-      );
+      const res = await apiFetch(`/api/admin/orders/${orderId}`, { method: "GET" }, session.jwt);
 
       setSelectedOrder(res.order);
     } catch (err) {

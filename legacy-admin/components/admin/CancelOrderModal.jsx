@@ -16,8 +16,7 @@ export default function CancelOrderModal({ order, onClose, onSuccess }) {
 
   const totalPaid = (order.amountPaid || 0) + (order.giftCard?.amountUsed || 0);
 
-  const alreadyRefunded =
-    order.refunds?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+  const alreadyRefunded = order.refunds?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
 
   const nonRefundableFees = order.onlineServiceFee || 0;
 
@@ -29,10 +28,7 @@ export default function CancelOrderModal({ order, onClose, onSuccess }) {
     .reduce((sum, item) => {
       const itemSubtotal = item.totalPrice || 0;
 
-      const itemTax =
-        order.subtotal > 0
-          ? (itemSubtotal / order.subtotal) * (order.tax || 0)
-          : 0;
+      const itemTax = order.subtotal > 0 ? (itemSubtotal / order.subtotal) * (order.tax || 0) : 0;
 
       return sum + itemSubtotal + itemTax;
     }, 0);
@@ -82,9 +78,7 @@ export default function CancelOrderModal({ order, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-xl">
-        <h2 className="text-xl font-bold mb-4">
-          Cancel Order #{order.orderNumber}
-        </h2>
+        <h2 className="text-xl font-bold mb-4">Cancel Order #{order.orderNumber}</h2>
 
         <p className="text-sm mb-3">
           Remaining refundable: <b>${remainingRefund.toFixed(2)}</b>
@@ -96,9 +90,7 @@ export default function CancelOrderModal({ order, onClose, onSuccess }) {
             <button
               key={t}
               onClick={() => setType(t)}
-              className={`px-3 py-1 rounded-lg border ${
-                type === t ? "bg-black text-white" : ""
-              }`}
+              className={`px-3 py-1 rounded-lg border ${type === t ? "bg-black text-white" : ""}`}
             >
               {t}
             </button>
@@ -124,17 +116,12 @@ export default function CancelOrderModal({ order, onClose, onSuccess }) {
 
               const itemSubtotal = item.totalPrice || 0;
               const itemTax =
-                order.subtotal > 0
-                  ? (itemSubtotal / order.subtotal) * (order.tax || 0)
-                  : 0;
+                order.subtotal > 0 ? (itemSubtotal / order.subtotal) * (order.tax || 0) : 0;
 
               const itemTotalWithTax = itemSubtotal + itemTax;
 
               return (
-                <label
-                  key={id}
-                  className="flex justify-between items-center mb-2"
-                >
+                <label key={id} className="flex justify-between items-center mb-2">
                   <div>
                     {item.name} x{item.quantity}
                     <div className="text-xs text-gray-500">
