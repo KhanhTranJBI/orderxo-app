@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Pencil, X } from "lucide-react";
+import { LockKeyhole, Pencil, X } from "lucide-react";
 
 const PERMS = [
   ["orders.read", "View orders"],
@@ -61,17 +61,20 @@ export default function Team() {
     setForm(blank);
     load();
   };
-  const openEdit = (m) =>
+  const isProtectedOwner = (m) => Boolean(m?.isOwner || m?.role === "owner");
+  const openEdit = (m) => {
+    if (isProtectedOwner(m)) return;
     setEditing({
       _id: m._id,
       name: m.userId?.name || "",
       email: m.userId?.email || "",
-      role: m.role === "owner" ? "admin" : m.role,
+      role: m.role,
       locationIds: (m.locationIds || []).map(String),
       permissions: m.role === "admin" ? defaultPermissions : m.permissions || [],
       status: m.status || "active",
-      isOwner: m.isOwner,
+      isOwner: false,
     });
+  };
   const saveEdit = async () => {
     setSaving(true);
     setMsg("");
@@ -134,9 +137,13 @@ export default function Team() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold capitalize">
-                      {m.isOwner ? "Owner" : m.role}
+                      {isProtectedOwner(m) ? "Owner" : m.role}
                     </span>
-                    {!m.isOwner && (
+                    {isProtectedOwner(m) ? (
+                      <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-50 px-3 text-xs font-semibold text-slate-500">
+                        <LockKeyhole size={14} /> Primary owner · Protected
+                      </span>
+                    ) : (
                       <button
                         type="button"
                         onClick={() => openEdit(m)}
