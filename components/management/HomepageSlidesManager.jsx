@@ -12,6 +12,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
+import useRestaurantPermissions from "./useRestaurantPermissions";
 
 async function api(path, organizationId, method = "GET", body, locationId = "") {
   const q = new URLSearchParams({ organizationId });
@@ -62,20 +63,24 @@ function SlideRow({ slide, onEdit, onDelete, disabled }) {
       >
         {slide.isActive !== false ? "Active" : "Inactive"}
       </span>
-      <button
-        disabled={disabled}
-        onClick={() => onEdit(slide)}
-        className="rounded-lg p-2 hover:bg-slate-100 disabled:opacity-30"
-      >
-        <Pencil size={19} />
-      </button>
-      <button
-        disabled={disabled}
-        onClick={() => onDelete(slide)}
-        className="rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:opacity-30"
-      >
-        <Trash2 size={19} />
-      </button>
+      {!disabled && (
+        <>
+          <button
+            onClick={() => onEdit(slide)}
+            className="rounded-lg p-2 hover:bg-slate-100"
+            aria-label="Edit slide"
+          >
+            <Pencil size={19} />
+          </button>
+          <button
+            onClick={() => onDelete(slide)}
+            className="rounded-lg p-2 text-red-500 hover:bg-red-50"
+            aria-label="Delete slide"
+          >
+            <Trash2 size={19} />
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -199,6 +204,9 @@ function SlideModal({ slide, onClose, onSaved, organizationId, locationId }) {
 }
 export default function HomepageSlidesManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
+  const permission = useRestaurantPermissions(organizationId);
+  const canManage = permission.can("homepage.manage");
+  const isAdmin = permission.isAdmin;
   const [scope, setScope] = useState("default"),
     [items, setItems] = useState([]),
     [useDefault, setUseDefault] = useState(false),
@@ -209,9 +217,14 @@ export default function HomepageSlidesManager({ organizationId }) {
     [deleting, setDeleting] = useState(null),
     [deleteLoading, setDeleteLoading] = useState(false),
     [switching, setSwitching] = useState(false);
+  useEffect(() => {
+    if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
+      setScope(String(loc.locations[0]._id || loc.locations[0].id));
+    }
+  }, [permission.loading, isAdmin, scope, loc.locations]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const locationId = scope === "default" ? "" : scope;
-  const editable = scope === "default" || !useDefault;
+  const editable = canManage && (scope === "default" || !useDefault);
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -229,6 +242,7 @@ export default function HomepageSlidesManager({ organizationId }) {
     load();
   }, [load]);
   const customize = async () => {
+    if (!canManage) return;
     setSwitching(true);
     setError("");
     try {
@@ -248,6 +262,7 @@ export default function HomepageSlidesManager({ organizationId }) {
     }
   };
   const restoreDefault = async () => {
+    if (!canManage) return;
     setSwitching(true);
     setError("");
     try {
@@ -267,6 +282,7 @@ export default function HomepageSlidesManager({ organizationId }) {
     }
   };
   const drag = async ({ active, over }) => {
+    if (!canManage) return;
     if (!editable || !over || active.id === over.id) return;
     const old = items.findIndex((x) => x._id === active.id),
       next = items.findIndex((x) => x._id === over.id);
@@ -288,6 +304,7 @@ export default function HomepageSlidesManager({ organizationId }) {
     }
   };
   const del = async () => {
+    if (!canManage) return;
     if (!deleting) return;
     setDeleteLoading(true);
     try {
@@ -334,7 +351,7 @@ export default function HomepageSlidesManager({ organizationId }) {
         <div className="mt-6 max-w-md">
           <label className="text-sm font-semibold text-slate-600">Slides for</label>
           <select className="field mt-2" value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="default">Restaurant Default</option>
+            {isAdmin && <option value="default">Restaurant Default</option>}
             {loc.locations.map((l) => (
               <option key={l._id || l.id} value={l._id || l.id}>
                 {l.name}
@@ -357,24 +374,31 @@ export default function HomepageSlidesManager({ organizationId }) {
                     : "This location has its own independent slide set."}
                 </p>
               </div>
-              {useDefault ? (
-                <button disabled={switching} onClick={customize} className="primary shrink-0">
-                  {switching ? "Preparing…" : "Customize for this location"}
-                </button>
-              ) : (
-                <button
-                  disabled={switching}
-                  onClick={restoreDefault}
-                  className="rounded-lg border px-4 py-2 font-semibold"
-                >
-                  {switching ? "Switching…" : "Use Restaurant Default"}
-                </button>
-              )}
+              {canManage &&
+                (useDefault ? (
+                  <button disabled={switching} onClick={customize} className="primary shrink-0">
+                    {switching ? "Preparing…" : "Customize for this location"}
+                  </button>
+                ) : (
+                  <button
+                    disabled={switching}
+                    onClick={restoreDefault}
+                    className="rounded-lg border px-4 py-2 font-semibold"
+                  >
+                    {switching ? "Switching…" : "Use Restaurant Default"}
+                  </button>
+                ))}
             </div>
           </div>
         )}
         {(loc.error || error) && (
           <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">{loc.error || error}</p>
+        )}
+        {!permission.loading && !canManage && (
+          <p className="mt-5 rounded-lg border bg-white p-3 text-sm text-slate-700">
+            <strong>Read only.</strong> Add, edit, delete and reorder require Manage homepage
+            permission.
+          </p>
         )}
         {loading || loc.loading ? (
           <p className="mt-8">Loading slides…</p>

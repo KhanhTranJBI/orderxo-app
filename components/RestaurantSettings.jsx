@@ -4,7 +4,7 @@ import { ownerFetch } from "../lib/ownerFetch";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-const TABS = ["General", "Loyalty", "Gift Cards", "Email", "Printing", "Ordering"];
+const TABS = ["General", "Loyalty", "Gift Cards", "Email"];
 
 const emptyOrg = {
   name: "",
@@ -110,18 +110,10 @@ function Toggle({ checked, onChange, label }) {
 export default function RestaurantSettings({ organizationId }) {
   const [tab, setTab] = useState("General");
   const [org, setOrg] = useState(emptyOrg);
-  const [locations, setLocations] = useState([]);
-  const [locationId, setLocationId] = useState("");
-  const [location, setLocation] = useState(emptyLocation);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  const selectedLocation = useMemo(
-    () => locations.find((x) => String(x._id || x.id) === locationId),
-    [locations, locationId],
-  );
 
   useEffect(() => {
     if (!organizationId) {
@@ -132,16 +124,10 @@ export default function RestaurantSettings({ organizationId }) {
       try {
         setLoading(true);
         setError("");
-        const [orgData, locationData] = await Promise.all([
-          jsonFetch(
-            `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`,
-          ),
-          jsonFetch(`/api/owner/locations?organizationId=${encodeURIComponent(organizationId)}`),
-        ]);
+        const orgData = await jsonFetch(
+          `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`,
+        );
         setOrg(mergeOrg(orgData.settings));
-        const list = Array.isArray(locationData.locations) ? locationData.locations : [];
-        setLocations(list);
-        if (list[0]) setLocationId(String(list[0]._id || list[0].id));
       } catch (e) {
         setError(e.message);
       } finally {
@@ -150,20 +136,6 @@ export default function RestaurantSettings({ organizationId }) {
     })();
   }, [organizationId]);
 
-  useEffect(() => {
-    if (!organizationId || !locationId) return;
-    (async () => {
-      try {
-        const data = await jsonFetch(
-          `/api/owner/locations/settings?organizationId=${encodeURIComponent(organizationId)}&locationId=${encodeURIComponent(locationId)}`,
-        );
-        setLocation(mergeLocation(data.settings));
-      } catch (e) {
-        setError(e.message);
-      }
-    })();
-  }, [organizationId, locationId]);
-
   const setOrgPart = (part, key, value) =>
     setOrg((old) => ({ ...old, [part]: { ...old[part], [key]: value } }));
   const setEmailNested = (part, key, value) =>
@@ -171,14 +143,6 @@ export default function RestaurantSettings({ organizationId }) {
       ...old,
       emailSettings: { ...old.emailSettings, [part]: { ...old.emailSettings[part], [key]: value } },
     }));
-  const setLocationPart = (part, key, value) =>
-    setLocation((old) => ({ ...old, [part]: { ...old[part], [key]: value } }));
-  const setPrinter = (target, key, value) =>
-    setLocation((old) => ({
-      ...old,
-      printing: { ...old.printing, [target]: { ...old.printing[target], [key]: value } },
-    }));
-
   async function saveOrganization() {
     setSaving(true);
     setError("");
@@ -203,54 +167,22 @@ export default function RestaurantSettings({ organizationId }) {
     }
   }
 
-  async function saveLocation() {
-    if (!locationId) return;
-    setSaving(true);
-    setError("");
-    setMessage("");
-    try {
-      const data = await jsonFetch("/api/owner/locations/settings", {
-        method: "PATCH",
-        body: JSON.stringify({
-          organizationId,
-          locationId,
-          ordering: location.ordering,
-          printing: location.printing,
-        }),
-      });
-      setLocation(mergeLocation(data.settings));
-      setMessage("Location settings saved.");
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
   if (!organizationId)
     return (
       <main className="mx-auto max-w-4xl p-8">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="font-semibold text-orange-700"
-        >
-          ← Restaurant workspace
+        <Link href="/dashboard" className="font-semibold text-orange-700">
+          ← Your restaurants
         </Link>
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
     );
   if (loading) return <main className="mx-auto max-w-5xl p-8">Loading restaurant settings…</main>;
 
-  const locationTab = tab === "Printing" || tab === "Ordering";
-
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="text-sm font-semibold text-orange-700"
-        >
-          ← Restaurant workspace
+        <Link href="/dashboard" className="text-sm font-semibold text-orange-700">
+          ← Your restaurants
         </Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -259,26 +191,9 @@ export default function RestaurantSettings({ organizationId }) {
             </p>
             <h1 className="mt-1 text-3xl font-bold">{org.name || "Restaurant"}</h1>
             <p className="mt-2 text-slate-600">
-              Manage ordering, loyalty, email, gift cards and printers.
+              Manage restaurant-wide branding, loyalty, gift cards and email settings.
             </p>
           </div>
-          {locations.length > 0 && (
-            <div className="min-w-[240px]">
-              <Field label="Location">
-                <select
-                  className={input}
-                  value={locationId}
-                  onChange={(e) => setLocationId(e.target.value)}
-                >
-                  {locations.map((x) => (
-                    <option key={String(x._id || x.id)} value={String(x._id || x.id)}>
-                      {x.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-          )}
         </div>
 
         <div className="mt-7 overflow-x-auto border-b">
@@ -307,11 +222,6 @@ export default function RestaurantSettings({ organizationId }) {
         {message && (
           <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
             {message}
-          </div>
-        )}
-        {locationTab && !locationId && (
-          <div className="mt-6 rounded-xl border bg-white p-6">
-            Create a location before configuring {tab.toLowerCase()}.
           </div>
         )}
 
@@ -559,111 +469,11 @@ export default function RestaurantSettings({ organizationId }) {
             </div>
           )}
 
-          {tab === "Printing" && locationId && (
-            <div className="space-y-7">
-              <div>
-                <h2 className="text-xl font-bold">Printing</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {selectedLocation?.name || "Location"} · Configure kitchen and receipt printers.
-                </p>
-              </div>
-              <Toggle
-                label="Enable printing"
-                checked={location.printing.enabled}
-                onChange={(v) =>
-                  setLocation((old) => ({ ...old, printing: { ...old.printing, enabled: v } }))
-                }
-              />
-              <Field label="Printing provider">
-                <select
-                  className={input}
-                  value={location.printing.provider || "none"}
-                  onChange={(e) =>
-                    setLocation((old) => ({
-                      ...old,
-                      printing: { ...old.printing, provider: e.target.value },
-                    }))
-                  }
-                >
-                  <option value="none">None</option>
-                  <option value="printnode">PrintNode</option>
-                  <option value="orderxo_agent">OrderXO Print Agent</option>
-                </select>
-              </Field>
-              {["kitchen", "receipt"].map((target) => (
-                <div key={target} className="rounded-xl border p-5">
-                  <h3 className="mb-4 text-lg font-bold capitalize">{target} printer</h3>
-                  <div className="space-y-4">
-                    <Toggle
-                      label={`Enable ${target} printer`}
-                      checked={location.printing[target].enabled}
-                      onChange={(v) => setPrinter(target, "enabled", v)}
-                    />
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Field label="Printer ID">
-                        <input
-                          className={input}
-                          value={location.printing[target].printerId || ""}
-                          onChange={(e) => setPrinter(target, "printerId", e.target.value)}
-                        />
-                      </Field>
-                      <Field label="Printer name">
-                        <input
-                          className={input}
-                          value={location.printing[target].printerName || ""}
-                          onChange={(e) => setPrinter(target, "printerName", e.target.value)}
-                        />
-                      </Field>
-                    </div>
-                    <Toggle
-                      label="Automatically print new orders"
-                      checked={location.printing[target].autoPrint}
-                      onChange={(v) => setPrinter(target, "autoPrint", v)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {tab === "Ordering" && locationId && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-xl font-bold">Ordering</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {selectedLocation?.name || "Location"} · Configure location-specific ordering
-                  behavior.
-                </p>
-              </div>
-              <div className="max-w-sm">
-                <Field
-                  label="Abandoned cart interval (minutes)"
-                  hint="How long a cart must be inactive before OrderXO treats it as abandoned. 1–10,080 minutes."
-                >
-                  <input
-                    type="number"
-                    min="1"
-                    max="10080"
-                    className={input}
-                    value={location.ordering.abandonedCartIntervalMinutes}
-                    onChange={(e) =>
-                      setLocationPart(
-                        "ordering",
-                        "abandonedCartIntervalMinutes",
-                        Number(e.target.value),
-                      )
-                    }
-                  />
-                </Field>
-              </div>
-            </div>
-          )}
-
           <div className="mt-8 border-t pt-6">
             <button
-              disabled={saving || (locationTab && !locationId)}
-              onClick={locationTab ? saveLocation : saveOrganization}
-              className="rounded-xl bg-orange-600 px-5 py-2.5 font-semibold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={saving}
+              onClick={saveOrganization}
+              className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save changes"}
             </button>

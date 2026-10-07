@@ -14,6 +14,12 @@ export default async function Dashboard() {
     result.status === 200 && Array.isArray(result.data.organizations)
       ? result.data.organizations
       : [];
+  // Restaurant creation is an account-level owner capability. Invited admins/managers
+  // can manage organizations they belong to, but cannot create new organizations.
+  // A brand-new verified account with no memberships may create its first restaurant.
+  const canCreateRestaurant =
+    organizations.length === 0 ||
+    organizations.some((org) => Boolean(org.isOwner) || org.role === "owner");
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
@@ -28,12 +34,14 @@ export default async function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <LogoutButton />
-            <Link
-              href="/restaurants/new"
-              className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
-            >
-              Add restaurant
-            </Link>
+            {canCreateRestaurant && (
+              <Link
+                href="/restaurants/new"
+                className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+              >
+                Add restaurant
+              </Link>
+            )}
           </div>
         </div>
         {result.status !== 200 ? (
@@ -87,6 +95,12 @@ export default async function Dashboard() {
                           href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
                         >
                           Admins & Managers
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
+                        >
+                          Restaurant settings
                         </Link>
                         <Link
                           className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"

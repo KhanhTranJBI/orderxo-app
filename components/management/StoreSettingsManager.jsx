@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock3, Info, Pencil, Plus, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
+import useRestaurantPermissions from "./useRestaurantPermissions";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const defaultHours = () =>
   DAYS.map((day) => ({ day, open: "11:00", close: "19:00", isClosed: false }));
@@ -36,6 +37,9 @@ function localInput(v) {
 }
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
+  const permission = useRestaurantPermissions(organizationId);
+  const canManage = permission.can("store.manage");
+  const isAdmin = permission.isAdmin;
   const [tab, setTab] = useState("hours");
   const [scope, setScope] = useState("default"),
     [useDefault, setUseDefault] = useState(false);
@@ -51,6 +55,11 @@ export default function StoreSettingsManager({ organizationId }) {
     [form, setForm] = useState(emptyNotice),
     [noticeSaving, setNoticeSaving] = useState(false),
     [deleting, setDeleting] = useState(null);
+  useEffect(() => {
+    if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
+      setScope(String(loc.locations[0]._id || loc.locations[0].id));
+    }
+  }, [permission.loading, isAdmin, scope, loc.locations]);
   const selectedLocationId = scope === "default" ? "" : scope;
   const selectedLocation = loc.locations.find((l) => String(l._id || l.id) === selectedLocationId);
   const load = useCallback(async () => {
@@ -82,6 +91,7 @@ export default function StoreSettingsManager({ organizationId }) {
     load();
   }, [load]);
   const save = async () => {
+    if (!canManage) return;
     setSaving(true);
     setError("");
     try {
@@ -102,6 +112,7 @@ export default function StoreSettingsManager({ organizationId }) {
   };
   const change = (i, k, v) => setHours((h) => h.map((x, n) => (n === i ? { ...x, [k]: v } : x)));
   const customize = async () => {
+    if (!canManage) return;
     setSaving(true);
     setError("");
     try {
@@ -117,6 +128,7 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const useRestaurantDefault = async () => {
+    if (!canManage) return;
     setSaving(true);
     setError("");
     try {
@@ -132,6 +144,7 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const saveManual = async () => {
+    if (!canManage) return;
     setSaving(true);
     setError("");
     try {
@@ -146,11 +159,13 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const openNew = () => {
+    if (!canManage) return;
     setEditing(null);
     setForm(emptyNotice);
     setModal(true);
   };
   const openEdit = (n) => {
+    if (!canManage) return;
     setEditing(n);
     setForm({
       title: n.title || "",
@@ -163,6 +178,7 @@ export default function StoreSettingsManager({ organizationId }) {
     setModal(true);
   };
   const saveNotice = async () => {
+    if (!canManage) return;
     setNoticeSaving(true);
     setError("");
     try {
@@ -181,6 +197,7 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const toggleNotice = async (n) => {
+    if (!canManage) return;
     try {
       await req("notices", organizationId, selectedLocationId, "PATCH", {
         noticeId: n._id,
@@ -192,6 +209,7 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const deleteNotice = async () => {
+    if (!canManage) return;
     if (!deleting) return;
     try {
       await req("notices", organizationId, selectedLocationId, "DELETE", {
@@ -222,7 +240,7 @@ export default function StoreSettingsManager({ organizationId }) {
         <div className="mt-5 max-w-sm">
           <label className="mb-2 block text-sm font-semibold text-slate-700">Settings for</label>
           <select className="field" value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="default">Restaurant Default</option>
+            {isAdmin && <option value="default">Restaurant Default</option>}
             {loc.locations.map((l) => (
               <option key={l._id || l.id} value={String(l._id || l.id)}>
                 {l.name}
@@ -235,6 +253,12 @@ export default function StoreSettingsManager({ organizationId }) {
         )}
         {message && (
           <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>
+        )}
+        {!permission.loading && !canManage && (
+          <p className="mt-4 rounded-lg border bg-white p-3 text-sm text-slate-700">
+            <strong>Read only.</strong> Editing, deleting, status changes and customization require
+            Manage store settings permission.
+          </p>
         )}
         <div className="mt-6 flex gap-6 border-b bg-white px-5 pt-1 rounded-t-2xl border-x border-t">
           <button
@@ -275,7 +299,7 @@ export default function StoreSettingsManager({ organizationId }) {
                             {manual ? "Open" : "Closed"}
                           </button>
                           <button
-                            disabled={saving}
+                            disabled={!canManage || saving}
                             onClick={saveManual}
                             className="rounded-lg border px-3 py-2 text-sm font-semibold"
                           >
@@ -297,12 +321,16 @@ export default function StoreSettingsManager({ organizationId }) {
                           </p>
                         </div>
                         {useDefault ? (
-                          <button disabled={saving} onClick={customize} className="primary">
+                          <button
+                            disabled={!canManage || saving}
+                            onClick={customize}
+                            className="primary"
+                          >
                             Customize for this location
                           </button>
                         ) : (
                           <button
-                            disabled={saving}
+                            disabled={!canManage || saving}
                             onClick={useRestaurantDefault}
                             className="rounded-lg border px-4 py-2 font-semibold"
                           >
@@ -325,21 +353,21 @@ export default function StoreSettingsManager({ organizationId }) {
                             <input
                               type="checkbox"
                               checked={h.isClosed}
-                              disabled={useDefault}
+                              disabled={!canManage || useDefault}
                               onChange={(e) => change(i, "isClosed", e.target.checked)}
                             />{" "}
                             Closed
                           </label>
                           <input
                             type="time"
-                            disabled={h.isClosed || useDefault}
+                            disabled={!canManage || h.isClosed || useDefault}
                             className="field"
                             value={h.open}
                             onChange={(e) => change(i, "open", e.target.value)}
                           />
                           <input
                             type="time"
-                            disabled={h.isClosed || useDefault}
+                            disabled={!canManage || h.isClosed || useDefault}
                             className="field"
                             value={h.close}
                             onChange={(e) => change(i, "close", e.target.value)}
@@ -348,7 +376,11 @@ export default function StoreSettingsManager({ organizationId }) {
                       ))}
                     </div>
                   </section>
-                  <button disabled={saving || useDefault} onClick={save} className="primary mt-5">
+                  <button
+                    disabled={!canManage || saving || useDefault}
+                    onClick={save}
+                    className="primary mt-5"
+                  >
                     {saving
                       ? "Saving…"
                       : scope === "default"
@@ -371,7 +403,7 @@ export default function StoreSettingsManager({ organizationId }) {
                       </p>
                     </div>
                     <button
-                      disabled={useDefault}
+                      disabled={!canManage || useDefault}
                       onClick={openNew}
                       className="primary flex shrink-0 items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -414,31 +446,33 @@ export default function StoreSettingsManager({ organizationId }) {
                                 </p>
                               )}
                             </div>
-                            <div className="flex shrink-0 items-center gap-2">
-                              <button
-                                disabled={useDefault}
-                                className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-40"
-                                onClick={() => toggleNotice(n)}
-                              >
-                                {n.isActive ? "Deactivate" : "Activate"}
-                              </button>
-                              <button
-                                disabled={useDefault}
-                                className="rounded-lg border p-2 disabled:opacity-40"
-                                onClick={() => openEdit(n)}
-                                aria-label="Edit notice"
-                              >
-                                <Pencil size={17} />
-                              </button>
-                              <button
-                                disabled={useDefault}
-                                className="rounded-lg border p-2 text-red-600 disabled:opacity-40"
-                                onClick={() => setDeleting(n)}
-                                aria-label="Delete notice"
-                              >
-                                <Trash2 size={17} />
-                              </button>
-                            </div>
+                            {canManage && (
+                              <div className="flex shrink-0 items-center gap-2">
+                                <button
+                                  disabled={!canManage || useDefault}
+                                  className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-40"
+                                  onClick={() => toggleNotice(n)}
+                                >
+                                  {n.isActive ? "Deactivate" : "Activate"}
+                                </button>
+                                <button
+                                  disabled={!canManage || useDefault}
+                                  className="rounded-lg border p-2 disabled:opacity-40"
+                                  onClick={() => openEdit(n)}
+                                  aria-label="Edit notice"
+                                >
+                                  <Pencil size={17} />
+                                </button>
+                                <button
+                                  disabled={!canManage || useDefault}
+                                  className="rounded-lg border p-2 text-red-600 disabled:opacity-40"
+                                  onClick={() => setDeleting(n)}
+                                  aria-label="Delete notice"
+                                >
+                                  <Trash2 size={17} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))
@@ -532,7 +566,7 @@ export default function StoreSettingsManager({ organizationId }) {
               </button>
               <button
                 className="primary"
-                disabled={noticeSaving || !form.message.trim()}
+                disabled={!canManage || noticeSaving || !form.message.trim()}
                 onClick={saveNotice}
               >
                 {noticeSaving ? "Saving…" : editing ? "Save changes" : "Add notice"}

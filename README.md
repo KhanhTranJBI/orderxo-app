@@ -43,3 +43,11 @@ The owner dashboard now has a restaurant-scoped workspace at `/dashboard/restaur
 ## RBAC v7
 
 Manager permissions are split into read/manage pairs. Restaurant workspace shows READ ONLY badges when a manager can view a module but cannot manage it. Menu write controls (add/edit/delete/reorder/activate/customize) are hidden for read-only managers. Orders shows read-only state and is ready for write actions to be gated by orders.manage. Promotions write controls are hidden unless promotions.manage is granted. Legacy permissions remain recognized for existing managers.
+
+## RBAC v9
+
+- Restaurant Settings is organization-wide, Admin-only, and linked from each restaurant card.
+- Printing and ordering device/configuration moved to per-location Location Settings.
+- PrintNode printer IDs are stored per Location; credentials remain server-side.
+- Store Settings and Homepage Slides now enforce read-only UI: read-only managers cannot add/edit/delete/toggle/reorder/customize.
+- Managers cannot edit Restaurant Default store/homepage content; only assigned location scopes are shown.
