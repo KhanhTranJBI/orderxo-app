@@ -10,6 +10,12 @@ const tools = [
   ["Orders", "orders", "Confirm, prepare, complete, refund and review orders."],
   ["Menu", "menu", "Items, categories, modifiers, pricing and availability."],
   ["Store settings", "store", "Hours, notices and ordering configuration."],
+  [
+    "Restaurant settings",
+    "settings",
+    "Branding, loyalty, email, gift cards, printing and ordering defaults.",
+  ],
+  ["Manage users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Homepage slides", "homepage", "Manage the restaurant homepage hero content."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Gift cards", "gift-cards", "Gift card balances and activity."],

@@ -638,7 +638,10 @@ export default function MenuManager({ organizationId }) {
     return usage;
   }, [groups, items]);
   const filteredGroups = useMemo(
-    () => groups.filter((g) => !modifierQuery || g.title.toLowerCase().includes(modifierQuery.toLowerCase())),
+    () =>
+      groups.filter(
+        (g) => !modifierQuery || g.title.toLowerCase().includes(modifierQuery.toLowerCase()),
+      ),
     [groups, modifierQuery],
   );
 
@@ -939,7 +942,9 @@ export default function MenuManager({ organizationId }) {
                     <div>
                       <div className="font-bold text-lg">{g.title}</div>
                       <p className="text-sm text-gray-500">
-                        {(g.options || []).length} {(g.options || []).length === 1 ? "option" : "options"} · {g.required ? "Required" : "Optional"}
+                        {(g.options || []).length}{" "}
+                        {(g.options || []).length === 1 ? "option" : "options"} ·{" "}
+                        {g.required ? "Required" : "Optional"}
                       </p>
                       <p className="mt-1 text-sm font-medium text-orange-600">
                         {usedBy.length
@@ -948,12 +953,20 @@ export default function MenuManager({ organizationId }) {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <button className="secondary" title="Edit modifier" onClick={() => setEditing({ group: g })}>
+                      <button
+                        className="secondary"
+                        title="Edit modifier"
+                        onClick={() => setEditing({ group: g })}
+                      >
                         <Pencil size={16} />
                       </button>
                       <button
                         className="danger disabled:cursor-not-allowed disabled:opacity-40"
-                        title={usedBy.length ? "Remove this modifier from all menu items before deleting it" : "Delete modifier"}
+                        title={
+                          usedBy.length
+                            ? "Remove this modifier from all menu items before deleting it"
+                            : "Delete modifier"
+                        }
                         disabled={usedBy.length > 0}
                         onClick={() => setDeleteTarget({ type: "modifier", value: g })}
                       >
@@ -966,7 +979,9 @@ export default function MenuManager({ organizationId }) {
                       <button
                         type="button"
                         className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
-                        onClick={() => setExpandedModifierUsage((v) => ({ ...v, [g._id]: !v[g._id] }))}
+                        onClick={() =>
+                          setExpandedModifierUsage((v) => ({ ...v, [g._id]: !v[g._id] }))
+                        }
                       >
                         {usageOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
                         {usageOpen ? "Hide menu items" : "Show menu items"}
@@ -974,7 +989,10 @@ export default function MenuManager({ organizationId }) {
                       {usageOpen && (
                         <div className="mt-3 flex flex-wrap gap-2">
                           {usedBy.map((item) => (
-                            <span key={item._id} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
+                            <span
+                              key={item._id}
+                              className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+                            >
                               {item.name}
                             </span>
                           ))}
