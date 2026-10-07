@@ -98,6 +98,12 @@ export default async function Dashboard() {
                         </Link>
                         <Link
                           className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
+                        >
+                          Restaurant settings
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                           href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
                         >
                           Restaurant settings

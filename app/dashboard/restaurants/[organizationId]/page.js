@@ -168,6 +168,12 @@ export default async function RestaurantManager({ params }) {
             </Link>
             <Link
               className="rounded-lg border bg-white px-4 py-2 font-semibold"
+              href={`/dashboard/restaurants/${id}/team`}
+            >
+              Restaurant settings
+            </Link>
+            <Link
+              className="rounded-lg border bg-white px-4 py-2 font-semibold"
               href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
             >
               Websites & domains
