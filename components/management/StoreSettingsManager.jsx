@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Clock3, Info, Pencil, Plus, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const defaultHours = () =>
@@ -35,6 +35,7 @@ function localInput(v) {
 }
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
+  const [tab, setTab] = useState("hours");
   const [manual, setManual] = useState(true),
     [hours, setHours] = useState(defaultHours),
     [notices, setNotices] = useState([]),
@@ -182,142 +183,163 @@ export default function StoreSettingsManager({ organizationId }) {
         {message && (
           <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>
         )}
+        <div className="mt-6 flex gap-6 border-b bg-white px-5 pt-1 rounded-t-2xl border-x border-t">
+          <button
+            onClick={() => setTab("hours")}
+            className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "hours" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+          >
+            <Clock3 size={18} /> Store Hours
+          </button>
+          <button
+            onClick={() => setTab("notices")}
+            className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "notices" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+          >
+            <Info size={18} /> Notices
+          </button>
+        </div>
         {loading || loc.loading ? (
           <p className="mt-6">Loading settings…</p>
         ) : (
           loc.locationId && (
             <>
-              <section className="mt-6 rounded-2xl border bg-white p-6">
-                <div className="flex items-center justify-between gap-5">
-                  <div>
-                    <h2 className="text-xl font-bold">Manual ordering status</h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Turn this off to immediately stop accepting online orders.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setManual((v) => !v)}
-                    className={`rounded-full px-5 py-2 font-semibold ${manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"}`}
-                  >
-                    {manual ? "Open" : "Closed"}
-                  </button>
-                </div>
-              </section>
-              <section className="mt-4 rounded-2xl border bg-white p-6">
-                <h2 className="text-xl font-bold">Weekly hours</h2>
-                <div className="mt-5 space-y-3">
-                  {hours.map((h, i) => (
-                    <div
-                      key={h.day}
-                      className="grid items-center gap-3 border-b pb-3 last:border-0 md:grid-cols-[130px_110px_1fr_1fr]"
-                    >
-                      <strong>{h.day}</strong>
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={h.isClosed}
-                          onChange={(e) => change(i, "isClosed", e.target.checked)}
-                        />{" "}
-                        Closed
-                      </label>
-                      <input
-                        type="time"
-                        disabled={h.isClosed}
-                        className="field"
-                        value={h.open}
-                        onChange={(e) => change(i, "open", e.target.value)}
-                      />
-                      <input
-                        type="time"
-                        disabled={h.isClosed}
-                        className="field"
-                        value={h.close}
-                        onChange={(e) => change(i, "close", e.target.value)}
-                      />
+              {tab === "hours" && (
+                <>
+                  <section className="mt-5 rounded-2xl border bg-white p-6">
+                    <div className="flex items-center justify-between gap-5">
+                      <div>
+                        <h2 className="text-xl font-bold">Manual ordering status</h2>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Turn this off to immediately stop accepting online orders at this
+                          location.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setManual((v) => !v)}
+                        className={`rounded-full px-5 py-2 font-semibold ${manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"}`}
+                      >
+                        {manual ? "Open" : "Closed"}
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </section>
-              <section className="mt-4 rounded-2xl border bg-white p-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-bold">Notices</h2>
-                    <p className="mt-1 text-sm text-slate-500">
-                      Show location-specific announcements such as special hours, closures, or
-                      service updates.
-                    </p>
-                  </div>
-                  <button onClick={openNew} className="primary flex shrink-0 items-center gap-2">
-                    <Plus size={17} /> Add notice
-                  </button>
-                </div>
-                <div className="mt-5 space-y-3">
-                  {!notices.length ? (
-                    <div className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
-                      No notices yet.
+                  </section>
+                  <section className="mt-4 rounded-2xl border bg-white p-6">
+                    <h2 className="text-xl font-bold">Weekly hours</h2>
+                    <div className="mt-5 space-y-3">
+                      {hours.map((h, i) => (
+                        <div
+                          key={h.day}
+                          className="grid items-center gap-3 border-b pb-3 last:border-0 md:grid-cols-[130px_110px_1fr_1fr]"
+                        >
+                          <strong>{h.day}</strong>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={h.isClosed}
+                              onChange={(e) => change(i, "isClosed", e.target.checked)}
+                            />{" "}
+                            Closed
+                          </label>
+                          <input
+                            type="time"
+                            disabled={h.isClosed}
+                            className="field"
+                            value={h.open}
+                            onChange={(e) => change(i, "open", e.target.value)}
+                          />
+                          <input
+                            type="time"
+                            disabled={h.isClosed}
+                            className="field"
+                            value={h.close}
+                            onChange={(e) => change(i, "close", e.target.value)}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    notices.map((n) => (
-                      <div key={n._id} className="rounded-xl border p-4">
-                        <div className="flex flex-col justify-between gap-3 sm:flex-row">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <strong>{n.title || "Notice"}</strong>
-                              <span
-                                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${n.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"}`}
-                              >
-                                {n.isActive ? "Active" : "Inactive"}
-                              </span>
-                              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs capitalize text-orange-700">
-                                {n.type}
-                              </span>
-                            </div>
-                            <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">
-                              {n.message}
-                            </p>
-                            {(n.startsAt || n.endsAt) && (
-                              <p className="mt-2 text-xs text-slate-400">
-                                {n.startsAt
-                                  ? `Starts ${new Date(n.startsAt).toLocaleString()}`
-                                  : "Starts immediately"}{" "}
-                                ·{" "}
-                                {n.endsAt
-                                  ? `Ends ${new Date(n.endsAt).toLocaleString()}`
-                                  : "No end date"}
+                  </section>
+                  <button disabled={saving} onClick={save} className="primary mt-5">
+                    {saving ? "Saving…" : "Save store hours"}
+                  </button>
+                </>
+              )}
+              {tab === "notices" && (
+                <section className="mt-5 rounded-2xl border bg-white p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl font-bold">Notices</h2>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Location-specific announcements such as special hours, closures, or service
+                        updates.
+                      </p>
+                    </div>
+                    <button onClick={openNew} className="primary flex shrink-0 items-center gap-2">
+                      <Plus size={17} /> Add notice
+                    </button>
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    {!notices.length ? (
+                      <div className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
+                        No notices yet.
+                      </div>
+                    ) : (
+                      notices.map((n) => (
+                        <div key={n._id} className="rounded-xl border p-4">
+                          <div className="flex flex-col justify-between gap-3 sm:flex-row">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <strong>{n.title || "Notice"}</strong>
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${n.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"}`}
+                                >
+                                  {n.isActive ? "Active" : "Inactive"}
+                                </span>
+                                <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs capitalize text-orange-700">
+                                  {n.type}
+                                </span>
+                              </div>
+                              <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">
+                                {n.message}
                               </p>
-                            )}
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <button
-                              className="rounded-lg border px-3 py-2 text-sm font-semibold"
-                              onClick={() => toggleNotice(n)}
-                            >
-                              {n.isActive ? "Deactivate" : "Activate"}
-                            </button>
-                            <button
-                              className="rounded-lg border p-2"
-                              onClick={() => openEdit(n)}
-                              aria-label="Edit notice"
-                            >
-                              <Pencil size={17} />
-                            </button>
-                            <button
-                              className="rounded-lg border p-2 text-red-600"
-                              onClick={() => setDeleting(n)}
-                              aria-label="Delete notice"
-                            >
-                              <Trash2 size={17} />
-                            </button>
+                              {(n.startsAt || n.endsAt) && (
+                                <p className="mt-2 text-xs text-slate-400">
+                                  {n.startsAt
+                                    ? `Starts ${new Date(n.startsAt).toLocaleString()}`
+                                    : "Starts immediately"}{" "}
+                                  ·{" "}
+                                  {n.endsAt
+                                    ? `Ends ${new Date(n.endsAt).toLocaleString()}`
+                                    : "No end date"}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <button
+                                className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                                onClick={() => toggleNotice(n)}
+                              >
+                                {n.isActive ? "Deactivate" : "Activate"}
+                              </button>
+                              <button
+                                className="rounded-lg border p-2"
+                                onClick={() => openEdit(n)}
+                                aria-label="Edit notice"
+                              >
+                                <Pencil size={17} />
+                              </button>
+                              <button
+                                className="rounded-lg border p-2 text-red-600"
+                                onClick={() => setDeleting(n)}
+                                aria-label="Delete notice"
+                              >
+                                <Trash2 size={17} />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
-              <button disabled={saving} onClick={save} className="primary mt-5">
-                {saving ? "Saving…" : "Save store settings"}
-              </button>
+                      ))
+                    )}
+                  </div>
+                </section>
+              )}
             </>
           )
         )}

@@ -10,22 +10,26 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
+import useRestaurantLocation from "./useRestaurantLocation";
 
-async function api(path, organizationId, method = "GET", body) {
+async function api(path, organizationId, method = "GET", body, locationId = "") {
   const q = new URLSearchParams({ organizationId });
+  if (locationId) q.set("locationId", locationId);
+  const payload = body ? { ...body, ...(locationId ? { locationId } : {}) } : undefined;
   const r = await fetch(`/api/owner/manage/${path}?${q}`, {
     method,
     headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
+    body: payload ? JSON.stringify(payload) : undefined,
     cache: "no-store",
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || "Request failed");
   return d;
 }
-function SlideRow({ slide, onEdit, onDelete }) {
+function SlideRow({ slide, onEdit, onDelete, disabled }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: slide._id,
+    disabled,
   });
   return (
     <div
@@ -36,8 +40,8 @@ function SlideRow({ slide, onEdit, onDelete }) {
     >
       <button
         {...listeners}
-        className="cursor-grab touch-none text-slate-400 active:cursor-grabbing"
-        aria-label="Reorder slide"
+        disabled={disabled}
+        className={`touch-none text-slate-400 ${disabled ? "cursor-default opacity-30" : "cursor-grab active:cursor-grabbing"}`}
       >
         <GripVertical size={20} />
       </button>
@@ -58,16 +62,16 @@ function SlideRow({ slide, onEdit, onDelete }) {
         {slide.isActive !== false ? "Active" : "Inactive"}
       </span>
       <button
+        disabled={disabled}
         onClick={() => onEdit(slide)}
-        className="rounded-lg p-2 hover:bg-slate-100"
-        aria-label="Edit slide"
+        className="rounded-lg p-2 hover:bg-slate-100 disabled:opacity-30"
       >
         <Pencil size={19} />
       </button>
       <button
+        disabled={disabled}
         onClick={() => onDelete(slide)}
-        className="rounded-lg p-2 text-red-500 hover:bg-red-50"
-        aria-label="Delete slide"
+        className="rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:opacity-30"
       >
         <Trash2 size={19} />
       </button>
@@ -75,7 +79,7 @@ function SlideRow({ slide, onEdit, onDelete }) {
   );
 }
 const empty = { title: "", subtitle: "", image: "", cta: "", link: "", isActive: true };
-function SlideModal({ slide, onClose, onSaved, organizationId }) {
+function SlideModal({ slide, onClose, onSaved, organizationId, locationId }) {
   const [form, setForm] = useState(
     slide
       ? {
@@ -94,10 +98,13 @@ function SlideModal({ slide, onClose, onSaved, organizationId }) {
     setSaving(true);
     setError("");
     try {
-      await api("admin/hero-slides", organizationId, slide ? "PATCH" : "POST", {
-        ...form,
-        slideId: slide?._id,
-      });
+      await api(
+        "admin/hero-slides",
+        organizationId,
+        slide ? "PATCH" : "POST",
+        { ...form, slideId: slide?._id },
+        locationId,
+      );
       onSaved();
     } catch (e) {
       setError(e.message);
@@ -190,40 +197,89 @@ function SlideModal({ slide, onClose, onSaved, organizationId }) {
   );
 }
 export default function HomepageSlidesManager({ organizationId }) {
-  const [items, setItems] = useState([]),
+  const loc = useRestaurantLocation(organizationId);
+  const [scope, setScope] = useState("default"),
+    [items, setItems] = useState([]),
+    [useDefault, setUseDefault] = useState(false),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
     [editing, setEditing] = useState(null),
     [creating, setCreating] = useState(false),
     [deleting, setDeleting] = useState(null),
-    [deleteLoading, setDeleteLoading] = useState(false);
+    [deleteLoading, setDeleteLoading] = useState(false),
+    [switching, setSwitching] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const locationId = scope === "default" ? "" : scope;
+  const editable = scope === "default" || !useDefault;
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const d = await api("admin/hero-slides", organizationId);
+      const d = await api("admin/hero-slides", organizationId, "GET", undefined, locationId);
       setItems(d.slides || []);
+      setUseDefault(locationId ? d.useDefault !== false : false);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [organizationId]);
+  }, [organizationId, locationId]);
   useEffect(() => {
     load();
   }, [load]);
+  const customize = async () => {
+    setSwitching(true);
+    setError("");
+    try {
+      const d = await api(
+        "admin/hero-slides",
+        organizationId,
+        "POST",
+        { action: "customizeLocation" },
+        locationId,
+      );
+      setItems(d.slides || []);
+      setUseDefault(false);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSwitching(false);
+    }
+  };
+  const restoreDefault = async () => {
+    setSwitching(true);
+    setError("");
+    try {
+      const d = await api(
+        "admin/hero-slides",
+        organizationId,
+        "POST",
+        { action: "useRestaurantDefault" },
+        locationId,
+      );
+      setItems(d.slides || []);
+      setUseDefault(true);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSwitching(false);
+    }
+  };
   const drag = async ({ active, over }) => {
-    if (!over || active.id === over.id) return;
+    if (!editable || !over || active.id === over.id) return;
     const old = items.findIndex((x) => x._id === active.id),
       next = items.findIndex((x) => x._id === over.id);
-    const before = items;
-    const moved = arrayMove(items, old, next);
+    const before = items,
+      moved = arrayMove(items, old, next);
     setItems(moved);
     try {
-      const d = await api("admin/hero-slides/reorder", organizationId, "POST", {
-        slides: moved.map((s, i) => ({ _id: s._id, order: i })),
-      });
+      const d = await api(
+        "admin/hero-slides/reorder",
+        organizationId,
+        "POST",
+        { slides: moved.map((s, i) => ({ _id: s._id, order: i })) },
+        locationId,
+      );
       setItems(d.slides || moved);
     } catch (e) {
       setItems(before);
@@ -234,7 +290,13 @@ export default function HomepageSlidesManager({ organizationId }) {
     if (!deleting) return;
     setDeleteLoading(true);
     try {
-      await api("admin/hero-slides", organizationId, "DELETE", { slideId: deleting._id });
+      await api(
+        "admin/hero-slides",
+        organizationId,
+        "DELETE",
+        { slideId: deleting._id },
+        locationId,
+      );
       setDeleting(null);
       await load();
     } catch (e) {
@@ -259,21 +321,69 @@ export default function HomepageSlidesManager({ organizationId }) {
           <div>
             <h1 className="text-3xl font-bold">Homepage slides</h1>
             <p className="mt-2 text-slate-600">
-              Manage the hero slides shown on this restaurant's homepage.
+              Use restaurant default slides everywhere, or customize a location when needed.
             </p>
           </div>
-          <button onClick={() => setCreating(true)} className="primary flex items-center gap-2">
-            <Plus size={18} /> Add Slide
-          </button>
+          {editable && (
+            <button onClick={() => setCreating(true)} className="primary flex items-center gap-2">
+              <Plus size={18} /> Add Slide
+            </button>
+          )}
         </div>
-        {error && <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        {loading ? (
+        <div className="mt-6 max-w-md">
+          <label className="text-sm font-semibold text-slate-600">Slides for</label>
+          <select className="field mt-2" value={scope} onChange={(e) => setScope(e.target.value)}>
+            <option value="default">Restaurant Default</option>
+            {loc.locations.map((l) => (
+              <option key={l._id || l.id} value={l._id || l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {locationId && (
+          <div className="mt-5 rounded-2xl border bg-white p-5">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div>
+                <h2 className="font-bold">
+                  {useDefault
+                    ? "Using Restaurant Default Slides"
+                    : "Custom slides for this location"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  {useDefault
+                    ? "Changes to Restaurant Default automatically appear at this location."
+                    : "This location has its own independent slide set."}
+                </p>
+              </div>
+              {useDefault ? (
+                <button disabled={switching} onClick={customize} className="primary shrink-0">
+                  {switching ? "Preparing…" : "Customize for this location"}
+                </button>
+              ) : (
+                <button
+                  disabled={switching}
+                  onClick={restoreDefault}
+                  className="rounded-lg border px-4 py-2 font-semibold"
+                >
+                  {switching ? "Switching…" : "Use Restaurant Default"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+        {(loc.error || error) && (
+          <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">{loc.error || error}</p>
+        )}
+        {loading || loc.loading ? (
           <p className="mt-8">Loading slides…</p>
         ) : !items.length ? (
           <div className="mt-8 rounded-2xl border border-dashed bg-white p-10 text-center">
             <h2 className="font-bold">No homepage slides yet</h2>
             <p className="mt-2 text-sm text-slate-500">
-              Add your first hero slide to start building the homepage.
+              {editable
+                ? "Add your first hero slide to start building the homepage."
+                : "Restaurant Default does not have any slides yet."}
             </p>
           </div>
         ) : (
@@ -281,7 +391,13 @@ export default function HomepageSlidesManager({ organizationId }) {
             <SortableContext items={items.map((x) => x._id)} strategy={verticalListSortingStrategy}>
               <div className="mt-8 space-y-3">
                 {items.map((s) => (
-                  <SlideRow key={s._id} slide={s} onEdit={setEditing} onDelete={setDeleting} />
+                  <SlideRow
+                    key={s._id}
+                    slide={s}
+                    disabled={!editable}
+                    onEdit={setEditing}
+                    onDelete={setDeleting}
+                  />
                 ))}
               </div>
             </SortableContext>
@@ -291,6 +407,7 @@ export default function HomepageSlidesManager({ organizationId }) {
       {(creating || editing) && (
         <SlideModal
           organizationId={organizationId}
+          locationId={locationId}
           slide={editing}
           onClose={() => {
             setCreating(false);
@@ -308,7 +425,7 @@ export default function HomepageSlidesManager({ organizationId }) {
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-bold">Delete hero slide?</h2>
             <p className="mt-2 text-sm text-slate-600">
-              “{deleting.title}” will be permanently removed.
+              “{deleting.title}” will be permanently removed from this slide set.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
