@@ -55,6 +55,15 @@ export default async function Dashboard() {
           <div className="grid gap-5 md:grid-cols-2">
             {organizations.map((org) => {
               const id = String(org._id || org.id || "");
+              const isOwner = Boolean(org.isOwner) || org.role === "owner";
+              const isAdmin = isOwner || org.role === "admin";
+              const roleLabel = isOwner
+                ? "Owner"
+                : org.role === "admin"
+                  ? "Admin"
+                  : org.role === "manager"
+                    ? "Manager"
+                    : org.role || "Member";
               return (
                 <section key={id} className="rounded-2xl border bg-white p-6 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
@@ -63,7 +72,7 @@ export default async function Dashboard() {
                       {org.status || "pending"}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-slate-500">Role: {org.role || "member"}</p>
+                  <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link
                       className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
@@ -71,18 +80,28 @@ export default async function Dashboard() {
                     >
                       Manage restaurant
                     </Link>
-                    <Link
-                      className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                      href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
-                    >
-                      Websites & domains
-                    </Link>
-                    <Link
-                      className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                      href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-                    >
-                      Billing & subscription
-                    </Link>
+                    {isAdmin && (
+                      <>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
+                        >
+                          Admins & Managers
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
+                        >
+                          Websites & domains
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                        >
+                          Billing & subscription
+                        </Link>
+                      </>
+                    )}
                   </div>
                 </section>
               );
