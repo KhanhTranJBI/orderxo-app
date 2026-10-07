@@ -575,6 +575,8 @@ export default function MenuManager({ organizationId }) {
     [groups, setGroups] = useState([]),
     [collapsed, setCollapsed] = useState({}),
     [query, setQuery] = useState(""),
+    [modifierQuery, setModifierQuery] = useState(""),
+    [expandedModifierUsage, setExpandedModifierUsage] = useState({}),
     [tab, setTab] = useState("items"),
     [editing, setEditing] = useState(null),
     [newFor, setNewFor] = useState(null),
@@ -618,6 +620,28 @@ export default function MenuManager({ organizationId }) {
         })),
     [categories, items, query],
   );
+  const modifierUsage = useMemo(() => {
+    const usage = new Map();
+    for (const group of groups) usage.set(String(group._id), []);
+    for (const item of items) {
+      for (const entry of item.modifierGroups || []) {
+        const raw = entry?.group ?? entry;
+        const id = String(raw?._id ?? raw ?? "");
+        if (!id) continue;
+        if (!usage.has(id)) usage.set(id, []);
+        const list = usage.get(id);
+        if (!list.some((x) => String(x._id) === String(item._id))) {
+          list.push({ _id: item._id, name: item.name });
+        }
+      }
+    }
+    return usage;
+  }, [groups, items]);
+  const filteredGroups = useMemo(
+    () => groups.filter((g) => !modifierQuery || g.title.toLowerCase().includes(modifierQuery.toLowerCase())),
+    [groups, modifierQuery],
+  );
+
   const saveItem = async (f) => {
     const body = { ...f, modifierGroups: f.modifierGroups };
     if (editing?.item) body.menuItemId = editing.item._id;
@@ -722,11 +746,22 @@ export default function MenuManager({ organizationId }) {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 text-gray-400" size={18} />
                 <input
-                  className="field pl-10"
+                  className={`field pl-10 ${query ? "pr-10" : ""}`}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search menu items..."
                 />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                    aria-label="Clear search"
+                    title="Clear search"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
               </div>
               <button className="primary" onClick={() => setCategoryModal({ mode: "create" })}>
                 <Plus size={17} className="inline" /> Category
@@ -869,33 +904,92 @@ export default function MenuManager({ organizationId }) {
             </DndContext>
           </>
         ) : (
-          <div className="mt-5 space-y-3">
-            <div className="flex justify-end">
-              <button className="primary" onClick={() => setEditing({ group: {} })}>
-                + New Modifier
+          <div className="mt-5 space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                <input
+                  className={`field pl-10 ${modifierQuery ? "pr-10" : ""}`}
+                  value={modifierQuery}
+                  onChange={(e) => setModifierQuery(e.target.value)}
+                  placeholder="Search modifiers..."
+                />
+                {modifierQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setModifierQuery("")}
+                    className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                    aria-label="Clear modifier search"
+                    title="Clear search"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+              <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
+                <Plus size={17} className="inline" /> Add Modifier
               </button>
             </div>
-            {groups.map((g) => (
-              <div key={g._id} className="rounded-xl border bg-white p-4 flex justify-between">
-                <div>
-                  <b>{g.title}</b>
-                  <p className="text-sm text-gray-500">
-                    {g.required ? "Required" : "Optional"} · {(g.options || []).length} options
-                  </p>
+            {filteredGroups.map((g) => {
+              const usedBy = modifierUsage.get(String(g._id)) || [];
+              const usageOpen = Boolean(expandedModifierUsage[g._id]);
+              return (
+                <div key={g._id} className="rounded-2xl border bg-white p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <div className="font-bold text-lg">{g.title}</div>
+                      <p className="text-sm text-gray-500">
+                        {(g.options || []).length} {(g.options || []).length === 1 ? "option" : "options"} · {g.required ? "Required" : "Optional"}
+                      </p>
+                      <p className="mt-1 text-sm font-medium text-orange-600">
+                        {usedBy.length
+                          ? `Used by ${usedBy.length} menu ${usedBy.length === 1 ? "item" : "items"}`
+                          : "Not used by any menu items"}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="secondary" title="Edit modifier" onClick={() => setEditing({ group: g })}>
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        className="danger disabled:cursor-not-allowed disabled:opacity-40"
+                        title={usedBy.length ? "Remove this modifier from all menu items before deleting it" : "Delete modifier"}
+                        disabled={usedBy.length > 0}
+                        onClick={() => setDeleteTarget({ type: "modifier", value: g })}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  {usedBy.length > 0 && (
+                    <div className="mt-4 border-t pt-3">
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+                        onClick={() => setExpandedModifierUsage((v) => ({ ...v, [g._id]: !v[g._id] }))}
+                      >
+                        {usageOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+                        {usageOpen ? "Hide menu items" : "Show menu items"}
+                      </button>
+                      {usageOpen && (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {usedBy.map((item) => (
+                            <span key={item._id} className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700">
+                              {item.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-2">
-                  <button className="secondary" onClick={() => setEditing({ group: g })}>
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    className="danger"
-                    onClick={() => setDeleteTarget({ type: "modifier", value: g })}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+              );
+            })}
+            {!filteredGroups.length && (
+              <div className="rounded-2xl border bg-white p-8 text-center text-slate-500">
+                No modifiers found.
               </div>
-            ))}
+            )}
           </div>
         )}
         {(editing?.item || newFor) && (

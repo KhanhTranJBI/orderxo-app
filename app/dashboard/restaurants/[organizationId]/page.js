@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../../../lib/backend";
+import AddLocationButton from "../../../../components/AddLocationButton";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,15 @@ export default async function RestaurantManager({ params }) {
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
 
+  const locationsResult = await backendRequest(
+    `/api/locations?organizationId=${encodeURIComponent(id)}`,
+    { authenticated: true },
+  );
+  const locations =
+    locationsResult.status === 200 && Array.isArray(locationsResult.data?.locations)
+      ? locationsResult.data.locations
+      : [];
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
@@ -44,6 +54,30 @@ export default async function RestaurantManager({ params }) {
             {org.status || "pending"}
           </span>
         </div>
+        <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold">Locations</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {locations.length} {locations.length === 1 ? "location" : "locations"}
+              </p>
+            </div>
+            <AddLocationButton organizationId={id} />
+          </div>
+          {locations.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {locations.map((location) => (
+                <span
+                  key={String(location._id || location.id)}
+                  className="rounded-full border bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700"
+                >
+                  {location.name}
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {tools.map(([name, slug, description]) => (
             <Link
