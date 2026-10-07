@@ -30,6 +30,9 @@ export default async function RestaurantManager({ params }) {
   const organizations = Array.isArray(result.data?.organizations) ? result.data.organizations : [];
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
+  const isAdmin = org.role === "admin" || org.role === "owner";
+  const permissions = new Set(org.permissions || []);
+  const can = (p) => isAdmin || permissions.includes("*") || permissions.includes(p);
 
   const locationsResult = await backendRequest(
     `/api/locations?organizationId=${encodeURIComponent(id)}`,
@@ -68,7 +71,7 @@ export default async function RestaurantManager({ params }) {
                 {locations.length} {locations.length === 1 ? "location" : "locations"}
               </p>
             </div>
-            <AddLocationButton organizationId={id} />
+            {isAdmin && <AddLocationButton organizationId={id} />}
           </div>
           {locations.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
@@ -85,32 +88,58 @@ export default async function RestaurantManager({ params }) {
         </section>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {tools.map(([name, slug, description]) => (
+          {tools
+            .filter(([name, slug]) => {
+              const need =
+                slug === "orders"
+                  ? "orders.read"
+                  : slug === "menu"
+                    ? "menu.read"
+                    : slug === "promotions"
+                      ? "promotions.read"
+                      : slug === "gift-cards"
+                        ? "giftcards.read"
+                        : slug === "financials"
+                          ? "reports.read"
+                          : slug === "users"
+                            ? "customers.read"
+                            : "settings.read";
+              return can(need);
+            })
+            .map(([name, slug, description]) => (
+              <Link
+                key={slug}
+                href={`/dashboard/restaurants/${id}/${slug}`}
+                className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <h2 className="text-xl font-bold">{name}</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+                <p className="mt-5 text-sm font-semibold text-orange-600">Open →</p>
+              </Link>
+            ))}
+        </div>
+        {isAdmin && (
+          <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
             <Link
-              key={slug}
-              href={`/dashboard/restaurants/${id}/${slug}`}
-              className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-lg border bg-white px-4 py-2 font-semibold"
+              href={`/dashboard/restaurants/${id}/team`}
             >
-              <h2 className="text-xl font-bold">{name}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-              <p className="mt-5 text-sm font-semibold text-orange-600">Open →</p>
+              Admins & Managers
             </Link>
-          ))}
-        </div>
-        <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
-          <Link
-            className="rounded-lg border bg-white px-4 py-2 font-semibold"
-            href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
-          >
-            Websites & domains
-          </Link>
-          <Link
-            className="rounded-lg border bg-white px-4 py-2 font-semibold"
-            href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-          >
-            Billing & Subscription
-          </Link>
-        </div>
+            <Link
+              className="rounded-lg border bg-white px-4 py-2 font-semibold"
+              href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
+            >
+              Websites & domains
+            </Link>
+            <Link
+              className="rounded-lg border bg-white px-4 py-2 font-semibold"
+              href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+            >
+              Billing & Subscription
+            </Link>
+          </div>
+        )}
       </div>
     </main>
   );
