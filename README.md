@@ -39,3 +39,7 @@ The dashboard's OrderXO hostname uses the restaurant/organization slug (for exam
 ## Restaurant management migration
 
 The owner dashboard now has a restaurant-scoped workspace at `/dashboard/restaurants/[organizationId]` for Orders, Menu, Store settings, Homepage slides, Promotions, Gift cards and Financials. The original YoYo Poke admin source is preserved under `legacy-admin/` for conversion. Do not expose those legacy components directly: they use the old single-tenant NextAuth/Redux APIs. New management requests should go through `/api/owner/manage/*` and include `organizationId`; the server proxy supplies the HttpOnly owner JWT to admin-api.
+
+## RBAC v7
+
+Manager permissions are split into read/manage pairs. Restaurant workspace shows READ ONLY badges when a manager can view a module but cannot manage it. Menu write controls (add/edit/delete/reorder/activate/customize) are hidden for read-only managers. Orders shows read-only state and is ready for write actions to be gated by orders.manage. Promotions write controls are hidden unless promotions.manage is granted. Legacy permissions remain recognized for existing managers.

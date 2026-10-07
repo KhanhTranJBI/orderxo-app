@@ -32,7 +32,17 @@ export default async function RestaurantManager({ params }) {
   if (!org) redirect("/dashboard");
   const isAdmin = org.role === "admin" || org.role === "owner";
   const permissions = new Set(org.permissions || []);
-  const can = (p) => isAdmin || permissions.has("*") || permissions.has(p);
+  const aliases = {
+    "orders.manage": ["orders.manage", "orders.update"],
+    "menu.manage": ["menu.manage", "menu.update", "menu.create", "menu.delete"],
+    "financials.read": ["financials.read", "reports.read"],
+    "store.read": ["store.read", "settings.read"],
+    "store.manage": ["store.manage", "settings.manage"],
+    "homepage.read": ["homepage.read", "settings.read"],
+    "homepage.manage": ["homepage.manage", "settings.manage"],
+  };
+  const can = (p) =>
+    isAdmin || permissions.has("*") || (aliases[p] || [p]).some((x) => permissions.has(x));
 
   const locationsResult = await backendRequest(
     `/api/locations?organizationId=${encodeURIComponent(id)}`,
@@ -100,23 +110,53 @@ export default async function RestaurantManager({ params }) {
                       : slug === "gift-cards"
                         ? "giftcards.read"
                         : slug === "financials"
-                          ? "reports.read"
+                          ? "financials.read"
                           : slug === "users"
                             ? "customers.read"
-                            : "settings.read";
+                            : slug === "store"
+                              ? "store.read"
+                              : slug === "homepage"
+                                ? "homepage.read"
+                                : "settings.read";
               return can(need);
             })
-            .map(([name, slug, description]) => (
-              <Link
-                key={slug}
-                href={`/dashboard/restaurants/${id}/${slug}`}
-                className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <h2 className="text-xl font-bold">{name}</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-                <p className="mt-5 text-sm font-semibold text-orange-600">Open →</p>
-              </Link>
-            ))}
+            .map(([name, slug, description]) => {
+              const managePermission =
+                slug === "orders"
+                  ? "orders.manage"
+                  : slug === "menu"
+                    ? "menu.manage"
+                    : slug === "promotions"
+                      ? "promotions.manage"
+                      : slug === "gift-cards"
+                        ? "giftcards.manage"
+                        : slug === "users"
+                          ? "customers.manage"
+                          : slug === "store"
+                            ? "store.manage"
+                            : slug === "homepage"
+                              ? "homepage.manage"
+                              : null;
+              const readOnly = !isAdmin && managePermission && !can(managePermission);
+              return (
+                <Link
+                  key={slug}
+                  href={`/dashboard/restaurants/${id}/${slug}`}
+                  className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-xl font-bold">{name}</h2>
+                    {readOnly && (
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+                        Read only
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+                  <p className="mt-5 text-sm font-semibold text-orange-600">Open →</p>
+                </Link>
+              );
+            })}
         </div>
         {isAdmin && (
           <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">

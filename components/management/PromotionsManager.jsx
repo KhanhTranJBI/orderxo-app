@@ -12,11 +12,17 @@ export default function PromotionsManager({ organizationId }) {
       title="Promotions"
       description="Create and manage promo codes for the selected location."
     >
-      {({ locationId }) => <Promos organizationId={organizationId} locationId={locationId} />}
+      {({ locationId, access }) => (
+        <Promos
+          organizationId={organizationId}
+          locationId={locationId}
+          canManage={access.can("promotions.manage")}
+        />
+      )}
     </LocationPageShell>
   );
 }
-function Promos({ organizationId, locationId }) {
+function Promos({ organizationId, locationId, canManage }) {
   const [items, setItems] = useState([]),
     [open, setOpen] = useState(false),
     [edit, setEdit] = useState(null),
@@ -48,17 +54,25 @@ function Promos({ organizationId, locationId }) {
   };
   return (
     <section className="mt-8">
-      <div className="mb-6 flex justify-end">
-        <button
-          onClick={() => {
-            setEdit(null);
-            setOpen(true);
-          }}
-          className="flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 font-bold text-white shadow-sm hover:bg-orange-700"
-        >
-          <Plus size={18} /> Add Promotion
-        </button>
-      </div>
+      {!canManage && (
+        <div className="mb-6 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+          Read only — you can view promotions, but you cannot create, edit, activate or deactivate
+          them.
+        </div>
+      )}
+      {canManage && (
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => {
+              setEdit(null);
+              setOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-xl bg-orange-600 px-5 py-3 font-bold text-white shadow-sm hover:bg-orange-700"
+          >
+            <Plus size={18} /> Add Promotion
+          </button>
+        </div>
+      )}
       {err && <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{err}</p>}
       <div className="space-y-4">
         {items.map((p) => (
@@ -101,31 +115,33 @@ function Promos({ organizationId, locationId }) {
                 )}
               </div>
             </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  setEdit(p);
-                  setOpen(true);
-                }}
-                className="flex items-center gap-1.5 font-semibold text-slate-700"
-              >
-                <Pencil size={17} /> Edit
-              </button>
-              <button
-                onClick={() => toggle(p)}
-                className={`flex items-center gap-1.5 font-semibold ${p.active ? "text-red-600" : "text-green-600"}`}
-              >
-                <Power size={17} />
-                {p.active ? "Deactivate" : "Activate"}
-              </button>
-            </div>
+            {canManage && (
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setEdit(p);
+                    setOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 font-semibold text-slate-700"
+                >
+                  <Pencil size={17} /> Edit
+                </button>
+                <button
+                  onClick={() => toggle(p)}
+                  className={`flex items-center gap-1.5 font-semibold ${p.active ? "text-red-600" : "text-green-600"}`}
+                >
+                  <Power size={17} />
+                  {p.active ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
       {!err && !items.length && (
         <p className="py-12 text-center text-slate-500">No promotions found</p>
       )}
-      {open && (
+      {canManage && open && (
         <PromoModal
           p={edit}
           organizationId={organizationId}

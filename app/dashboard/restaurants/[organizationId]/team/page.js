@@ -6,16 +6,37 @@ import { LockKeyhole, Pencil, X } from "lucide-react";
 
 const PERMS = [
   ["orders.read", "View orders"],
-  ["orders.update", "Manage orders"],
+  ["orders.manage", "Manage orders"],
   ["menu.read", "View menu"],
-  ["menu.update", "Customize menu"],
-  ["promotions.manage", "Promotions"],
-  ["giftcards.manage", "Gift cards"],
-  ["customers.read", "Customers"],
-  ["reports.read", "Financial reports"],
-  ["settings.manage", "Store & homepage settings"],
+  ["menu.manage", "Customize menu"],
+  ["promotions.read", "View promotions"],
+  ["promotions.manage", "Manage promotions"],
+  ["giftcards.read", "View gift cards"],
+  ["giftcards.manage", "Manage gift cards"],
+  ["customers.read", "View customers"],
+  ["customers.manage", "Manage customers"],
+  ["financials.read", "View financial reports"],
+  ["store.read", "View store settings"],
+  ["store.manage", "Manage store settings"],
+  ["homepage.read", "View homepage"],
+  ["homepage.manage", "Manage homepage"],
 ];
 const defaultPermissions = PERMS.map((x) => x[0]);
+const normalizePermissions = (ps = []) => {
+  const s = new Set(ps);
+  if (s.has("orders.update")) s.add("orders.manage");
+  if (s.has("menu.update") || s.has("menu.create") || s.has("menu.delete")) s.add("menu.manage");
+  if (s.has("reports.read")) s.add("financials.read");
+  if (s.has("settings.read")) {
+    s.add("store.read");
+    s.add("homepage.read");
+  }
+  if (s.has("settings.manage")) {
+    s.add("store.manage");
+    s.add("homepage.manage");
+  }
+  return [...s];
+};
 const blank = { email: "", role: "manager", locationIds: [], permissions: defaultPermissions };
 
 export default function Team() {
@@ -70,7 +91,8 @@ export default function Team() {
       email: m.userId?.email || "",
       role: m.role,
       locationIds: (m.locationIds || []).map(String),
-      permissions: m.role === "admin" ? defaultPermissions : m.permissions || [],
+      permissions:
+        m.role === "admin" ? defaultPermissions : normalizePermissions(m.permissions || []),
       status: m.status || "active",
       isOwner: false,
     });

@@ -33,13 +33,18 @@ export default function OrdersManager({ organizationId }) {
       title="Orders"
       description="Manage carts, active orders, order history and reports for each location."
     >
-      {({ locationId, loading }) => (
-        <Orders organizationId={organizationId} locationId={locationId} locationLoading={loading} />
+      {({ locationId, loading, access }) => (
+        <Orders
+          organizationId={organizationId}
+          locationId={locationId}
+          locationLoading={loading}
+          canManage={access.can("orders.manage")}
+        />
       )}
     </LocationPageShell>
   );
 }
-function Orders({ organizationId, locationId, locationLoading }) {
+function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const [tab, setTab] = useState("active-orders"),
     [active, setActive] = useState([]),
     [carts, setCarts] = useState([]),
@@ -158,6 +163,12 @@ function Orders({ organizationId, locationId, locationLoading }) {
   if (locationLoading && !locationId) return <Skeleton />;
   return (
     <div className="mt-8">
+      {!canManage && (
+        <div className="mb-5 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+          Read only — you can view orders, carts, history and reports, but order-management actions
+          are disabled.
+        </div>
+      )}
       <div className="overflow-x-auto rounded-2xl bg-white shadow-md">
         <div className="flex min-w-max">
           {tabs.map(({ id, label, Icon, count }) => (

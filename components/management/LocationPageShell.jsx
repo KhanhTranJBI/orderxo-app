@@ -1,8 +1,10 @@
 "use client";
 import Link from "next/link";
 import useRestaurantLocation from "./useRestaurantLocation";
+import useRestaurantPermissions from "./useRestaurantPermissions";
 export default function LocationPageShell({ organizationId, title, description, children }) {
   const loc = useRestaurantLocation(organizationId);
+  const access = useRestaurantPermissions(organizationId);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
@@ -38,7 +40,12 @@ export default function LocationPageShell({ organizationId, title, description, 
         {loc.error ? (
           <p className="mt-6 rounded-xl bg-red-50 p-4 text-red-700">{loc.error}</p>
         ) : (
-          children({ locationId: loc.locationId, locations: loc.locations, loading: loc.loading })
+          children({
+            locationId: loc.locationId,
+            locations: loc.locations,
+            loading: loc.loading,
+            access,
+          })
         )}
       </div>
     </main>

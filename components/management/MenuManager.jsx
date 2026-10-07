@@ -23,6 +23,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import useRestaurantLocation from "./useRestaurantLocation";
+import useRestaurantPermissions from "./useRestaurantPermissions";
 
 const money = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`;
 async function api(path, org, loc, method = "GET", body, menuScope = "location") {
@@ -706,6 +707,8 @@ function MenuManagerSkeleton() {
 
 export default function MenuManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
+  const access = useRestaurantPermissions(organizationId);
+  const canManage = access.can("menu.manage");
   const [categories, setCategories] = useState([]),
     [items, setItems] = useState([]),
     [groups, setGroups] = useState([]),
@@ -815,6 +818,7 @@ export default function MenuManager({ organizationId }) {
     return d.group;
   };
   const catDrag = async ({ active, over }) => {
+    if (!canManage) return;
     if (menuScope !== "default") return;
     if (!over || active.id === over.id) return;
     const ids = categories
@@ -836,6 +840,7 @@ export default function MenuManager({ organizationId }) {
     );
   };
   const itemDrag = async (cat, its, { active, over }) => {
+    if (!canManage) return;
     if (menuScope !== "default") return;
     if (!over || active.id === over.id) return;
     const ids = its.map((i) => String(i._id));
@@ -918,6 +923,12 @@ export default function MenuManager({ organizationId }) {
           <MenuManagerSkeleton />
         ) : loc.locationId && !loc.error ? (
           <>
+            {!canManage && (
+              <div className="mt-6 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+                Read only — you can view menu items and modifiers, but editing, reordering,
+                activation changes and location customization are disabled.
+              </div>
+            )}
             <div className="flex gap-2 mt-6">
               <button
                 className={tab === "items" ? "primary" : "secondary"}
@@ -946,7 +957,7 @@ export default function MenuManager({ organizationId }) {
                 override only the fields that differ for this location.
               </div>
             )}
-            {menuScope === "default" && items.length === 0 && (
+            {canManage && menuScope === "default" && items.length === 0 && (
               <div className="mt-4 rounded-xl border bg-white p-4">
                 <p className="font-semibold">Restaurant Default menu is empty.</p>
                 <p className="mt-1 text-sm text-slate-500">
@@ -1005,7 +1016,7 @@ export default function MenuManager({ organizationId }) {
                       </button>
                     )}
                   </div>
-                  {menuScope === "default" && (
+                  {canManage && menuScope === "default" && (
                     <button
                       className="primary"
                       onClick={() => setCategoryModal({ mode: "create" })}
@@ -1029,9 +1040,11 @@ export default function MenuManager({ organizationId }) {
                             >
                               <div className="p-4 flex items-center justify-between bg-slate-50">
                                 <div className="flex items-center gap-3">
-                                  <span {...listeners} className="cursor-grab text-gray-400">
-                                    <GripVertical />
-                                  </span>
+                                  {canManage && (
+                                    <span {...listeners} className="cursor-grab text-gray-400">
+                                      <GripVertical />
+                                    </span>
+                                  )}
                                   <button
                                     className="flex items-center gap-2 font-bold text-lg"
                                     onClick={() =>
@@ -1045,7 +1058,7 @@ export default function MenuManager({ organizationId }) {
                                     </span>
                                   </button>
                                 </div>
-                                {menuScope === "default" && (
+                                {canManage && menuScope === "default" && (
                                   <div className="flex gap-2">
                                     <button className="secondary" onClick={() => setNewFor(c._id)}>
                                       + Item
@@ -1089,9 +1102,14 @@ export default function MenuManager({ organizationId }) {
                                               className={`p-4 flex flex-wrap items-center justify-between gap-3 ${i.isActive === false ? "opacity-50" : ""}`}
                                             >
                                               <div className="flex items-center gap-3">
-                                                <span {...il} className="cursor-grab text-gray-400">
-                                                  <GripVertical size={18} />
-                                                </span>
+                                                {canManage && (
+                                                  <span
+                                                    {...il}
+                                                    className="cursor-grab text-gray-400"
+                                                  >
+                                                    <GripVertical size={18} />
+                                                  </span>
+                                                )}
                                                 {i.image && (
                                                   <img
                                                     src={i.image}
@@ -1107,64 +1125,69 @@ export default function MenuManager({ organizationId }) {
                                                   </div>
                                                 </div>
                                               </div>
-                                              <div className="flex gap-2">
-                                                {menuScope === "location" ? (
-                                                  <>
-                                                    {i.overriddenFields?.length > 0 && (
-                                                      <span className="self-center rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
-                                                        Customized
-                                                      </span>
-                                                    )}
-                                                    <button
-                                                      className="secondary"
-                                                      onClick={() => setOverrideItem(i)}
-                                                    >
-                                                      <Pencil size={16} className="inline mr-1" />{" "}
-                                                      Customize
-                                                    </button>
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <button
-                                                      className="secondary"
-                                                      onClick={async () => {
-                                                        await api(
-                                                          "menu/update-active",
-                                                          organizationId,
-                                                          loc.locationId,
-                                                          "POST",
-                                                          {
-                                                            menuItemId: i._id,
-                                                            isActive: i.isActive === false,
-                                                          },
-                                                          "default",
-                                                        );
-                                                        await load();
-                                                      }}
-                                                    >
-                                                      {i.isActive === false
-                                                        ? "Activate"
-                                                        : "Deactivate"}
-                                                    </button>
-                                                    <button
-                                                      className="secondary"
-                                                      onClick={() =>
-                                                        setEditing({ item: i, categoryId: c._id })
-                                                      }
-                                                    >
-                                                      <Pencil size={16} />
-                                                    </button>
-                                                    <button
-                                                      className="danger"
-                                                      onClick={() =>
-                                                        setDeleteTarget({ type: "item", value: i })
-                                                      }
-                                                    >
-                                                      <Trash2 size={16} />
-                                                    </button>
-                                                  </>
-                                                )}
-                                              </div>
+                                              {canManage && (
+                                                <div className="flex gap-2">
+                                                  {menuScope === "location" ? (
+                                                    <>
+                                                      {i.overriddenFields?.length > 0 && (
+                                                        <span className="self-center rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
+                                                          Customized
+                                                        </span>
+                                                      )}
+                                                      <button
+                                                        className="secondary"
+                                                        onClick={() => setOverrideItem(i)}
+                                                      >
+                                                        <Pencil size={16} className="inline mr-1" />{" "}
+                                                        Customize
+                                                      </button>
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <button
+                                                        className="secondary"
+                                                        onClick={async () => {
+                                                          await api(
+                                                            "menu/update-active",
+                                                            organizationId,
+                                                            loc.locationId,
+                                                            "POST",
+                                                            {
+                                                              menuItemId: i._id,
+                                                              isActive: i.isActive === false,
+                                                            },
+                                                            "default",
+                                                          );
+                                                          await load();
+                                                        }}
+                                                      >
+                                                        {i.isActive === false
+                                                          ? "Activate"
+                                                          : "Deactivate"}
+                                                      </button>
+                                                      <button
+                                                        className="secondary"
+                                                        onClick={() =>
+                                                          setEditing({ item: i, categoryId: c._id })
+                                                        }
+                                                      >
+                                                        <Pencil size={16} />
+                                                      </button>
+                                                      <button
+                                                        className="danger"
+                                                        onClick={() =>
+                                                          setDeleteTarget({
+                                                            type: "item",
+                                                            value: i,
+                                                          })
+                                                        }
+                                                      >
+                                                        <Trash2 size={16} />
+                                                      </button>
+                                                    </>
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
                                           )}
                                         </Sortable>
@@ -1204,7 +1227,7 @@ export default function MenuManager({ organizationId }) {
                       </button>
                     )}
                   </div>
-                  {menuScope === "default" && (
+                  {canManage && menuScope === "default" && (
                     <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
                       <Plus size={17} className="inline" /> Add Modifier
                     </button>
@@ -1229,7 +1252,7 @@ export default function MenuManager({ organizationId }) {
                               : "Not used by any menu items"}
                           </p>
                         </div>
-                        {menuScope === "default" && (
+                        {canManage && menuScope === "default" && (
                           <div className="flex gap-2">
                             <button
                               className="secondary"
