@@ -1,12 +1,24 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BarChart3, Flame, History, Loader2, Search, ShoppingCart, X } from "lucide-react";
+import {
+  BarChart3,
+  Flame,
+  History,
+  Loader2,
+  Search,
+  ShoppingCart,
+  X,
+  BellRing,
+} from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
 const usd = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`,
   usdD = (n) => `$${Number(n || 0).toFixed(2)}`;
-async function get(path, organizationId, locationId) {
+async function get(path, organizationId, locationId, params = {}) {
   const q = new URLSearchParams({ organizationId, locationId });
-  const r = await fetch(`/api/owner/manage/admin/${path}?${q}`, { cache: "no-store" });
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) q.set(key, String(value));
+  });
+  const r = await fetch(`/api/owner/manage/admin/${path}?${q.toString()}`, { cache: "no-store" });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || "Request failed");
   return d;
@@ -69,8 +81,10 @@ function Orders({ organizationId, locationId, locationLoading }) {
         setActive(d.orders || []);
         setPagination(d.pagination);
       } else if (tab === "orders-history") {
-        const q = `orders/history&page=${page}&search=${encodeURIComponent(debounced)}`;
-        d = await get(q, organizationId, locationId);
+        d = await get("admin/orders/history", organizationId, locationId, {
+          page,
+          search: debounced,
+        });
         setHistory(d.orders || []);
         setPagination(d.pagination);
       } else {
@@ -87,11 +101,40 @@ function Orders({ organizationId, locationId, locationLoading }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Keep operational data fresh even when the owner is viewing another Orders tab.
+  // These background requests intentionally do not touch the page-level loading state,
+  // so History/Report never flash a loading screen every time polling runs.
+  const fetchActiveOrders = useCallback(async () => {
+    if (!locationId) return;
+    try {
+      const d = await get("orders", organizationId, locationId);
+      setActive(d.orders || []);
+    } catch (e) {
+      console.error("Unable to refresh active orders", e);
+    }
+  }, [organizationId, locationId]);
+  const fetchActiveCarts = useCallback(async () => {
+    if (!locationId) return;
+    try {
+      const d = await get("carts", organizationId, locationId);
+      setCarts(d.carts || []);
+    } catch (e) {
+      console.error("Unable to refresh active carts", e);
+    }
+  }, [organizationId, locationId]);
   useEffect(() => {
-    if (!locationId || tab !== "active-orders") return;
-    const id = setInterval(load, 5000);
+    if (!locationId) return;
+    fetchActiveOrders();
+    const id = setInterval(fetchActiveOrders, 15000);
     return () => clearInterval(id);
-  }, [locationId, tab, load]);
+  }, [locationId, fetchActiveOrders]);
+  useEffect(() => {
+    if (!locationId) return;
+    fetchActiveCarts();
+    const id = setInterval(fetchActiveCarts, 30000);
+    return () => clearInterval(id);
+  }, [locationId, fetchActiveCarts]);
   const reportCount = (report?.dailyReports || []).reduce(
     (s, d) => s + Number(d.orderCount || 0),
     0,
@@ -161,6 +204,36 @@ function Orders({ organizationId, locationId, locationLoading }) {
         ) : (
           <ReportTable report={report} />
         )}
+      </div>
+      {tab !== "active-orders" && active.length > 0 && (
+        <ActiveOrderAlert count={active.length} onView={() => selectTab("active-orders")} />
+      )}
+    </div>
+  );
+}
+function ActiveOrderAlert({ count, onView }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="p-6 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+            <BellRing size={28} />
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-slate-900">
+            Active {count === 1 ? "Order" : "Orders"}
+          </h2>
+          <p className="mt-2 text-slate-500">
+            {count === 1
+              ? "There is an active order waiting for your attention."
+              : `There are ${count} active orders waiting for your attention.`}
+          </p>
+          <button
+            onClick={onView}
+            className="mt-6 w-full rounded-xl bg-orange-500 px-5 py-3 font-bold text-white transition hover:bg-orange-600"
+          >
+            View Active Orders
+          </button>
+        </div>
       </div>
     </div>
   );
