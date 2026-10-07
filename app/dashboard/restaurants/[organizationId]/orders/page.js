@@ -1,4 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
+import OrdersManager from "../../../../../components/management/OrdersManager";
 export default function Page({ params }) {
-  return <ManagementPage organizationId={params.organizationId} section="orders" />;
+  return <OrdersManager organizationId={params.organizationId} />;
 }

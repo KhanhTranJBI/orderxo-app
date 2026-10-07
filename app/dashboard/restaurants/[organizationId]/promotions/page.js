@@ -1,4 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
+import PromotionsManager from "../../../../../components/management/PromotionsManager";
 export default function Page({ params }) {
-  return <ManagementPage organizationId={params.organizationId} section="promotions" />;
+  return <PromotionsManager organizationId={params.organizationId} />;
 }

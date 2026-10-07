@@ -1,4 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
+import GiftCardsManager from "../../../../../components/management/GiftCardsManager";
 export default function Page({ params }) {
-  return <ManagementPage organizationId={params.organizationId} section="gift-cards" />;
+  return <GiftCardsManager organizationId={params.organizationId} />;
 }

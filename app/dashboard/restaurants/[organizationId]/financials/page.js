@@ -1,4 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
+import FinancialsManager from "../../../../../components/management/FinancialsManager";
 export default function Page({ params }) {
-  return <ManagementPage organizationId={params.organizationId} section="financials" />;
+  return <FinancialsManager organizationId={params.organizationId} />;
 }

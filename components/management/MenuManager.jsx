@@ -679,6 +679,30 @@ function ConfirmModal({
   );
 }
 
+function MenuManagerSkeleton() {
+  return (
+    <div className="mt-6 animate-pulse space-y-5" aria-hidden="true">
+      <div className="flex gap-2">
+        <div className="h-10 w-32 rounded-xl bg-slate-200" />
+        <div className="h-10 w-28 rounded-xl bg-slate-200" />
+      </div>
+      <div className="h-11 w-full rounded-xl bg-slate-200" />
+      {[0, 1, 2].map((row) => (
+        <div key={row} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="flex items-center justify-between bg-slate-50 p-4">
+            <div className="h-6 w-40 rounded bg-slate-200" />
+            <div className="h-9 w-24 rounded-xl bg-slate-200" />
+          </div>
+          <div className="space-y-3 p-4">
+            <div className="h-16 rounded-xl bg-slate-100" />
+            <div className="h-16 rounded-xl bg-slate-100" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MenuManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const [categories, setCategories] = useState([]),
@@ -832,9 +856,6 @@ export default function MenuManager({ organizationId }) {
       "default",
     );
   };
-  if (loc.loading) return <p>Loading locations…</p>;
-  if (loc.error || !loc.locationId)
-    return <p className="text-red-600">{loc.error || "No location found"}</p>;
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-7xl">
@@ -856,380 +877,419 @@ export default function MenuManager({ organizationId }) {
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
               Menu for
             </label>
-            <select
-              className="field"
-              value={menuScope === "default" ? "default" : loc.locationId}
-              onChange={(e) => {
-                if (e.target.value === "default") setMenuScope("default");
-                else {
-                  loc.setLocationId(e.target.value);
-                  setMenuScope("location");
-                }
-              }}
-            >
-              <option value="default">Restaurant Default</option>
-              {loc.locations.map((l) => (
-                <option key={l._id || l.id} value={l._id || l.id}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="flex gap-2 mt-6">
-          <button
-            className={tab === "items" ? "primary" : "secondary"}
-            onClick={() => setTab("items")}
-          >
-            <MenuIcon size={16} className="inline mr-2" />
-            Menu Items
-          </button>
-          <button
-            className={tab === "modifiers" ? "primary" : "secondary"}
-            onClick={() => setTab("modifiers")}
-          >
-            <SlidersHorizontal size={16} className="inline mr-2" />
-            Modifiers
-          </button>
-        </div>
-        {menuScope === "location" && (
-          <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
-            <strong>
-              {loc.locations.find((l) => String(l._id || l.id) === String(loc.locationId))?.name}
-            </strong>{" "}
-            inherits categories, modifiers and items from Restaurant Default. Edit an item to
-            override only the fields that differ for this location.
-          </div>
-        )}
-        {menuScope === "default" && items.length === 0 && (
-          <div className="mt-4 rounded-xl border bg-white p-4">
-            <p className="font-semibold">Restaurant Default menu is empty.</p>
-            <p className="mt-1 text-sm text-slate-500">
-              If your existing menu is stored under {loc.location?.name || "this location"}, import
-              it once to create the master menu.
-            </p>
-            <button
-              className="primary mt-3"
-              disabled={importingDefault}
-              onClick={async () => {
-                try {
-                  setImportingDefault(true);
-                  await api(
-                    "menu/default/import",
-                    organizationId,
-                    loc.locationId,
-                    "POST",
-                    {},
-                    "location",
-                  );
-                  await load();
-                } catch (e) {
-                  setError(e.message);
-                } finally {
-                  setImportingDefault(false);
-                }
-              }}
-            >
-              {importingDefault ? "Importing…" : "Import current location as Restaurant Default"}
-            </button>
-          </div>
-        )}
-        {error && <p className="mt-4 text-red-600">{error}</p>}
-        {tab === "items" ? (
-          <>
-            <div className="mt-5 flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-                <input
-                  className={`field pl-10 ${query ? "pr-10" : ""}`}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search menu items..."
-                />
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery("")}
-                    className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                    aria-label="Clear search"
-                    title="Clear search"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
-              {menuScope === "default" && (
-                <button className="primary" onClick={() => setCategoryModal({ mode: "create" })}>
-                  <Plus size={17} className="inline" /> Category
-                </button>
-              )}
-            </div>
-            <DndContext collisionDetection={closestCenter} onDragEnd={catDrag}>
-              <SortableContext
-                items={grouped.map((x) => String(x.c._id))}
-                strategy={verticalListSortingStrategy}
+            {loc.loading ? (
+              <div className="h-10 w-full animate-pulse rounded-xl bg-slate-200" />
+            ) : (
+              <select
+                className="field"
+                value={menuScope === "default" ? "default" : loc.locationId || "default"}
+                disabled={!loc.locationId}
+                onChange={(e) => {
+                  if (e.target.value === "default") setMenuScope("default");
+                  else {
+                    loc.setLocationId(e.target.value);
+                    setMenuScope("location");
+                  }
+                }}
               >
-                <div className="space-y-4 mt-5">
-                  {grouped.map(({ c, items: its }) => (
-                    <Sortable key={c._id} id={String(c._id)}>
-                      {(listeners, attrs) => (
-                        <section {...attrs} className="rounded-2xl border bg-white overflow-hidden">
-                          <div className="p-4 flex items-center justify-between bg-slate-50">
-                            <div className="flex items-center gap-3">
-                              <span {...listeners} className="cursor-grab text-gray-400">
-                                <GripVertical />
-                              </span>
-                              <button
-                                className="flex items-center gap-2 font-bold text-lg"
-                                onClick={() =>
-                                  setCollapsed((v) => ({ ...v, [c.slug]: !v[c.slug] }))
-                                }
-                              >
-                                {collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}
-                                {c.name}
-                                <span className="text-sm font-normal text-gray-400">
-                                  ({its.length})
-                                </span>
-                              </button>
-                            </div>
-                            {menuScope === "default" && (
-                              <div className="flex gap-2">
-                                <button className="secondary" onClick={() => setNewFor(c._id)}>
-                                  + Item
-                                </button>
-                                <button
-                                  className="secondary"
-                                  title="Edit category"
-                                  onClick={() => setCategoryModal({ mode: "edit", category: c })}
-                                >
-                                  <Pencil size={16} />
-                                </button>
-                                <button
-                                  className="danger"
-                                  title="Delete category"
-                                  onClick={() => setDeleteTarget({ type: "category", value: c })}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                          {!collapsed[c.slug] && (
-                            <DndContext
-                              collisionDetection={closestCenter}
-                              onDragEnd={(e) => itemDrag(c, its, e)}
-                            >
-                              <SortableContext
-                                items={its.map((i) => String(i._id))}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                <div className="divide-y">
-                                  {its.map((i) => (
-                                    <Sortable key={i._id} id={String(i._id)}>
-                                      {(il, ia) => (
-                                        <div
-                                          {...ia}
-                                          className={`p-4 flex flex-wrap items-center justify-between gap-3 ${i.isActive === false ? "opacity-50" : ""}`}
-                                        >
-                                          <div className="flex items-center gap-3">
-                                            <span {...il} className="cursor-grab text-gray-400">
-                                              <GripVertical size={18} />
-                                            </span>
-                                            {i.image && (
-                                              <img
-                                                src={i.image}
-                                                className="w-14 h-14 rounded-lg object-cover"
-                                                alt=""
-                                              />
-                                            )}
-                                            <div>
-                                              <div className="font-semibold">{i.name}</div>
-                                              <div className="text-sm text-gray-500">
-                                                {money(i.priceCents)} ·{" "}
-                                                {i.isActive !== false ? "Active" : "Inactive"}
-                                              </div>
-                                            </div>
-                                          </div>
-                                          <div className="flex gap-2">
-                                            {menuScope === "location" ? (
-                                              <>
-                                                {i.overriddenFields?.length > 0 && (
-                                                  <span className="self-center rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
-                                                    Customized
-                                                  </span>
-                                                )}
-                                                <button
-                                                  className="secondary"
-                                                  onClick={() => setOverrideItem(i)}
-                                                >
-                                                  <Pencil size={16} className="inline mr-1" />{" "}
-                                                  Customize
-                                                </button>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <button
-                                                  className="secondary"
-                                                  onClick={async () => {
-                                                    await api(
-                                                      "menu/update-active",
-                                                      organizationId,
-                                                      loc.locationId,
-                                                      "POST",
-                                                      {
-                                                        menuItemId: i._id,
-                                                        isActive: i.isActive === false,
-                                                      },
-                                                      "default",
-                                                    );
-                                                    await load();
-                                                  }}
-                                                >
-                                                  {i.isActive === false ? "Activate" : "Deactivate"}
-                                                </button>
-                                                <button
-                                                  className="secondary"
-                                                  onClick={() =>
-                                                    setEditing({ item: i, categoryId: c._id })
-                                                  }
-                                                >
-                                                  <Pencil size={16} />
-                                                </button>
-                                                <button
-                                                  className="danger"
-                                                  onClick={() =>
-                                                    setDeleteTarget({ type: "item", value: i })
-                                                  }
-                                                >
-                                                  <Trash2 size={16} />
-                                                </button>
-                                              </>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </Sortable>
-                                  ))}
-                                </div>
-                              </SortableContext>
-                            </DndContext>
-                          )}
-                        </section>
-                      )}
-                    </Sortable>
-                  ))}
-                </div>
-              </SortableContext>
-            </DndContext>
-          </>
-        ) : (
-          <div className="mt-5 space-y-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="relative w-full sm:max-w-md">
-                <Search className="absolute left-3 top-3 text-gray-400" size={18} />
-                <input
-                  className={`field pl-10 ${modifierQuery ? "pr-10" : ""}`}
-                  value={modifierQuery}
-                  onChange={(e) => setModifierQuery(e.target.value)}
-                  placeholder="Search modifiers..."
-                />
-                {modifierQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setModifierQuery("")}
-                    className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-                    aria-label="Clear modifier search"
-                    title="Clear search"
-                  >
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
-              {menuScope === "default" && (
-                <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
-                  <Plus size={17} className="inline" /> Add Modifier
-                </button>
-              )}
+                <option value="default">Restaurant Default</option>
+                {loc.locations.map((l) => (
+                  <option key={l._id || l.id} value={l._id || l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </div>
+        {loc.error && (
+          <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {loc.error}
+          </div>
+        )}
+        {!loc.loading && !loc.error && !loc.locationId && (
+          <div className="mt-6 rounded-2xl border bg-white p-8 text-center">
+            <p className="font-semibold text-slate-900">No location found</p>
+            <p className="mt-1 text-sm text-slate-500">Add a location before managing your menu.</p>
+          </div>
+        )}
+        {loc.loading ? (
+          <MenuManagerSkeleton />
+        ) : loc.locationId && !loc.error ? (
+          <>
+            <div className="flex gap-2 mt-6">
+              <button
+                className={tab === "items" ? "primary" : "secondary"}
+                onClick={() => setTab("items")}
+              >
+                <MenuIcon size={16} className="inline mr-2" />
+                Menu Items
+              </button>
+              <button
+                className={tab === "modifiers" ? "primary" : "secondary"}
+                onClick={() => setTab("modifiers")}
+              >
+                <SlidersHorizontal size={16} className="inline mr-2" />
+                Modifiers
+              </button>
             </div>
-            {filteredGroups.map((g) => {
-              const usedBy = modifierUsage.get(String(g._id)) || [];
-              const usageOpen = Boolean(expandedModifierUsage[g._id]);
-              return (
-                <div key={g._id} className="rounded-2xl border bg-white p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <div className="font-bold text-lg">{g.title}</div>
-                      <p className="text-sm text-gray-500">
-                        {(g.options || []).length}{" "}
-                        {(g.options || []).length === 1 ? "option" : "options"} ·{" "}
-                        {g.required ? "Required" : "Optional"}
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-orange-600">
-                        {usedBy.length
-                          ? `Used by ${usedBy.length} menu ${usedBy.length === 1 ? "item" : "items"}`
-                          : "Not used by any menu items"}
-                      </p>
-                    </div>
-                    {menuScope === "default" && (
-                      <div className="flex gap-2">
-                        <button
-                          className="secondary"
-                          title="Edit modifier"
-                          onClick={() => setEditing({ group: g })}
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          className="danger disabled:cursor-not-allowed disabled:opacity-40"
-                          title={
-                            usedBy.length
-                              ? "Remove this modifier from all menu items before deleting it"
-                              : "Delete modifier"
-                          }
-                          disabled={usedBy.length > 0}
-                          onClick={() => setDeleteTarget({ type: "modifier", value: g })}
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {usedBy.length > 0 && (
-                    <div className="mt-4 border-t pt-3">
+            {menuScope === "location" && (
+              <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
+                <strong>
+                  {
+                    loc.locations.find((l) => String(l._id || l.id) === String(loc.locationId))
+                      ?.name
+                  }
+                </strong>{" "}
+                inherits categories, modifiers and items from Restaurant Default. Edit an item to
+                override only the fields that differ for this location.
+              </div>
+            )}
+            {menuScope === "default" && items.length === 0 && (
+              <div className="mt-4 rounded-xl border bg-white p-4">
+                <p className="font-semibold">Restaurant Default menu is empty.</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  If your existing menu is stored under {loc.location?.name || "this location"},
+                  import it once to create the master menu.
+                </p>
+                <button
+                  className="primary mt-3"
+                  disabled={importingDefault}
+                  onClick={async () => {
+                    try {
+                      setImportingDefault(true);
+                      await api(
+                        "menu/default/import",
+                        organizationId,
+                        loc.locationId,
+                        "POST",
+                        {},
+                        "location",
+                      );
+                      await load();
+                    } catch (e) {
+                      setError(e.message);
+                    } finally {
+                      setImportingDefault(false);
+                    }
+                  }}
+                >
+                  {importingDefault
+                    ? "Importing…"
+                    : "Import current location as Restaurant Default"}
+                </button>
+              </div>
+            )}
+            {error && <p className="mt-4 text-red-600">{error}</p>}
+            {tab === "items" ? (
+              <>
+                <div className="mt-5 flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      className={`field pl-10 ${query ? "pr-10" : ""}`}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search menu items..."
+                    />
+                    {query && (
                       <button
                         type="button"
-                        className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
-                        onClick={() =>
-                          setExpandedModifierUsage((v) => ({ ...v, [g._id]: !v[g._id] }))
-                        }
+                        onClick={() => setQuery("")}
+                        className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        aria-label="Clear search"
+                        title="Clear search"
                       >
-                        {usageOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
-                        {usageOpen ? "Hide menu items" : "Show menu items"}
+                        <X size={18} />
                       </button>
-                      {usageOpen && (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {usedBy.map((item) => (
-                            <span
-                              key={item._id}
-                              className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+                    )}
+                  </div>
+                  {menuScope === "default" && (
+                    <button
+                      className="primary"
+                      onClick={() => setCategoryModal({ mode: "create" })}
+                    >
+                      <Plus size={17} className="inline" /> Category
+                    </button>
+                  )}
+                </div>
+                <DndContext collisionDetection={closestCenter} onDragEnd={catDrag}>
+                  <SortableContext
+                    items={grouped.map((x) => String(x.c._id))}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-4 mt-5">
+                      {grouped.map(({ c, items: its }) => (
+                        <Sortable key={c._id} id={String(c._id)}>
+                          {(listeners, attrs) => (
+                            <section
+                              {...attrs}
+                              className="rounded-2xl border bg-white overflow-hidden"
                             >
-                              {item.name}
-                            </span>
-                          ))}
+                              <div className="p-4 flex items-center justify-between bg-slate-50">
+                                <div className="flex items-center gap-3">
+                                  <span {...listeners} className="cursor-grab text-gray-400">
+                                    <GripVertical />
+                                  </span>
+                                  <button
+                                    className="flex items-center gap-2 font-bold text-lg"
+                                    onClick={() =>
+                                      setCollapsed((v) => ({ ...v, [c.slug]: !v[c.slug] }))
+                                    }
+                                  >
+                                    {collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}
+                                    {c.name}
+                                    <span className="text-sm font-normal text-gray-400">
+                                      ({its.length})
+                                    </span>
+                                  </button>
+                                </div>
+                                {menuScope === "default" && (
+                                  <div className="flex gap-2">
+                                    <button className="secondary" onClick={() => setNewFor(c._id)}>
+                                      + Item
+                                    </button>
+                                    <button
+                                      className="secondary"
+                                      title="Edit category"
+                                      onClick={() =>
+                                        setCategoryModal({ mode: "edit", category: c })
+                                      }
+                                    >
+                                      <Pencil size={16} />
+                                    </button>
+                                    <button
+                                      className="danger"
+                                      title="Delete category"
+                                      onClick={() =>
+                                        setDeleteTarget({ type: "category", value: c })
+                                      }
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {!collapsed[c.slug] && (
+                                <DndContext
+                                  collisionDetection={closestCenter}
+                                  onDragEnd={(e) => itemDrag(c, its, e)}
+                                >
+                                  <SortableContext
+                                    items={its.map((i) => String(i._id))}
+                                    strategy={verticalListSortingStrategy}
+                                  >
+                                    <div className="divide-y">
+                                      {its.map((i) => (
+                                        <Sortable key={i._id} id={String(i._id)}>
+                                          {(il, ia) => (
+                                            <div
+                                              {...ia}
+                                              className={`p-4 flex flex-wrap items-center justify-between gap-3 ${i.isActive === false ? "opacity-50" : ""}`}
+                                            >
+                                              <div className="flex items-center gap-3">
+                                                <span {...il} className="cursor-grab text-gray-400">
+                                                  <GripVertical size={18} />
+                                                </span>
+                                                {i.image && (
+                                                  <img
+                                                    src={i.image}
+                                                    className="w-14 h-14 rounded-lg object-cover"
+                                                    alt=""
+                                                  />
+                                                )}
+                                                <div>
+                                                  <div className="font-semibold">{i.name}</div>
+                                                  <div className="text-sm text-gray-500">
+                                                    {money(i.priceCents)} ·{" "}
+                                                    {i.isActive !== false ? "Active" : "Inactive"}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div className="flex gap-2">
+                                                {menuScope === "location" ? (
+                                                  <>
+                                                    {i.overriddenFields?.length > 0 && (
+                                                      <span className="self-center rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
+                                                        Customized
+                                                      </span>
+                                                    )}
+                                                    <button
+                                                      className="secondary"
+                                                      onClick={() => setOverrideItem(i)}
+                                                    >
+                                                      <Pencil size={16} className="inline mr-1" />{" "}
+                                                      Customize
+                                                    </button>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <button
+                                                      className="secondary"
+                                                      onClick={async () => {
+                                                        await api(
+                                                          "menu/update-active",
+                                                          organizationId,
+                                                          loc.locationId,
+                                                          "POST",
+                                                          {
+                                                            menuItemId: i._id,
+                                                            isActive: i.isActive === false,
+                                                          },
+                                                          "default",
+                                                        );
+                                                        await load();
+                                                      }}
+                                                    >
+                                                      {i.isActive === false
+                                                        ? "Activate"
+                                                        : "Deactivate"}
+                                                    </button>
+                                                    <button
+                                                      className="secondary"
+                                                      onClick={() =>
+                                                        setEditing({ item: i, categoryId: c._id })
+                                                      }
+                                                    >
+                                                      <Pencil size={16} />
+                                                    </button>
+                                                    <button
+                                                      className="danger"
+                                                      onClick={() =>
+                                                        setDeleteTarget({ type: "item", value: i })
+                                                      }
+                                                    >
+                                                      <Trash2 size={16} />
+                                                    </button>
+                                                  </>
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
+                                        </Sortable>
+                                      ))}
+                                    </div>
+                                  </SortableContext>
+                                </DndContext>
+                              )}
+                            </section>
+                          )}
+                        </Sortable>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              </>
+            ) : (
+              <div className="mt-5 space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="relative w-full sm:max-w-md">
+                    <Search className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <input
+                      className={`field pl-10 ${modifierQuery ? "pr-10" : ""}`}
+                      value={modifierQuery}
+                      onChange={(e) => setModifierQuery(e.target.value)}
+                      placeholder="Search modifiers..."
+                    />
+                    {modifierQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setModifierQuery("")}
+                        className="absolute right-3 top-2.5 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                        aria-label="Clear modifier search"
+                        title="Clear search"
+                      >
+                        <X size={18} />
+                      </button>
+                    )}
+                  </div>
+                  {menuScope === "default" && (
+                    <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
+                      <Plus size={17} className="inline" /> Add Modifier
+                    </button>
+                  )}
+                </div>
+                {filteredGroups.map((g) => {
+                  const usedBy = modifierUsage.get(String(g._id)) || [];
+                  const usageOpen = Boolean(expandedModifierUsage[g._id]);
+                  return (
+                    <div key={g._id} className="rounded-2xl border bg-white p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <div className="font-bold text-lg">{g.title}</div>
+                          <p className="text-sm text-gray-500">
+                            {(g.options || []).length}{" "}
+                            {(g.options || []).length === 1 ? "option" : "options"} ·{" "}
+                            {g.required ? "Required" : "Optional"}
+                          </p>
+                          <p className="mt-1 text-sm font-medium text-orange-600">
+                            {usedBy.length
+                              ? `Used by ${usedBy.length} menu ${usedBy.length === 1 ? "item" : "items"}`
+                              : "Not used by any menu items"}
+                          </p>
+                        </div>
+                        {menuScope === "default" && (
+                          <div className="flex gap-2">
+                            <button
+                              className="secondary"
+                              title="Edit modifier"
+                              onClick={() => setEditing({ group: g })}
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              className="danger disabled:cursor-not-allowed disabled:opacity-40"
+                              title={
+                                usedBy.length
+                                  ? "Remove this modifier from all menu items before deleting it"
+                                  : "Delete modifier"
+                              }
+                              disabled={usedBy.length > 0}
+                              onClick={() => setDeleteTarget({ type: "modifier", value: g })}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      {usedBy.length > 0 && (
+                        <div className="mt-4 border-t pt-3">
+                          <button
+                            type="button"
+                            className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+                            onClick={() =>
+                              setExpandedModifierUsage((v) => ({ ...v, [g._id]: !v[g._id] }))
+                            }
+                          >
+                            {usageOpen ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+                            {usageOpen ? "Hide menu items" : "Show menu items"}
+                          </button>
+                          {usageOpen && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {usedBy.map((item) => (
+                                <span
+                                  key={item._id}
+                                  className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700"
+                                >
+                                  {item.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-            {!filteredGroups.length && (
-              <div className="rounded-2xl border bg-white p-8 text-center text-slate-500">
-                No modifiers found.
+                  );
+                })}
+                {!filteredGroups.length && (
+                  <div className="rounded-2xl border bg-white p-8 text-center text-slate-500">
+                    No modifiers found.
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
+          </>
+        ) : null}
         {(editing?.item || newFor) && (
           <ItemModal
             item={editing?.item}
