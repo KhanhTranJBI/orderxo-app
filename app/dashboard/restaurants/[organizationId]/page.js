@@ -32,7 +32,7 @@ export default async function RestaurantManager({ params }) {
   if (!org) redirect("/dashboard");
   const isAdmin = org.role === "admin" || org.role === "owner";
   const permissions = new Set(org.permissions || []);
-  const can = (p) => isAdmin || permissions.includes("*") || permissions.includes(p);
+  const can = (p) => isAdmin || permissions.has("*") || permissions.has(p);
 
   const locationsResult = await backendRequest(
     `/api/locations?organizationId=${encodeURIComponent(id)}`,
