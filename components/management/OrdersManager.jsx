@@ -81,7 +81,7 @@ function Orders({ organizationId, locationId, locationLoading }) {
         setActive(d.orders || []);
         setPagination(d.pagination);
       } else if (tab === "orders-history") {
-        d = await get("admin/orders/history", organizationId, locationId, {
+        d = await get("orders/history", organizationId, locationId, {
           page,
           search: debounced,
         });
@@ -129,12 +129,14 @@ function Orders({ organizationId, locationId, locationLoading }) {
     const id = setInterval(fetchActiveOrders, 15000);
     return () => clearInterval(id);
   }, [locationId, fetchActiveOrders]);
+  // Active carts are only relevant while the owner is viewing the Active Carts tab.
+  // `load()` fetches them immediately when the tab becomes active; this interval only
+  // keeps that visible tab fresh every 30 seconds. No carts API calls run on other tabs.
   useEffect(() => {
-    if (!locationId) return;
-    fetchActiveCarts();
+    if (!locationId || tab !== "active-carts") return;
     const id = setInterval(fetchActiveCarts, 30000);
     return () => clearInterval(id);
-  }, [locationId, fetchActiveCarts]);
+  }, [locationId, tab, fetchActiveCarts]);
   const reportCount = (report?.dailyReports || []).reduce(
     (s, d) => s + Number(d.orderCount || 0),
     0,
