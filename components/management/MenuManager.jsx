@@ -24,15 +24,15 @@ import { CSS } from "@dnd-kit/utilities";
 import useRestaurantLocation from "./useRestaurantLocation";
 
 const money = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`;
-async function api(path, org, loc, method = "GET", body) {
-  const q = new URLSearchParams({ organizationId: org, locationId: loc });
+async function api(path, org, loc, method = "GET", body, menuScope = "location") {
+  const q = new URLSearchParams({ organizationId: org, locationId: loc, menuScope });
   const r = await fetch(`/api/owner/manage/admin/${path}?${q}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body:
       method === "GET"
         ? undefined
-        : JSON.stringify({ ...body, organizationId: org, locationId: loc }),
+        : JSON.stringify({ ...body, organizationId: org, locationId: loc, menuScope }),
     cache: "no-store",
   });
   const d = await r.json().catch(() => ({}));
@@ -421,6 +421,117 @@ function ItemModal({ item, categoryId, categories, groups, onClose, onSave, onSa
   );
 }
 
+function LocationItemOverrideModal({ item, locationName, onClose, onSave, onReset }) {
+  const fields = ["name", "priceCents", "description", "image", "isActive"];
+  const initial = new Set(item?.overriddenFields || []);
+  const [enabled, setEnabled] = useState(
+    Object.fromEntries(fields.map((k) => [k, initial.has(k)])),
+  );
+  const [f, setF] = useState({
+    name: item?.name || "",
+    priceCents: item?.priceCents || 0,
+    description: item?.description || "",
+    image: item?.image || "",
+    isActive: item?.isActive !== false,
+  });
+  const toggle = (k) => setEnabled((v) => ({ ...v, [k]: !v[k] }));
+  const row = (k, label, child) => (
+    <div className="rounded-xl border p-3">
+      <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <input type="checkbox" checked={!!enabled[k]} onChange={() => toggle(k)} /> Override {label}
+      </label>
+      <div className={!enabled[k] ? "pointer-events-none opacity-45" : ""}>{child}</div>
+    </div>
+  );
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-w-2xl max-h-[92vh] overflow-auto rounded-2xl bg-white shadow-2xl">
+        <div className="sticky top-0 flex items-center justify-between border-b bg-white px-6 py-4">
+          <div>
+            <h2 className="text-xl font-bold">Customize for {locationName}</h2>
+            <p className="text-sm text-slate-500">
+              Unchecked fields continue using Restaurant Default.
+            </p>
+          </div>
+          <button onClick={onClose}>
+            <X />
+          </button>
+        </div>
+        <div className="space-y-3 p-6">
+          {row(
+            "name",
+            "name",
+            <input
+              className="field"
+              value={f.name}
+              onChange={(e) => setF({ ...f, name: e.target.value })}
+            />,
+          )}
+          {row(
+            "priceCents",
+            "price",
+            <input
+              className="field"
+              type="number"
+              min="0"
+              step=".01"
+              value={(f.priceCents || 0) / 100}
+              onChange={(e) =>
+                setF({ ...f, priceCents: Math.round(Number(e.target.value || 0) * 100) })
+              }
+            />,
+          )}
+          {row(
+            "description",
+            "description",
+            <textarea
+              className="field min-h-[90px]"
+              value={f.description}
+              onChange={(e) => setF({ ...f, description: e.target.value })}
+            />,
+          )}
+          {row(
+            "image",
+            "image",
+            <input
+              className="field"
+              value={f.image}
+              onChange={(e) => setF({ ...f, image: e.target.value })}
+            />,
+          )}
+          {row(
+            "isActive",
+            "availability",
+            <button
+              type="button"
+              className={f.isActive ? "primary" : "secondary"}
+              onClick={() => setF({ ...f, isActive: !f.isActive })}
+            >
+              {f.isActive ? "Available" : "Unavailable"}
+            </button>,
+          )}
+        </div>
+        <div className="sticky bottom-0 flex justify-between border-t bg-white px-6 py-4">
+          <button className="secondary" onClick={onReset}>
+            Reset to Restaurant Default
+          </button>
+          <div className="flex gap-2">
+            <button className="secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button
+              className="primary"
+              onClick={() => onSave({ ...f, overriddenFields: fields.filter((k) => enabled[k]) })}
+            >
+              Save customization
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CategoryModal({ category, onClose, onSave }) {
   const slugify = (v) =>
     v
@@ -583,15 +694,18 @@ export default function MenuManager({ organizationId }) {
     [categoryModal, setCategoryModal] = useState(null),
     [deleteTarget, setDeleteTarget] = useState(null),
     [deleting, setDeleting] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [menuScope, setMenuScope] = useState("default"),
+    [overrideItem, setOverrideItem] = useState(null),
+    [importingDefault, setImportingDefault] = useState(false);
   const load = useCallback(async () => {
     if (!loc.locationId) return;
     try {
       setError("");
       const [c, m, g] = await Promise.all([
-        api("categories", organizationId, loc.locationId),
-        api("menu", organizationId, loc.locationId),
-        api("modifiers", organizationId, loc.locationId),
+        api("categories", organizationId, loc.locationId, "GET", undefined, menuScope),
+        api("menu", organizationId, loc.locationId, "GET", undefined, menuScope),
+        api("modifiers", organizationId, loc.locationId, "GET", undefined, menuScope),
       ]);
       const cs = c.categories || [];
       setCategories(cs);
@@ -603,7 +717,7 @@ export default function MenuManager({ organizationId }) {
     } catch (e) {
       setError(e.message);
     }
-  }, [organizationId, loc.locationId]);
+  }, [organizationId, loc.locationId, menuScope]);
   useEffect(() => {
     load();
   }, [load]);
@@ -654,20 +768,29 @@ export default function MenuManager({ organizationId }) {
       loc.locationId,
       "POST",
       body,
+      "default",
     );
     setEditing(null);
     setNewFor(null);
     await load();
   };
   const saveGroup = async (g, id) => {
-    const d = await api("modifiers/upsert", organizationId, loc.locationId, "POST", {
-      ...g,
-      _id: id,
-    });
+    const d = await api(
+      "modifiers/upsert",
+      organizationId,
+      loc.locationId,
+      "POST",
+      {
+        ...g,
+        _id: id,
+      },
+      "default",
+    );
     await load();
     return d.group;
   };
   const catDrag = async ({ active, over }) => {
+    if (menuScope !== "default") return;
     if (!over || active.id === over.id) return;
     const ids = categories
       .sort((a, b) => (a.order || 0) - (b.order || 0))
@@ -676,11 +799,19 @@ export default function MenuManager({ organizationId }) {
     setCategories(
       next.map((id, i) => ({ ...categories.find((c) => String(c._id) === id), order: i })),
     );
-    await api("categories/reorder", organizationId, loc.locationId, "POST", {
-      orders: next.map((id, order) => ({ id, order })),
-    });
+    await api(
+      "categories/reorder",
+      organizationId,
+      loc.locationId,
+      "POST",
+      {
+        orders: next.map((id, order) => ({ id, order })),
+      },
+      "default",
+    );
   };
   const itemDrag = async (cat, its, { active, over }) => {
+    if (menuScope !== "default") return;
     if (!over || active.id === over.id) return;
     const ids = its.map((i) => String(i._id));
     const next = arrayMove(ids, ids.indexOf(String(active.id)), ids.indexOf(String(over.id)));
@@ -689,10 +820,17 @@ export default function MenuManager({ organizationId }) {
         next.includes(String(i._id)) ? { ...i, order: next.indexOf(String(i._id)) } : i,
       ),
     );
-    await api("menu/reorder", organizationId, loc.locationId, "POST", {
-      categorySlug: cat.slug,
-      orders: next.map((id, order) => ({ id, order })),
-    });
+    await api(
+      "menu/reorder",
+      organizationId,
+      loc.locationId,
+      "POST",
+      {
+        categorySlug: cat.slug,
+        orders: next.map((id, order) => ({ id, order })),
+      },
+      "default",
+    );
   };
   if (loc.loading) return <p>Loading locations…</p>;
   if (loc.error || !loc.locationId)
@@ -714,17 +852,29 @@ export default function MenuManager({ organizationId }) {
             <h1 className="text-3xl font-bold">Menu Manager</h1>
             <p className="text-slate-500 mt-1">Manage categories, items and modifiers.</p>
           </div>
-          <select
-            className="field max-w-xs"
-            value={loc.locationId}
-            onChange={(e) => loc.setLocationId(e.target.value)}
-          >
-            {loc.locations.map((l) => (
-              <option key={l._id || l.id} value={l._id || l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-[260px]">
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Menu for
+            </label>
+            <select
+              className="field"
+              value={menuScope === "default" ? "default" : loc.locationId}
+              onChange={(e) => {
+                if (e.target.value === "default") setMenuScope("default");
+                else {
+                  loc.setLocationId(e.target.value);
+                  setMenuScope("location");
+                }
+              }}
+            >
+              <option value="default">Restaurant Default</option>
+              {loc.locations.map((l) => (
+                <option key={l._id || l.id} value={l._id || l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <div className="flex gap-2 mt-6">
           <button
@@ -742,6 +892,48 @@ export default function MenuManager({ organizationId }) {
             Modifiers
           </button>
         </div>
+        {menuScope === "location" && (
+          <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
+            <strong>
+              {loc.locations.find((l) => String(l._id || l.id) === String(loc.locationId))?.name}
+            </strong>{" "}
+            inherits categories, modifiers and items from Restaurant Default. Edit an item to
+            override only the fields that differ for this location.
+          </div>
+        )}
+        {menuScope === "default" && items.length === 0 && (
+          <div className="mt-4 rounded-xl border bg-white p-4">
+            <p className="font-semibold">Restaurant Default menu is empty.</p>
+            <p className="mt-1 text-sm text-slate-500">
+              If your existing menu is stored under {loc.location?.name || "this location"}, import
+              it once to create the master menu.
+            </p>
+            <button
+              className="primary mt-3"
+              disabled={importingDefault}
+              onClick={async () => {
+                try {
+                  setImportingDefault(true);
+                  await api(
+                    "menu/default/import",
+                    organizationId,
+                    loc.locationId,
+                    "POST",
+                    {},
+                    "location",
+                  );
+                  await load();
+                } catch (e) {
+                  setError(e.message);
+                } finally {
+                  setImportingDefault(false);
+                }
+              }}
+            >
+              {importingDefault ? "Importing…" : "Import current location as Restaurant Default"}
+            </button>
+          </div>
+        )}
         {error && <p className="mt-4 text-red-600">{error}</p>}
         {tab === "items" ? (
           <>
@@ -766,9 +958,11 @@ export default function MenuManager({ organizationId }) {
                   </button>
                 )}
               </div>
-              <button className="primary" onClick={() => setCategoryModal({ mode: "create" })}>
-                <Plus size={17} className="inline" /> Category
-              </button>
+              {menuScope === "default" && (
+                <button className="primary" onClick={() => setCategoryModal({ mode: "create" })}>
+                  <Plus size={17} className="inline" /> Category
+                </button>
+              )}
             </div>
             <DndContext collisionDetection={closestCenter} onDragEnd={catDrag}>
               <SortableContext
@@ -798,25 +992,27 @@ export default function MenuManager({ organizationId }) {
                                 </span>
                               </button>
                             </div>
-                            <div className="flex gap-2">
-                              <button className="secondary" onClick={() => setNewFor(c._id)}>
-                                + Item
-                              </button>
-                              <button
-                                className="secondary"
-                                title="Edit category"
-                                onClick={() => setCategoryModal({ mode: "edit", category: c })}
-                              >
-                                <Pencil size={16} />
-                              </button>
-                              <button
-                                className="danger"
-                                title="Delete category"
-                                onClick={() => setDeleteTarget({ type: "category", value: c })}
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
+                            {menuScope === "default" && (
+                              <div className="flex gap-2">
+                                <button className="secondary" onClick={() => setNewFor(c._id)}>
+                                  + Item
+                                </button>
+                                <button
+                                  className="secondary"
+                                  title="Edit category"
+                                  onClick={() => setCategoryModal({ mode: "edit", category: c })}
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  className="danger"
+                                  title="Delete category"
+                                  onClick={() => setDeleteTarget({ type: "category", value: c })}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                           {!collapsed[c.slug] && (
                             <DndContext
@@ -855,40 +1051,60 @@ export default function MenuManager({ organizationId }) {
                                             </div>
                                           </div>
                                           <div className="flex gap-2">
-                                            <button
-                                              className="secondary"
-                                              onClick={async () => {
-                                                await api(
-                                                  "menu/update-active",
-                                                  organizationId,
-                                                  loc.locationId,
-                                                  "POST",
-                                                  {
-                                                    menuItemId: i._id,
-                                                    isActive: i.isActive === false,
-                                                  },
-                                                );
-                                                await load();
-                                              }}
-                                            >
-                                              {i.isActive === false ? "Activate" : "Deactivate"}
-                                            </button>
-                                            <button
-                                              className="secondary"
-                                              onClick={() =>
-                                                setEditing({ item: i, categoryId: c._id })
-                                              }
-                                            >
-                                              <Pencil size={16} />
-                                            </button>
-                                            <button
-                                              className="danger"
-                                              onClick={() =>
-                                                setDeleteTarget({ type: "item", value: i })
-                                              }
-                                            >
-                                              <Trash2 size={16} />
-                                            </button>
+                                            {menuScope === "location" ? (
+                                              <>
+                                                {i.overriddenFields?.length > 0 && (
+                                                  <span className="self-center rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-700">
+                                                    Customized
+                                                  </span>
+                                                )}
+                                                <button
+                                                  className="secondary"
+                                                  onClick={() => setOverrideItem(i)}
+                                                >
+                                                  <Pencil size={16} className="inline mr-1" />{" "}
+                                                  Customize
+                                                </button>
+                                              </>
+                                            ) : (
+                                              <>
+                                                <button
+                                                  className="secondary"
+                                                  onClick={async () => {
+                                                    await api(
+                                                      "menu/update-active",
+                                                      organizationId,
+                                                      loc.locationId,
+                                                      "POST",
+                                                      {
+                                                        menuItemId: i._id,
+                                                        isActive: i.isActive === false,
+                                                      },
+                                                      "default",
+                                                    );
+                                                    await load();
+                                                  }}
+                                                >
+                                                  {i.isActive === false ? "Activate" : "Deactivate"}
+                                                </button>
+                                                <button
+                                                  className="secondary"
+                                                  onClick={() =>
+                                                    setEditing({ item: i, categoryId: c._id })
+                                                  }
+                                                >
+                                                  <Pencil size={16} />
+                                                </button>
+                                                <button
+                                                  className="danger"
+                                                  onClick={() =>
+                                                    setDeleteTarget({ type: "item", value: i })
+                                                  }
+                                                >
+                                                  <Trash2 size={16} />
+                                                </button>
+                                              </>
+                                            )}
                                           </div>
                                         </div>
                                       )}
@@ -929,9 +1145,11 @@ export default function MenuManager({ organizationId }) {
                   </button>
                 )}
               </div>
-              <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
-                <Plus size={17} className="inline" /> Add Modifier
-              </button>
+              {menuScope === "default" && (
+                <button className="primary shrink-0" onClick={() => setEditing({ group: {} })}>
+                  <Plus size={17} className="inline" /> Add Modifier
+                </button>
+              )}
             </div>
             {filteredGroups.map((g) => {
               const usedBy = modifierUsage.get(String(g._id)) || [];
@@ -952,27 +1170,29 @@ export default function MenuManager({ organizationId }) {
                           : "Not used by any menu items"}
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="secondary"
-                        title="Edit modifier"
-                        onClick={() => setEditing({ group: g })}
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        className="danger disabled:cursor-not-allowed disabled:opacity-40"
-                        title={
-                          usedBy.length
-                            ? "Remove this modifier from all menu items before deleting it"
-                            : "Delete modifier"
-                        }
-                        disabled={usedBy.length > 0}
-                        onClick={() => setDeleteTarget({ type: "modifier", value: g })}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                    {menuScope === "default" && (
+                      <div className="flex gap-2">
+                        <button
+                          className="secondary"
+                          title="Edit modifier"
+                          onClick={() => setEditing({ group: g })}
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          className="danger disabled:cursor-not-allowed disabled:opacity-40"
+                          title={
+                            usedBy.length
+                              ? "Remove this modifier from all menu items before deleting it"
+                              : "Delete modifier"
+                          }
+                          disabled={usedBy.length > 0}
+                          onClick={() => setDeleteTarget({ type: "modifier", value: g })}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   {usedBy.length > 0 && (
                     <div className="mt-4 border-t pt-3">
@@ -1034,6 +1254,40 @@ export default function MenuManager({ organizationId }) {
             }}
           />
         )}
+        {overrideItem && (
+          <LocationItemOverrideModal
+            item={overrideItem}
+            locationName={
+              loc.locations.find((l) => String(l._id || l.id) === String(loc.locationId))?.name ||
+              "location"
+            }
+            onClose={() => setOverrideItem(null)}
+            onSave={async (data) => {
+              await api(
+                "menu/override",
+                organizationId,
+                loc.locationId,
+                "POST",
+                { menuItemId: overrideItem._id, ...data },
+                "location",
+              );
+              setOverrideItem(null);
+              await load();
+            }}
+            onReset={async () => {
+              await api(
+                "menu/override",
+                organizationId,
+                loc.locationId,
+                "DELETE",
+                { menuItemId: overrideItem._id },
+                "location",
+              );
+              setOverrideItem(null);
+              await load();
+            }}
+          />
+        )}
         {categoryModal && (
           <CategoryModal
             category={categoryModal.category || null}
@@ -1045,6 +1299,7 @@ export default function MenuManager({ organizationId }) {
                 loc.locationId,
                 "POST",
                 categoryModal.mode === "edit" ? { ...data, id: categoryModal.category._id } : data,
+                "default",
               );
               await load();
             }}
@@ -1070,17 +1325,38 @@ export default function MenuManager({ organizationId }) {
               setDeleting(true);
               try {
                 if (deleteTarget.type === "category")
-                  await api("categories/delete", organizationId, loc.locationId, "POST", {
-                    id: deleteTarget.value._id,
-                  });
+                  await api(
+                    "categories/delete",
+                    organizationId,
+                    loc.locationId,
+                    "POST",
+                    {
+                      id: deleteTarget.value._id,
+                    },
+                    "default",
+                  );
                 else if (deleteTarget.type === "item")
-                  await api("menu/delete", organizationId, loc.locationId, "POST", {
-                    menuItemId: deleteTarget.value._id,
-                  });
+                  await api(
+                    "menu/delete",
+                    organizationId,
+                    loc.locationId,
+                    "POST",
+                    {
+                      menuItemId: deleteTarget.value._id,
+                    },
+                    "default",
+                  );
                 else
-                  await api("modifiers/delete", organizationId, loc.locationId, "POST", {
-                    id: deleteTarget.value._id,
-                  });
+                  await api(
+                    "modifiers/delete",
+                    organizationId,
+                    loc.locationId,
+                    "POST",
+                    {
+                      id: deleteTarget.value._id,
+                    },
+                    "default",
+                  );
                 setDeleteTarget(null);
                 await load();
               } catch (e) {

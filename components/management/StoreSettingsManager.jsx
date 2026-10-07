@@ -36,6 +36,8 @@ function localInput(v) {
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const [tab, setTab] = useState("hours");
+  const [scope, setScope] = useState("default"),
+    [useDefault, setUseDefault] = useState(false);
   const [manual, setManual] = useState(true),
     [hours, setHours] = useState(defaultHours),
     [notices, setNotices] = useState([]),
@@ -48,16 +50,19 @@ export default function StoreSettingsManager({ organizationId }) {
     [form, setForm] = useState(emptyNotice),
     [noticeSaving, setNoticeSaving] = useState(false),
     [deleting, setDeleting] = useState(null);
+  const selectedLocationId = scope === "default" ? "" : scope;
+  const selectedLocation = loc.locations.find((l) => String(l._id || l.id) === selectedLocationId);
   const load = useCallback(async () => {
-    if (!loc.locationId) return;
+    if (scope !== "default" && !selectedLocationId) return;
     setLoading(true);
     setError("");
     try {
       const [a, n] = await Promise.all([
-        req("store-config", organizationId, loc.locationId),
-        req("notices", organizationId, loc.locationId),
+        req("store-config", organizationId, selectedLocationId),
+        req("notices", organizationId, selectedLocationId),
       ]);
       const c = a.config || {};
+      setUseDefault(Boolean(a.useDefault));
       setManual(c.isOpenManual !== false);
       if (Array.isArray(c.hours) && c.hours.length) {
         const map = new Map(c.hours.map((h) => [h.day, h]));
@@ -71,7 +76,7 @@ export default function StoreSettingsManager({ organizationId }) {
     } finally {
       setLoading(false);
     }
-  }, [organizationId, loc.locationId]);
+  }, [organizationId, scope, selectedLocationId]);
   useEffect(() => {
     load();
   }, [load]);
@@ -79,11 +84,14 @@ export default function StoreSettingsManager({ organizationId }) {
     setSaving(true);
     setError("");
     try {
-      await req("store-config", organizationId, loc.locationId, "PATCH", {
-        isOpenManual: manual,
-        hours,
-      });
-      setMessage("Store settings saved");
+      await req(
+        "store-config",
+        organizationId,
+        selectedLocationId,
+        "PATCH",
+        scope === "default" ? { hours } : { isOpenManual: manual, hours },
+      );
+      setMessage(scope === "default" ? "Restaurant default hours saved" : "Store settings saved");
       setTimeout(() => setMessage(""), 2500);
     } catch (e) {
       setError(e.message);
@@ -92,6 +100,50 @@ export default function StoreSettingsManager({ organizationId }) {
     }
   };
   const change = (i, k, v) => setHours((h) => h.map((x, n) => (n === i ? { ...x, [k]: v } : x)));
+  const customize = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await req("store-config", organizationId, selectedLocationId, "POST", {
+        action: "customizeLocation",
+      });
+      setMessage(`Custom settings enabled for ${selectedLocation?.name || "location"}`);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+  const useRestaurantDefault = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await req("store-config", organizationId, selectedLocationId, "POST", {
+        action: "useRestaurantDefault",
+      });
+      setMessage(`Now using Restaurant Default for ${selectedLocation?.name || "location"}`);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+  const saveManual = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await req("store-config", organizationId, selectedLocationId, "PATCH", {
+        isOpenManual: manual,
+      });
+      setMessage("Ordering status saved");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   const openNew = () => {
     setEditing(null);
     setForm(emptyNotice);
@@ -113,7 +165,7 @@ export default function StoreSettingsManager({ organizationId }) {
     setNoticeSaving(true);
     setError("");
     try {
-      await req("notices", organizationId, loc.locationId, editing ? "PATCH" : "POST", {
+      await req("notices", organizationId, selectedLocationId, editing ? "PATCH" : "POST", {
         ...form,
         noticeId: editing?._id,
         startsAt: form.startsAt || null,
@@ -129,7 +181,7 @@ export default function StoreSettingsManager({ organizationId }) {
   };
   const toggleNotice = async (n) => {
     try {
-      await req("notices", organizationId, loc.locationId, "PATCH", {
+      await req("notices", organizationId, selectedLocationId, "PATCH", {
         noticeId: n._id,
         isActive: !n.isActive,
       });
@@ -141,7 +193,9 @@ export default function StoreSettingsManager({ organizationId }) {
   const deleteNotice = async () => {
     if (!deleting) return;
     try {
-      await req("notices", organizationId, loc.locationId, "DELETE", { noticeId: deleting._id });
+      await req("notices", organizationId, selectedLocationId, "DELETE", {
+        noticeId: deleting._id,
+      });
       setDeleting(null);
       await load();
     } catch (e) {
@@ -164,19 +218,17 @@ export default function StoreSettingsManager({ organizationId }) {
         <p className="mt-2 text-slate-600">
           Control ordering status, weekly business hours, and location notices.
         </p>
-        {loc.locations.length > 1 && (
-          <select
-            className="field mt-5 max-w-sm"
-            value={loc.locationId}
-            onChange={(e) => loc.setLocationId(e.target.value)}
-          >
+        <div className="mt-5 max-w-sm">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">Settings for</label>
+          <select className="field" value={scope} onChange={(e) => setScope(e.target.value)}>
+            <option value="default">Restaurant Default</option>
             {loc.locations.map((l) => (
-              <option key={l._id} value={l._id}>
+              <option key={l._id || l.id} value={String(l._id || l.id)}>
                 {l.name}
               </option>
             ))}
           </select>
-        )}
+        </div>
         {(loc.error || error) && (
           <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{loc.error || error}</p>
         )}
@@ -200,27 +252,65 @@ export default function StoreSettingsManager({ organizationId }) {
         {loading || loc.loading ? (
           <p className="mt-6">Loading settings…</p>
         ) : (
-          loc.locationId && (
+          (scope === "default" || selectedLocationId) && (
             <>
               {tab === "hours" && (
                 <>
-                  <section className="mt-5 rounded-2xl border bg-white p-6">
-                    <div className="flex items-center justify-between gap-5">
-                      <div>
-                        <h2 className="text-xl font-bold">Manual ordering status</h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                          Turn this off to immediately stop accepting online orders at this
-                          location.
-                        </p>
+                  {scope !== "default" && (
+                    <section className="mt-5 rounded-2xl border bg-white p-6">
+                      <div className="flex flex-wrap items-center justify-between gap-5">
+                        <div>
+                          <h2 className="text-xl font-bold">Manual ordering status</h2>
+                          <p className="mt-1 text-sm text-slate-500">
+                            Always specific to {selectedLocation?.name || "this location"}. It never
+                            inherits from Restaurant Default.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => setManual((v) => !v)}
+                            className={`rounded-full px-5 py-2 font-semibold ${manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"}`}
+                          >
+                            {manual ? "Open" : "Closed"}
+                          </button>
+                          <button
+                            disabled={saving}
+                            onClick={saveManual}
+                            className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                          >
+                            Save status
+                          </button>
+                        </div>
                       </div>
-                      <button
-                        onClick={() => setManual((v) => !v)}
-                        className={`rounded-full px-5 py-2 font-semibold ${manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"}`}
-                      >
-                        {manual ? "Open" : "Closed"}
-                      </button>
-                    </div>
-                  </section>
+                    </section>
+                  )}
+                  {scope !== "default" && (
+                    <section className="mt-4 rounded-2xl border bg-white p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <h2 className="font-bold">Store configuration</h2>
+                          <p className="mt-1 text-sm text-slate-500">
+                            {useDefault
+                              ? `${selectedLocation?.name || "This location"} is using Restaurant Default hours and notices.`
+                              : `${selectedLocation?.name || "This location"} has custom hours and notices.`}
+                          </p>
+                        </div>
+                        {useDefault ? (
+                          <button disabled={saving} onClick={customize} className="primary">
+                            Customize for this location
+                          </button>
+                        ) : (
+                          <button
+                            disabled={saving}
+                            onClick={useRestaurantDefault}
+                            className="rounded-lg border px-4 py-2 font-semibold"
+                          >
+                            Use Restaurant Default
+                          </button>
+                        )}
+                      </div>
+                    </section>
+                  )}
                   <section className="mt-4 rounded-2xl border bg-white p-6">
                     <h2 className="text-xl font-bold">Weekly hours</h2>
                     <div className="mt-5 space-y-3">
@@ -234,20 +324,21 @@ export default function StoreSettingsManager({ organizationId }) {
                             <input
                               type="checkbox"
                               checked={h.isClosed}
+                              disabled={useDefault}
                               onChange={(e) => change(i, "isClosed", e.target.checked)}
                             />{" "}
                             Closed
                           </label>
                           <input
                             type="time"
-                            disabled={h.isClosed}
+                            disabled={h.isClosed || useDefault}
                             className="field"
                             value={h.open}
                             onChange={(e) => change(i, "open", e.target.value)}
                           />
                           <input
                             type="time"
-                            disabled={h.isClosed}
+                            disabled={h.isClosed || useDefault}
                             className="field"
                             value={h.close}
                             onChange={(e) => change(i, "close", e.target.value)}
@@ -256,8 +347,12 @@ export default function StoreSettingsManager({ organizationId }) {
                       ))}
                     </div>
                   </section>
-                  <button disabled={saving} onClick={save} className="primary mt-5">
-                    {saving ? "Saving…" : "Save store hours"}
+                  <button disabled={saving || useDefault} onClick={save} className="primary mt-5">
+                    {saving
+                      ? "Saving…"
+                      : scope === "default"
+                        ? "Save default hours"
+                        : "Save store hours"}
                   </button>
                 </>
               )}
@@ -267,11 +362,18 @@ export default function StoreSettingsManager({ organizationId }) {
                     <div>
                       <h2 className="text-xl font-bold">Notices</h2>
                       <p className="mt-1 text-sm text-slate-500">
-                        Location-specific announcements such as special hours, closures, or service
-                        updates.
+                        {scope === "default"
+                          ? "Default announcements inherited by locations that use Restaurant Default."
+                          : useDefault
+                            ? `Inherited from Restaurant Default for ${selectedLocation?.name || "this location"}.`
+                            : `Custom announcements for ${selectedLocation?.name || "this location"}.`}
                       </p>
                     </div>
-                    <button onClick={openNew} className="primary flex shrink-0 items-center gap-2">
+                    <button
+                      disabled={useDefault}
+                      onClick={openNew}
+                      className="primary flex shrink-0 items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
                       <Plus size={17} /> Add notice
                     </button>
                   </div>
@@ -313,20 +415,23 @@ export default function StoreSettingsManager({ organizationId }) {
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
                               <button
-                                className="rounded-lg border px-3 py-2 text-sm font-semibold"
+                                disabled={useDefault}
+                                className="rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-40"
                                 onClick={() => toggleNotice(n)}
                               >
                                 {n.isActive ? "Deactivate" : "Activate"}
                               </button>
                               <button
-                                className="rounded-lg border p-2"
+                                disabled={useDefault}
+                                className="rounded-lg border p-2 disabled:opacity-40"
                                 onClick={() => openEdit(n)}
                                 aria-label="Edit notice"
                               >
                                 <Pencil size={17} />
                               </button>
                               <button
-                                className="rounded-lg border p-2 text-red-600"
+                                disabled={useDefault}
+                                className="rounded-lg border p-2 text-red-600 disabled:opacity-40"
                                 onClick={() => setDeleting(n)}
                                 aria-label="Delete notice"
                               >
