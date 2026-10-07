@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const tools = [
   ["Orders", "orders", "Confirm, prepare, complete, refund and review orders."],
   ["Menu", "menu", "Items, categories, modifiers, pricing and availability."],
-  ["Store settings", "store", "Hours, notices and ordering configuration."],
+  ["Store settings", "store", "Hours, ordering status and location notices."],
   [
     "Restaurant settings",
     "settings",

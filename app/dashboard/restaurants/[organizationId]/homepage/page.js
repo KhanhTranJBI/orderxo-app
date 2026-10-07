@@ -1,4 +1,4 @@
-import ManagementPage from "../../../../../components/management/ManagementPage";
+import HomepageSlidesManager from "../../../../../components/management/HomepageSlidesManager";
 export default function Page({ params }) {
-  return <ManagementPage organizationId={params.organizationId} section="homepage" />;
+  return <HomepageSlidesManager organizationId={params.organizationId} />;
 }
