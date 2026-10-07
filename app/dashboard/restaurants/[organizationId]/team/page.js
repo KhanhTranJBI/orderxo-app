@@ -125,10 +125,7 @@ export default function Team() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-6xl">
-        <Link
-          className="text-sm font-semibold text-orange-600"
-          href={`/dashboard/restaurants/${organizationId}`}
-        >
+        <Link className="text-sm font-semibold text-orange-600" href={`/dashboard`}>
           ← Restaurant workspace
         </Link>
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
