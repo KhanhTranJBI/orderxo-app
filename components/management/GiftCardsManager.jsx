@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Gift, History, X } from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
 const money = (n) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format((n || 0) / 100);
@@ -7,81 +8,180 @@ export default function GiftCardsManager({ organizationId }) {
   return (
     <LocationPageShell
       organizationId={organizationId}
-      title="Gift cards"
-      description="Gift cards issued at the selected location."
+      title="Gift Cards"
+      description="Look up and manage gift cards for the selected location."
     >
       {({ locationId }) => <Cards organizationId={organizationId} locationId={locationId} />}
     </LocationPageShell>
   );
 }
 function Cards({ organizationId, locationId }) {
-  const [items, setItems] = useState([]),
+  const [tab, setTab] = useState("active"),
+    [items, setItems] = useState([]),
     [page, setPage] = useState(1),
     [meta, setMeta] = useState({}),
-    [err, setErr] = useState("");
-  useEffect(() => {
+    [code, setCode] = useState(""),
+    [found, setFound] = useState(null),
+    [err, setErr] = useState(""),
+    [loading, setLoading] = useState(false);
+  const load = async () => {
     if (!locationId) return;
-    (async () => {
-      let r = await fetch(
-          `/api/owner/manage/admin/gift-cards?organizationId=${organizationId}&locationId=${locationId}&page=${page}&limit=25`,
-          { cache: "no-store" },
-        ),
-        d = await r.json();
-      if (r.ok) {
-        setItems(d.giftCards || []);
-        setMeta(d.pagination || {});
-        setErr("");
-      } else setErr(d.error || "Unable to load gift cards");
-    })();
-  }, [locationId, page]);
+    setLoading(true);
+    const path = tab === "active" ? "gift-cards" : "gift-cards/history";
+    const r = await fetch(
+        `/api/owner/manage/admin/${path}?organizationId=${organizationId}&locationId=${locationId}&page=${page}&limit=12`,
+        { cache: "no-store" },
+      ),
+      d = await r.json();
+    r.ok
+      ? (setItems(d.giftCards || []), setMeta(d.pagination || {}), setErr(""))
+      : setErr(d.error || "Unable to load gift cards");
+    setLoading(false);
+  };
+  useEffect(() => {
+    setPage(1);
+  }, [tab, locationId]);
+  useEffect(() => {
+    load();
+  }, [tab, locationId, page]);
+  async function check() {
+    if (!code.trim()) return;
+    setErr("");
+    const r = await fetch(
+        `/api/owner/manage/admin/gift-cards/check?organizationId=${organizationId}&locationId=${locationId}&code=${encodeURIComponent(code.trim().toUpperCase())}`,
+        { cache: "no-store" },
+      ),
+      d = await r.json();
+    r.ok ? setFound(d.giftCard) : setErr(d.error || "Gift card not found");
+  }
   return (
     <section className="mt-8">
-      <div className="overflow-hidden rounded-2xl border bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="p-4">Recipient</th>
-              <th className="p-4">Original</th>
-              <th className="p-4">Balance</th>
-              <th className="p-4">Status</th>
-              <th className="p-4">Created</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((g) => (
-              <tr key={g._id} className="border-t">
-                <td className="p-4">
-                  <b>{g.recipientName}</b>
-                  <div className="text-slate-500">{g.recipientEmail}</div>
-                </td>
-                <td className="p-4">{money(g.amountCents)}</td>
-                <td className="p-4 font-semibold">{money(g.balanceCents)}</td>
-                <td className="p-4 capitalize">{g.status}</td>
-                <td className="p-4">{new Date(g.createdAt).toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!err && !items.length && (
-          <p className="p-8 text-center text-slate-500">No gift cards for this location.</p>
+      <div className="overflow-hidden rounded-2xl bg-white shadow-md">
+        <nav className="flex gap-8 px-6">
+          {[
+            [
+              "active",
+              Gift,
+              `Active Gift Cards${tab === "active" && !loading ? ` (${meta.total || 0})` : ""}`,
+            ],
+            [
+              "history",
+              History,
+              `Gift Cards History${tab === "history" && !loading ? ` (${meta.total || 0})` : ""}`,
+            ],
+          ].map(([id, Icon, label]) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`relative flex items-center gap-2 py-5 text-lg font-semibold ${tab === id ? "text-orange-600" : "text-slate-500"} after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-orange-500 ${tab === id ? "after:scale-x-100" : "after:scale-x-0"}`}
+            >
+              <Icon size={18} />
+              {label}
+            </button>
+          ))}
+        </nav>
+      </div>
+      <div className="mx-auto mt-8 max-w-xl rounded-2xl bg-white p-7 shadow">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-orange-600">
+          🎟️ Gift Card Lookup
+        </h2>
+        <p className="mt-5 text-slate-500">
+          Enter the gift card code <b>after</b> your restaurant gift card prefix.
+        </p>
+        <div className="mt-5 flex gap-3">
+          <div className="relative flex-1">
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="XXXX-XXXX-XXXX-XXXX"
+              className="w-full rounded-xl border px-4 py-3 font-mono tracking-wider"
+            />
+            {code && (
+              <button
+                onClick={() => {
+                  setCode("");
+                  setFound(null);
+                }}
+                className="absolute right-3 top-3 text-slate-400"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          <button
+            disabled={!code}
+            onClick={check}
+            className="rounded-xl bg-orange-500 px-6 py-3 font-bold text-white disabled:opacity-40"
+          >
+            Check
+          </button>
+        </div>
+        {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
+        {found && (
+          <div className="mt-5 rounded-xl border bg-slate-50 p-4">
+            <div className="flex justify-between">
+              <b>{found.recipientName}</b>
+              <span className="capitalize">{found.status}</span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">{found.recipientEmail}</p>
+            <p className="mt-3 text-xl font-bold">Balance: {money(found.balanceCents)}</p>
+          </div>
         )}
       </div>
-      {err && <p className="mt-4 text-red-600">{err}</p>}
-      <div className="mt-4 flex justify-end gap-2">
-        <button
-          disabled={!meta.hasPrev}
-          onClick={() => setPage((x) => x - 1)}
-          className="rounded-lg border px-3 py-2 disabled:opacity-40"
-        >
-          Previous
-        </button>
-        <button
-          disabled={!meta.hasNext}
-          onClick={() => setPage((x) => x + 1)}
-          className="rounded-lg border px-3 py-2 disabled:opacity-40"
-        >
-          Next
-        </button>
+      <div className="mt-8">
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+        ) : items.length ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {items.map((g) => (
+              <div key={g._id || g.id} className="rounded-2xl border bg-white p-5 shadow-sm">
+                <div className="flex justify-between">
+                  <span>Status</span>
+                  <b className="capitalize">{g.status}</b>
+                </div>
+                <div className="mt-4 border-t pt-4">
+                  <p className="font-bold">{g.recipientName}</p>
+                  <p className="text-sm text-slate-500">{g.recipientEmail}</p>
+                </div>
+                <div className="mt-4 flex justify-between">
+                  <span>Original</span>
+                  <b>{money(g.amountCents)}</b>
+                </div>
+                <div className="mt-2 flex justify-between">
+                  <span>Balance</span>
+                  <b className="text-orange-600">{money(g.balanceCents)}</b>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="py-12 text-center text-lg text-slate-500">No gift cards found</p>
+        )}
+      </div>
+      <div className="mt-8 flex items-center justify-between text-slate-500">
+        <span>
+          Page {meta.page || 1} of {meta.totalPages || 0} • {meta.total || 0} gift cards
+        </span>
+        <div className="flex gap-3">
+          <button
+            disabled={!meta.hasPrev}
+            onClick={() => setPage((x) => x - 1)}
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
+          >
+            ← Previous
+          </button>
+          <button
+            disabled={!meta.hasNext}
+            onClick={() => setPage((x) => x + 1)}
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
+          >
+            Next →
+          </button>
+        </div>
       </div>
     </section>
   );
