@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -26,7 +27,7 @@ import useRestaurantLocation from "./useRestaurantLocation";
 const money = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`;
 async function api(path, org, loc, method = "GET", body, menuScope = "location") {
   const q = new URLSearchParams({ organizationId: org, locationId: loc, menuScope });
-  const r = await fetch(`/api/owner/manage/admin/${path}?${q}`, {
+  const r = await ownerFetch(`/api/owner/manage/admin/${path}?${q}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body:

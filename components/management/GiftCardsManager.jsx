@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useEffect, useState } from "react";
 import { Gift, History, X } from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
@@ -28,7 +29,7 @@ function Cards({ organizationId, locationId }) {
     if (!locationId) return;
     setLoading(true);
     const path = tab === "active" ? "gift-cards" : "gift-cards/history";
-    const r = await fetch(
+    const r = await ownerFetch(
         `/api/owner/manage/admin/${path}?organizationId=${organizationId}&locationId=${locationId}&page=${page}&limit=12`,
         { cache: "no-store" },
       ),
@@ -47,7 +48,7 @@ function Cards({ organizationId, locationId }) {
   async function check() {
     if (!code.trim()) return;
     setErr("");
-    const r = await fetch(
+    const r = await ownerFetch(
         `/api/owner/manage/admin/gift-cards/check?organizationId=${organizationId}&locationId=${locationId}&code=${encodeURIComponent(code.trim().toUpperCase())}`,
         { cache: "no-store" },
       ),

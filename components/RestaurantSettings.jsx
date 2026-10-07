@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../lib/ownerFetch";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -70,7 +71,7 @@ function mergeLocation(value = {}) {
 }
 
 async function jsonFetch(url, options) {
-  const response = await fetch(url, {
+  const response = await ownerFetch(url, {
     ...options,
     headers: { "Content-Type": "application/json", ...(options?.headers || {}) },
   });

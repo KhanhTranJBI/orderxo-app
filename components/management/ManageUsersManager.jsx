@@ -1,11 +1,12 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, ArrowUpDown, Loader2, Search, X } from "lucide-react";
 
 async function jsonFetch(url) {
-  const res = await fetch(url, { cache: "no-store" });
+  const res = await ownerFetch(url, { cache: "no-store" });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || "Failed to load users");
   return data;

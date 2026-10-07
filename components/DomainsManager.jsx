@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
 
 function normalizeDomain(value) {
@@ -24,7 +25,7 @@ export default function DomainsManager({ organization, locations }) {
     setError("");
     setMessage("");
     try {
-      const r = await fetch("/api/owner/domains", {
+      const r = await ownerFetch("/api/owner/domains", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

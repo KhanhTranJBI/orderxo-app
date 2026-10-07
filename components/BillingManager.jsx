@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
 const plans = [
   { id: "starter", name: "Starter" },
@@ -12,7 +13,7 @@ export default function BillingManager({ organizationId, subscription }) {
     setBusy(key);
     setError("");
     try {
-      const r = await fetch(path, {
+      const r = await ownerFetch(path, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

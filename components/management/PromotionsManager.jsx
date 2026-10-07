@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Power, X, Tag } from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
@@ -22,7 +23,7 @@ function Promos({ organizationId, locationId }) {
     [err, setErr] = useState("");
   const load = async () => {
     if (!locationId) return;
-    const r = await fetch(
+    const r = await ownerFetch(
         `/api/owner/manage/admin/promotions?organizationId=${organizationId}&locationId=${locationId}`,
         { cache: "no-store" },
       ),
@@ -35,7 +36,7 @@ function Promos({ organizationId, locationId }) {
     load();
   }, [locationId]);
   const toggle = async (p) => {
-    await fetch(
+    await ownerFetch(
       `/api/owner/manage/admin/promotions/update-active?organizationId=${organizationId}`,
       {
         method: "PATCH",
@@ -196,7 +197,7 @@ function PromoModal({ p, organizationId, locationId, close, saved }) {
       active: f.active,
     };
     if (p) body.id = p._id;
-    const r = await fetch(
+    const r = await ownerFetch(
         `/api/owner/manage/admin/promotions/${p ? "update" : "create"}?organizationId=${organizationId}`,
         {
           method: p ? "PATCH" : "POST",

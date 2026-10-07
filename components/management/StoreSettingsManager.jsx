@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Clock3, Info, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -16,7 +17,7 @@ const emptyNotice = {
 };
 async function req(path, org, loc, method = "GET", body) {
   const q = new URLSearchParams({ organizationId: org, locationId: loc });
-  const r = await fetch(`/api/owner/manage/${path}?${q}`, {
+  const r = await ownerFetch(`/api/owner/manage/${path}?${q}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify({ ...body, locationId: loc }) : undefined,

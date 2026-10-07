@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -16,7 +17,7 @@ async function api(path, organizationId, method = "GET", body, locationId = "") 
   const q = new URLSearchParams({ organizationId });
   if (locationId) q.set("locationId", locationId);
   const payload = body ? { ...body, ...(locationId ? { locationId } : {}) } : undefined;
-  const r = await fetch(`/api/owner/manage/${path}?${q}`, {
+  const r = await ownerFetch(`/api/owner/manage/${path}?${q}`, {
     method,
     headers: { "Content-Type": "application/json" },
     body: payload ? JSON.stringify(payload) : undefined,

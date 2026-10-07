@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../lib/ownerFetch";
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
@@ -18,7 +19,7 @@ export default function AddLocationButton({ organizationId }) {
     setSaving(true);
     setError("");
     try {
-      const r = await fetch("/api/owner/locations", {
+      const r = await ownerFetch("/api/owner/locations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organizationId, name: value }),

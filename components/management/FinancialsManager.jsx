@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useEffect, useState } from "react";
 import LocationPageShell from "./LocationPageShell";
 const usd = (n) => Number(n || 0).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -27,7 +28,7 @@ function Fin({ organizationId, locationId }) {
     if (!locationId) return;
     (async () => {
       setLoading(true);
-      const r = await fetch(
+      const r = await ownerFetch(
           `/api/owner/manage/admin/financials/statements?organizationId=${organizationId}&locationId=${locationId}&year=${year}&limit=24`,
           { cache: "no-store" },
         ),
@@ -38,7 +39,7 @@ function Fin({ organizationId, locationId }) {
   }, [organizationId, locationId, year]);
   const s = d.summary || {};
   const download = async (month) => {
-    const r = await fetch(
+    const r = await ownerFetch(
       `/api/owner/financials/statement-download?organizationId=${organizationId}&locationId=${locationId}&month=${month}`,
     );
     if (!r.ok) {

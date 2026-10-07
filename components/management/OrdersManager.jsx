@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BarChart3,
@@ -18,7 +19,9 @@ async function get(path, organizationId, locationId, params = {}) {
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) q.set(key, String(value));
   });
-  const r = await fetch(`/api/owner/manage/admin/${path}?${q.toString()}`, { cache: "no-store" });
+  const r = await ownerFetch(`/api/owner/manage/admin/${path}?${q.toString()}`, {
+    cache: "no-store",
+  });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(d.error || "Request failed");
   return d;

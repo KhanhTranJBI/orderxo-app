@@ -1,4 +1,5 @@
 "use client";
+import { ownerFetch } from "../../lib/ownerFetch";
 import { useEffect, useState } from "react";
 
 export default function useRestaurantLocation(organizationId) {
@@ -12,7 +13,7 @@ export default function useRestaurantLocation(organizationId) {
       try {
         setLoading(true);
         setError("");
-        const r = await fetch(
+        const r = await ownerFetch(
           `/api/owner/locations?organizationId=${encodeURIComponent(organizationId)}`,
           { cache: "no-store" },
         );

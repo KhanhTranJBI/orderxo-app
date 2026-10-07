@@ -100,21 +100,15 @@ export default async function RestaurantManager({ params }) {
         <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
           <Link
             className="rounded-lg border bg-white px-4 py-2 font-semibold"
-            href={`/dashboard/settings/restaurant?organizationId=${encodeURIComponent(id)}`}
-          >
-            Restaurant profile
-          </Link>
-          <Link
-            className="rounded-lg border bg-white px-4 py-2 font-semibold"
             href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
           >
-            Domains
+            Websites & domains
           </Link>
           <Link
             className="rounded-lg border bg-white px-4 py-2 font-semibold"
             href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
           >
-            Billing
+            Billing & Subscription
           </Link>
         </div>
       </div>
