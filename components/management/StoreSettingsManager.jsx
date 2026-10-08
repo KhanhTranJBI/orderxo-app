@@ -149,6 +149,12 @@ export default function StoreSettingsManager({ organizationId }) {
   const [printingLoading, setPrintingLoading] = useState(false);
   const [printingSaving, setPrintingSaving] = useState(false);
 
+  const [locationDetails, setLocationDetails] = useState({
+    address: { line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" },
+    phone: "",
+    googleMapUrl: "",
+    pickupInstructions: "",
+  });
   const [locationOrdering, setLocationOrdering] = useState({
     taxRate: 0,
   });
@@ -418,6 +424,12 @@ export default function StoreSettingsManager({ organizationId }) {
           },
         });
 
+        setLocationDetails({
+          address: d.settings?.address || {},
+          phone: d.settings?.phone || "",
+          googleMapUrl: d.settings?.googleMapUrl || "",
+          pickupInstructions: d.settings?.pickupInstructions || "",
+        });
         setLocationOrdering({
           taxRate: Number(d.settings?.ordering?.taxRate ?? 0),
         });
@@ -468,6 +480,7 @@ export default function StoreSettingsManager({ organizationId }) {
       const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
         printing,
         ordering: locationOrdering,
+        ...locationDetails,
       });
 
       setPrinting({
@@ -483,6 +496,12 @@ export default function StoreSettingsManager({ organizationId }) {
         },
       });
 
+      setLocationDetails({
+        address: d.settings?.address || {},
+        phone: d.settings?.phone || "",
+        googleMapUrl: d.settings?.googleMapUrl || "",
+        pickupInstructions: d.settings?.pickupInstructions || "",
+      });
       setLocationOrdering({
         taxRate: Number(d.settings?.ordering?.taxRate ?? locationOrdering.taxRate ?? 0),
       });
@@ -970,6 +989,49 @@ export default function StoreSettingsManager({ organizationId }) {
                       {/* FIXED: Fragment wraps tax + save button */}
                       {canManage && (
                         <>
+                          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <h3 className="md:col-span-2 font-semibold text-lg">
+                              Location Details & Pickup Address
+                            </h3>
+                            {[
+                              ["line1", "Street address"],
+                              ["line2", "Suite / unit"],
+                              ["city", "City"],
+                              ["state", "State"],
+                              ["postalCode", "ZIP / postal code"],
+                              ["country", "Country"],
+                            ].map(([key, label]) => (
+                              <label key={key} className="text-sm font-medium text-slate-700">
+                                {label}
+                                <input
+                                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                                  value={locationDetails.address?.[key] || ""}
+                                  onChange={(e) =>
+                                    setLocationDetails((v) => ({
+                                      ...v,
+                                      address: { ...v.address, [key]: e.target.value },
+                                    }))
+                                  }
+                                />
+                              </label>
+                            ))}
+                            {[
+                              ["phone", "Phone number"],
+                              ["googleMapUrl", "Google Maps directions URL"],
+                              ["pickupInstructions", "Pickup instructions"],
+                            ].map(([key, label]) => (
+                              <label key={key} className="text-sm font-medium text-slate-700">
+                                {label}
+                                <input
+                                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                                  value={locationDetails[key] || ""}
+                                  onChange={(e) =>
+                                    setLocationDetails((v) => ({ ...v, [key]: e.target.value }))
+                                  }
+                                />
+                              </label>
+                            ))}
+                          </div>
                           <div className="mt-6 max-w-sm">
                             <label className="mb-1.5 block text-sm font-semibold text-slate-700">
                               Sales tax rate (%)
