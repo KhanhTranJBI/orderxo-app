@@ -1,4 +1,5 @@
 "use client";
+
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,29 +7,64 @@ import { Clock3, Images, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-r
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 import HomepageSlidesManager from "./HomepageSlidesManager";
+
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 const defaultHours = () =>
-  DAYS.map((day) => ({ day, open: "11:00", close: "19:00", isClosed: false }));
+  DAYS.map((day) => ({
+    day,
+    open: "11:00",
+    close: "19:00",
+    isClosed: false,
+  }));
 
 const emptyPrinting = {
   enabled: false,
   provider: "none",
-  kitchen: { enabled: false, printerId: "", printerName: "", autoPrint: true },
-  receipt: { enabled: false, printerId: "", printerName: "", autoPrint: false },
+  kitchen: {
+    enabled: false,
+    printerId: "",
+    printerName: "",
+    autoPrint: true,
+  },
+  receipt: {
+    enabled: false,
+    printerId: "",
+    printerName: "",
+    autoPrint: false,
+  },
 };
 
 async function printerReq(org, locationId, method = "GET", body) {
-  const q = new URLSearchParams({ organizationId: org, locationId });
+  const q = new URLSearchParams({
+    organizationId: org,
+    locationId,
+  });
+
   const r = await ownerFetch(`/api/owner/locations/settings?${q}`, {
     method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify({ ...body, organizationId: org, locationId }) : undefined,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body
+      ? JSON.stringify({
+          ...body,
+          organizationId: org,
+          locationId,
+        })
+      : undefined,
     cache: "no-store",
   });
+
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(d.error || "Printer settings request failed");
+
+  if (!r.ok) {
+    throw new Error(d.error || "Printer settings request failed");
+  }
+
   return d;
 }
+
 const emptyNotice = {
   title: "",
   message: "",
@@ -37,79 +73,139 @@ const emptyNotice = {
   startsAt: "",
   endsAt: "",
 };
+
 async function req(path, org, loc, method = "GET", body) {
-  const q = new URLSearchParams({ organizationId: org, locationId: loc });
+  const q = new URLSearchParams({
+    organizationId: org,
+    locationId: loc,
+  });
+
   const r = await ownerFetch(`/api/owner/manage/${path}?${q}`, {
     method,
-    headers: { "Content-Type": "application/json" },
-    body: body ? JSON.stringify({ ...body, locationId: loc }) : undefined,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: body
+      ? JSON.stringify({
+          ...body,
+          locationId: loc,
+        })
+      : undefined,
     cache: "no-store",
   });
+
   const d = await r.json();
-  if (!r.ok) throw new Error(d.error || "Request failed");
+
+  if (!r.ok) {
+    throw new Error(d.error || "Request failed");
+  }
+
   return d;
 }
+
 function localInput(v) {
   if (!v) return "";
+
   const d = new Date(v);
+
   if (Number.isNaN(d.getTime())) return "";
+
   const p = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(
+    d.getDate(),
+  )}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
+
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const permission = useRestaurantPermissions(organizationId);
+
   const canReadStore = permission.can("store.read");
   const canManage = permission.can("store.manage");
   const canReadHomepage = permission.can("homepage.read");
   const isAdmin = permission.isAdmin;
+
   const [tab, setTab] = useState("hours");
-  const [scope, setScope] = useState("default"),
-    [useDefault, setUseDefault] = useState(false);
-  const [manual, setManual] = useState(true),
-    [hours, setHours] = useState(defaultHours),
-    [notices, setNotices] = useState([]),
-    [loading, setLoading] = useState(false),
-    [saving, setSaving] = useState(false),
-    [error, setError] = useState(""),
-    [message, setMessage] = useState("");
-  const [modal, setModal] = useState(false),
-    [editing, setEditing] = useState(null),
-    [form, setForm] = useState(emptyNotice),
-    [noticeSaving, setNoticeSaving] = useState(false),
-    [deleting, setDeleting] = useState(null);
+
+  const [scope, setScope] = useState("default");
+  const [useDefault, setUseDefault] = useState(false);
+
+  const [manual, setManual] = useState(true);
+  const [hours, setHours] = useState(defaultHours);
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [modal, setModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyNotice);
+  const [noticeSaving, setNoticeSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
+
   const [printing, setPrinting] = useState(emptyPrinting);
   const [printingLoading, setPrintingLoading] = useState(false);
   const [printingSaving, setPrintingSaving] = useState(false);
+
+  const [locationOrdering, setLocationOrdering] = useState({
+    taxRate: 0,
+  });
+
   useEffect(() => {
     if (permission.loading) return;
-    if (!canReadStore && canReadHomepage) setTab("homepage");
+
+    if (!canReadStore && canReadHomepage) {
+      setTab("homepage");
+    }
   }, [permission.loading, canReadStore, canReadHomepage]);
+
   useEffect(() => {
     if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
     }
   }, [permission.loading, isAdmin, scope, loc.locations]);
+
   const selectedLocationId = scope === "default" ? "" : scope;
+
   const selectedLocation = loc.locations.find((l) => String(l._id || l.id) === selectedLocationId);
+
   const load = useCallback(async () => {
     if (scope !== "default" && !selectedLocationId) return;
+
     setLoading(true);
     setError("");
+
     try {
       const [a, n] = await Promise.all([
         req("store-config", organizationId, selectedLocationId),
         req("notices", organizationId, selectedLocationId),
       ]);
+
       const c = a.config || {};
+
       setUseDefault(Boolean(a.useDefault));
       setManual(c.isOpenManual !== false);
+
       if (Array.isArray(c.hours) && c.hours.length) {
         const map = new Map(c.hours.map((h) => [h.day, h]));
+
         setHours(
-          DAYS.map((day) => map.get(day) || { day, open: "11:00", close: "19:00", isClosed: true }),
+          DAYS.map(
+            (day) =>
+              map.get(day) || {
+                day,
+                open: "11:00",
+                close: "19:00",
+                isClosed: true,
+              },
+          ),
         );
-      } else setHours(defaultHours());
+      } else {
+        setHours(defaultHours());
+      }
+
       setNotices(n.notices || []);
     } catch (e) {
       setError(e.message);
@@ -117,22 +213,33 @@ export default function StoreSettingsManager({ organizationId }) {
       setLoading(false);
     }
   }, [organizationId, scope, selectedLocationId]);
+
   useEffect(() => {
     load();
   }, [load]);
+
   const save = async () => {
     if (!canManage) return;
+
     setSaving(true);
     setError("");
+
     try {
       await req(
         "store-config",
         organizationId,
         selectedLocationId,
         "PATCH",
-        scope === "default" ? { hours } : { isOpenManual: manual, hours },
+        scope === "default"
+          ? { hours }
+          : {
+              isOpenManual: manual,
+              hours,
+            },
       );
+
       setMessage(scope === "default" ? "Restaurant default hours saved" : "Store settings saved");
+
       setTimeout(() => setMessage(""), 2500);
     } catch (e) {
       setError(e.message);
@@ -140,16 +247,22 @@ export default function StoreSettingsManager({ organizationId }) {
       setSaving(false);
     }
   };
+
   const change = (i, k, v) => setHours((h) => h.map((x, n) => (n === i ? { ...x, [k]: v } : x)));
+
   const customize = async () => {
     if (!canManage) return;
+
     setSaving(true);
     setError("");
+
     try {
       await req("store-config", organizationId, selectedLocationId, "POST", {
         action: "customizeLocation",
       });
+
       setMessage(`Custom settings enabled for ${selectedLocation?.name || "location"}`);
+
       await load();
     } catch (e) {
       setError(e.message);
@@ -157,15 +270,20 @@ export default function StoreSettingsManager({ organizationId }) {
       setSaving(false);
     }
   };
+
   const useRestaurantDefault = async () => {
     if (!canManage) return;
+
     setSaving(true);
     setError("");
+
     try {
       await req("store-config", organizationId, selectedLocationId, "POST", {
         action: "useRestaurantDefault",
       });
+
       setMessage(`Now using Restaurant Default for ${selectedLocation?.name || "location"}`);
+
       await load();
     } catch (e) {
       setError(e.message);
@@ -173,14 +291,18 @@ export default function StoreSettingsManager({ organizationId }) {
       setSaving(false);
     }
   };
+
   const saveManual = async () => {
     if (!canManage) return;
+
     setSaving(true);
     setError("");
+
     try {
       await req("store-config", organizationId, selectedLocationId, "PATCH", {
         isOpenManual: manual,
       });
+
       setMessage("Ordering status saved");
     } catch (e) {
       setError(e.message);
@@ -188,15 +310,20 @@ export default function StoreSettingsManager({ organizationId }) {
       setSaving(false);
     }
   };
+
   const openNew = () => {
     if (!canManage) return;
+
     setEditing(null);
     setForm(emptyNotice);
     setModal(true);
   };
+
   const openEdit = (n) => {
     if (!canManage) return;
+
     setEditing(n);
+
     setForm({
       title: n.title || "",
       message: n.message || "",
@@ -205,12 +332,16 @@ export default function StoreSettingsManager({ organizationId }) {
       startsAt: localInput(n.startsAt),
       endsAt: localInput(n.endsAt),
     });
+
     setModal(true);
   };
+
   const saveNotice = async () => {
     if (!canManage) return;
+
     setNoticeSaving(true);
     setError("");
+
     try {
       await req("notices", organizationId, selectedLocationId, editing ? "PATCH" : "POST", {
         ...form,
@@ -218,7 +349,9 @@ export default function StoreSettingsManager({ organizationId }) {
         startsAt: form.startsAt || null,
         endsAt: form.endsAt || null,
       });
+
       setModal(false);
+
       await load();
     } catch (e) {
       setError(e.message);
@@ -226,80 +359,136 @@ export default function StoreSettingsManager({ organizationId }) {
       setNoticeSaving(false);
     }
   };
+
   const toggleNotice = async (n) => {
     if (!canManage) return;
+
     try {
       await req("notices", organizationId, selectedLocationId, "PATCH", {
         noticeId: n._id,
         isActive: !n.isActive,
       });
+
       await load();
     } catch (e) {
       setError(e.message);
     }
   };
+
   const deleteNotice = async () => {
     if (!canManage) return;
     if (!deleting) return;
+
     try {
       await req("notices", organizationId, selectedLocationId, "DELETE", {
         noticeId: deleting._id,
       });
+
       setDeleting(null);
+
       await load();
     } catch (e) {
       setError(e.message);
     }
   };
+
   useEffect(() => {
     if (scope === "default" || !selectedLocationId) return;
+
     let cancelled = false;
+
     (async () => {
       setPrintingLoading(true);
+
       try {
         const d = await printerReq(organizationId, selectedLocationId);
+
         if (cancelled) return;
+
         setPrinting({
           ...emptyPrinting,
           ...d.settings?.printing,
-          kitchen: { ...emptyPrinting.kitchen, ...d.settings?.printing?.kitchen },
-          receipt: { ...emptyPrinting.receipt, ...d.settings?.printing?.receipt },
+          kitchen: {
+            ...emptyPrinting.kitchen,
+            ...d.settings?.printing?.kitchen,
+          },
+          receipt: {
+            ...emptyPrinting.receipt,
+            ...d.settings?.printing?.receipt,
+          },
+        });
+
+        setLocationOrdering({
+          taxRate: Number(d.settings?.ordering?.taxRate ?? 0),
         });
       } catch (e) {
-        if (!cancelled) setError(e.message);
+        if (!cancelled) {
+          setError(e.message);
+        }
       } finally {
-        if (!cancelled) setPrintingLoading(false);
+        if (!cancelled) {
+          setPrintingLoading(false);
+        }
       }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [organizationId, scope, selectedLocationId]);
 
   useEffect(() => {
-    if (scope === "default" && tab === "printing") setTab("hours");
+    if (scope === "default" && tab === "printing") {
+      setTab("hours");
+    }
   }, [scope, tab]);
 
-  const setPrintingField = (key, value) => setPrinting((current) => ({ ...current, [key]: value }));
+  const setPrintingField = (key, value) =>
+    setPrinting((current) => ({
+      ...current,
+      [key]: value,
+    }));
+
   const setPrinterField = (target, key, value) =>
     setPrinting((current) => ({
       ...current,
-      [target]: { ...current[target], [key]: value },
+      [target]: {
+        ...current[target],
+        [key]: value,
+      },
     }));
 
   const savePrinting = async () => {
     if (!canManage || !selectedLocationId) return;
+
     setPrintingSaving(true);
     setError("");
+
     try {
-      const d = await printerReq(organizationId, selectedLocationId, "PATCH", { printing });
+      const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
+        printing,
+        ordering: locationOrdering,
+      });
+
       setPrinting({
         ...emptyPrinting,
         ...d.settings?.printing,
-        kitchen: { ...emptyPrinting.kitchen, ...d.settings?.printing?.kitchen },
-        receipt: { ...emptyPrinting.receipt, ...d.settings?.printing?.receipt },
+        kitchen: {
+          ...emptyPrinting.kitchen,
+          ...d.settings?.printing?.kitchen,
+        },
+        receipt: {
+          ...emptyPrinting.receipt,
+          ...d.settings?.printing?.receipt,
+        },
       });
-      setMessage(`Printer settings saved for ${selectedLocation?.name || "location"}.`);
+
+      setLocationOrdering({
+        taxRate: Number(d.settings?.ordering?.taxRate ?? locationOrdering.taxRate ?? 0),
+      });
+
+      setMessage(`Location settings saved for ${selectedLocation?.name || "location"}.`);
+
       setTimeout(() => setMessage(""), 2500);
     } catch (e) {
       setError(e.message);
@@ -307,6 +496,7 @@ export default function StoreSettingsManager({ organizationId }) {
       setPrintingSaving(false);
     }
   };
+
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl">
@@ -316,18 +506,24 @@ export default function StoreSettingsManager({ organizationId }) {
         >
           ← Restaurant workspace
         </Link>
+
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
         </p>
+
         <h1 className="mt-1 text-3xl font-bold">Store settings</h1>
+
         <p className="mt-2 text-slate-600">
           Control business hours, notices, homepage slides, ordering status, and physical printer
           configuration.
         </p>
+
         <div className="mt-5 max-w-sm">
           <label className="mb-2 block text-sm font-semibold text-slate-700">Settings for</label>
+
           <select className="field" value={scope} onChange={(e) => setScope(e.target.value)}>
             {isAdmin && <option value="default">Restaurant Default</option>}
+
             {loc.locations.map((l) => (
               <option key={l._id || l.id} value={String(l._id || l.id)}>
                 {l.name}
@@ -335,52 +531,80 @@ export default function StoreSettingsManager({ organizationId }) {
             ))}
           </select>
         </div>
+
         {(loc.error || error) && (
           <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{loc.error || error}</p>
         )}
+
         {message && (
           <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>
         )}
+
         {!permission.loading && canReadStore && !canManage && (
           <p className="mt-4 rounded-lg border bg-white p-3 text-sm text-slate-700">
             <strong>Read only.</strong> Editing, deleting, status changes and customization require
             Manage store settings permission.
           </p>
         )}
-        <div className="mt-6 flex gap-6 border-b bg-white px-5 pt-1 rounded-t-2xl border-x border-t">
+
+        <div className="mt-6 flex gap-6 rounded-t-2xl border-x border-t border-b bg-white px-5 pt-1">
           {canReadStore && (
             <>
               <button
                 onClick={() => setTab("hours")}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "hours" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                  tab === "hours"
+                    ? "border-orange-500 text-orange-600"
+                    : "border-transparent text-slate-500"
+                }`}
               >
-                <Clock3 size={18} /> Store Hours
+                <Clock3 size={18} />
+                Store Hours
               </button>
+
               <button
                 onClick={() => setTab("notices")}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "notices" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                  tab === "notices"
+                    ? "border-orange-500 text-orange-600"
+                    : "border-transparent text-slate-500"
+                }`}
               >
-                <Info size={18} /> Notices
+                <Info size={18} />
+                Notices
               </button>
             </>
           )}
+
           {canReadHomepage && (
             <button
               onClick={() => setTab("homepage")}
-              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "homepage" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                tab === "homepage"
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-slate-500"
+              }`}
             >
-              <Images size={18} /> Homepage Slides
+              <Images size={18} />
+              Homepage Slides
             </button>
           )}
+
           {canReadStore && scope !== "default" && (
             <button
               onClick={() => setTab("printing")}
-              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "printing" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                tab === "printing"
+                  ? "border-orange-500 text-orange-600"
+                  : "border-transparent text-slate-500"
+              }`}
             >
-              <Printer size={18} /> Printing
+              <Printer size={18} />
+              Printing
             </button>
           )}
         </div>
+
         {loading || loc.loading ? (
           <p className="mt-6">Loading settings…</p>
         ) : (
@@ -393,18 +617,23 @@ export default function StoreSettingsManager({ organizationId }) {
                       <div className="flex flex-wrap items-center justify-between gap-5">
                         <div>
                           <h2 className="text-xl font-bold">Manual ordering status</h2>
+
                           <p className="mt-1 text-sm text-slate-500">
                             Always specific to {selectedLocation?.name || "this location"}. It never
                             inherits from Restaurant Default.
                           </p>
                         </div>
+
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => setManual((v) => !v)}
-                            className={`rounded-full px-5 py-2 font-semibold ${manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"}`}
+                            className={`rounded-full px-5 py-2 font-semibold ${
+                              manual ? "bg-green-100 text-green-800" : "bg-slate-200 text-slate-700"
+                            }`}
                           >
                             {manual ? "Open" : "Closed"}
                           </button>
+
                           <button
                             disabled={!canManage || saving}
                             onClick={saveManual}
@@ -416,17 +645,24 @@ export default function StoreSettingsManager({ organizationId }) {
                       </div>
                     </section>
                   )}
+
                   {scope !== "default" && (
                     <section className="mt-4 rounded-2xl border bg-white p-5">
                       <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                           <h2 className="font-bold">Store configuration</h2>
+
                           <p className="mt-1 text-sm text-slate-500">
                             {useDefault
-                              ? `${selectedLocation?.name || "This location"} is using Restaurant Default hours and notices.`
-                              : `${selectedLocation?.name || "This location"} has custom hours and notices.`}
+                              ? `${
+                                  selectedLocation?.name || "This location"
+                                } is using Restaurant Default hours and notices.`
+                              : `${
+                                  selectedLocation?.name || "This location"
+                                } has custom hours and notices.`}
                           </p>
                         </div>
+
                         {useDefault ? (
                           <button
                             disabled={!canManage || saving}
@@ -447,8 +683,10 @@ export default function StoreSettingsManager({ organizationId }) {
                       </div>
                     </section>
                   )}
+
                   <section className="mt-4 rounded-2xl border bg-white p-6">
                     <h2 className="text-xl font-bold">Weekly hours</h2>
+
                     <div className="mt-5 space-y-3">
                       {hours.map((h, i) => (
                         <div
@@ -456,6 +694,7 @@ export default function StoreSettingsManager({ organizationId }) {
                           className="grid items-center gap-3 border-b pb-3 last:border-0 md:grid-cols-[130px_110px_1fr_1fr]"
                         >
                           <strong>{h.day}</strong>
+
                           <label className="flex items-center gap-2 text-sm">
                             <input
                               type="checkbox"
@@ -465,6 +704,7 @@ export default function StoreSettingsManager({ organizationId }) {
                             />{" "}
                             Closed
                           </label>
+
                           <input
                             type="time"
                             disabled={!canManage || h.isClosed || useDefault}
@@ -472,6 +712,7 @@ export default function StoreSettingsManager({ organizationId }) {
                             value={h.open}
                             onChange={(e) => change(i, "open", e.target.value)}
                           />
+
                           <input
                             type="time"
                             disabled={!canManage || h.isClosed || useDefault}
@@ -483,6 +724,7 @@ export default function StoreSettingsManager({ organizationId }) {
                       ))}
                     </div>
                   </section>
+
                   <button
                     disabled={!canManage || saving || useDefault}
                     onClick={save}
@@ -496,27 +738,36 @@ export default function StoreSettingsManager({ organizationId }) {
                   </button>
                 </>
               )}
+
               {tab === "notices" && (
                 <section className="mt-5 rounded-2xl border bg-white p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h2 className="text-xl font-bold">Notices</h2>
+
                       <p className="mt-1 text-sm text-slate-500">
                         {scope === "default"
                           ? "Default announcements inherited by locations that use Restaurant Default."
                           : useDefault
-                            ? `Inherited from Restaurant Default for ${selectedLocation?.name || "this location"}.`
-                            : `Custom announcements for ${selectedLocation?.name || "this location"}.`}
+                            ? `Inherited from Restaurant Default for ${
+                                selectedLocation?.name || "this location"
+                              }.`
+                            : `Custom announcements for ${
+                                selectedLocation?.name || "this location"
+                              }.`}
                       </p>
                     </div>
+
                     <button
                       disabled={!canManage || useDefault}
                       onClick={openNew}
                       className="primary flex shrink-0 items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <Plus size={17} /> Add notice
+                      <Plus size={17} />
+                      Add notice
                     </button>
                   </div>
+
                   <div className="mt-5 space-y-3">
                     {!notices.length ? (
                       <div className="rounded-xl border border-dashed p-6 text-center text-sm text-slate-500">
@@ -529,18 +780,26 @@ export default function StoreSettingsManager({ organizationId }) {
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <strong>{n.title || "Notice"}</strong>
+
                                 <span
-                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${n.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"}`}
+                                  className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                    n.isActive
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-slate-100 text-slate-600"
+                                  }`}
                                 >
                                   {n.isActive ? "Active" : "Inactive"}
                                 </span>
+
                                 <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs capitalize text-orange-700">
                                   {n.type}
                                 </span>
                               </div>
+
                               <p className="mt-2 whitespace-pre-wrap text-sm text-slate-600">
                                 {n.message}
                               </p>
+
                               {(n.startsAt || n.endsAt) && (
                                 <p className="mt-2 text-xs text-slate-400">
                                   {n.startsAt
@@ -553,6 +812,7 @@ export default function StoreSettingsManager({ organizationId }) {
                                 </p>
                               )}
                             </div>
+
                             {canManage && (
                               <div className="flex shrink-0 items-center gap-2">
                                 <button
@@ -562,6 +822,7 @@ export default function StoreSettingsManager({ organizationId }) {
                                 >
                                   {n.isActive ? "Deactivate" : "Activate"}
                                 </button>
+
                                 <button
                                   disabled={!canManage || useDefault}
                                   className="rounded-lg border p-2 disabled:opacity-40"
@@ -570,6 +831,7 @@ export default function StoreSettingsManager({ organizationId }) {
                                 >
                                   <Pencil size={17} />
                                 </button>
+
                                 <button
                                   disabled={!canManage || useDefault}
                                   className="rounded-lg border p-2 text-red-600 disabled:opacity-40"
@@ -587,6 +849,7 @@ export default function StoreSettingsManager({ organizationId }) {
                   </div>
                 </section>
               )}
+
               {tab === "homepage" && canReadHomepage && (
                 <section className="mt-5 rounded-2xl border bg-white p-6">
                   <HomepageSlidesManager
@@ -596,16 +859,19 @@ export default function StoreSettingsManager({ organizationId }) {
                   />
                 </section>
               )}
+
               {tab === "printing" && scope !== "default" && (
                 <section className="mt-5 rounded-2xl border bg-white p-6">
                   <div>
                     <h2 className="text-xl font-bold">Printing</h2>
+
                     <p className="mt-1 text-sm text-slate-500">
                       Physical printer IDs are always specific to{" "}
                       {selectedLocation?.name || "this location"} and never inherit from Restaurant
                       Default. API credentials remain server-side.
                     </p>
                   </div>
+
                   {printingLoading ? (
                     <p className="mt-5 text-sm text-slate-500">Loading printer settings…</p>
                   ) : (
@@ -620,10 +886,12 @@ export default function StoreSettingsManager({ organizationId }) {
                           />
                           Enable printing
                         </label>
+
                         <div>
                           <label className="mb-2 block text-sm font-semibold">
                             Printer provider
                           </label>
+
                           <select
                             disabled={!canManage}
                             className="field"
@@ -636,12 +904,15 @@ export default function StoreSettingsManager({ organizationId }) {
                           </select>
                         </div>
                       </div>
+
                       {["kitchen", "receipt"].map((target) => (
                         <div key={target} className="mt-6 rounded-xl border p-5">
                           <h3 className="font-bold capitalize">{target} printer</h3>
+
                           <div className="mt-4 grid gap-4 sm:grid-cols-2">
                             <div>
                               <label className="mb-2 block text-sm font-semibold">Printer ID</label>
+
                               <input
                                 disabled={!canManage}
                                 className="field"
@@ -652,10 +923,12 @@ export default function StoreSettingsManager({ organizationId }) {
                                 }
                               />
                             </div>
+
                             <div>
                               <label className="mb-2 block text-sm font-semibold">
                                 Printer name
                               </label>
+
                               <input
                                 disabled={!canManage}
                                 className="field"
@@ -666,6 +939,7 @@ export default function StoreSettingsManager({ organizationId }) {
                                 }
                               />
                             </div>
+
                             <label className="flex items-center gap-2 font-medium">
                               <input
                                 disabled={!canManage}
@@ -677,6 +951,7 @@ export default function StoreSettingsManager({ organizationId }) {
                               />
                               Enabled
                             </label>
+
                             <label className="flex items-center gap-2 font-medium">
                               <input
                                 disabled={!canManage}
@@ -691,14 +966,47 @@ export default function StoreSettingsManager({ organizationId }) {
                           </div>
                         </div>
                       ))}
+
+                      {/* FIXED: Fragment wraps tax + save button */}
                       {canManage && (
-                        <button
-                          disabled={printingSaving}
-                          onClick={savePrinting}
-                          className="primary mt-6"
-                        >
-                          {printingSaving ? "Saving…" : "Save printer settings"}
-                        </button>
+                        <>
+                          <div className="mt-6 max-w-sm">
+                            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                              Sales tax rate (%)
+                            </label>
+
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              step="0.001"
+                              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                              value={(Number(locationOrdering.taxRate || 0) * 100).toString()}
+                              onChange={(e) =>
+                                setLocationOrdering((current) => ({
+                                  ...current,
+                                  taxRate: Math.max(
+                                    0,
+                                    Math.min(1, Number(e.target.value || 0) / 100),
+                                  ),
+                                }))
+                              }
+                            />
+
+                            <p className="mt-1 text-xs text-slate-500">
+                              Location-specific tax rate used by customer checkout, e.g. 9.2 for
+                              9.2%.
+                            </p>
+                          </div>
+
+                          <button
+                            disabled={printingSaving}
+                            onClick={savePrinting}
+                            className="primary mt-6"
+                          >
+                            {printingSaving ? "Saving…" : "Save location settings"}
+                          </button>
+                        </>
                       )}
                     </>
                   )}
@@ -708,6 +1016,7 @@ export default function StoreSettingsManager({ organizationId }) {
           )
         )}
       </div>
+
       {modal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
@@ -719,68 +1028,111 @@ export default function StoreSettingsManager({ organizationId }) {
           >
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">{editing ? "Edit notice" : "Add notice"}</h2>
+
               <button onClick={() => setModal(false)} className="rounded-lg p-2">
                 <X />
               </button>
             </div>
+
             <label className="mt-5 block text-sm font-semibold">Title</label>
+
             <input
               className="field mt-2"
               maxLength={120}
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  title: e.target.value,
+                })
+              }
               placeholder="Special hours"
             />
+
             <label className="mt-4 block text-sm font-semibold">Message *</label>
+
             <textarea
               className="field mt-2 min-h-28"
               maxLength={1000}
               value={form.message}
-              onChange={(e) => setForm({ ...form, message: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  message: e.target.value,
+                })
+              }
               placeholder="We will close at 5 PM today."
             />
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold">Type</label>
+
                 <select
                   className="field mt-2"
                   value={form.type}
-                  onChange={(e) => setForm({ ...form, type: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      type: e.target.value,
+                    })
+                  }
                 >
                   <option value="info">Info</option>
                   <option value="warning">Warning</option>
                   <option value="important">Important</option>
                 </select>
               </div>
+
               <label className="flex items-end gap-2 pb-3 text-sm font-semibold">
                 <input
                   type="checkbox"
                   checked={form.isActive}
-                  onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      isActive: e.target.checked,
+                    })
+                  }
                 />{" "}
                 Active
               </label>
             </div>
+
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold">Starts</label>
+
                 <input
                   type="datetime-local"
                   className="field mt-2"
                   value={form.startsAt}
-                  onChange={(e) => setForm({ ...form, startsAt: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      startsAt: e.target.value,
+                    })
+                  }
                 />
               </div>
+
               <div>
                 <label className="block text-sm font-semibold">Ends</label>
+
                 <input
                   type="datetime-local"
                   className="field mt-2"
                   value={form.endsAt}
-                  onChange={(e) => setForm({ ...form, endsAt: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      endsAt: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
+
             <div className="mt-6 flex justify-end gap-3">
               <button
                 className="rounded-lg border px-4 py-2 font-semibold"
@@ -788,6 +1140,7 @@ export default function StoreSettingsManager({ organizationId }) {
               >
                 Cancel
               </button>
+
               <button
                 className="primary"
                 disabled={!canManage || noticeSaving || !form.message.trim()}
@@ -799,13 +1152,16 @@ export default function StoreSettingsManager({ organizationId }) {
           </div>
         </div>
       )}
+
       {deleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-bold">Delete notice?</h2>
+
             <p className="mt-2 text-sm text-slate-600">
               This permanently removes “{deleting.title || "Notice"}”.
             </p>
+
             <div className="mt-6 flex justify-end gap-3">
               <button
                 className="rounded-lg border px-4 py-2 font-semibold"
@@ -813,6 +1169,7 @@ export default function StoreSettingsManager({ organizationId }) {
               >
                 Cancel
               </button>
+
               <button
                 className="rounded-lg bg-red-600 px-4 py-2 font-semibold text-white"
                 onClick={deleteNotice}

@@ -12,7 +12,8 @@ const emptyOrg = {
   branding: { logoUrl: "", primaryColor: "#111827", secondaryColor: "#ffffff" },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
-  ordering: { abandonedCartIntervalMinutes: 20 },
+  ordering: { abandonedCartIntervalMinutes: 20, serviceFeePerItemCents: 0 },
+  notifications: { orderEmails: [], abandonedCartEmails: [], giftCardEmails: [] },
   emailSettings: {
     fromName: "",
     sendingDomain: "",
@@ -39,6 +40,7 @@ function mergeOrg(value = {}) {
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
     ordering: { ...emptyOrg.ordering, ...(value.ordering || {}) },
+    notifications: { ...emptyOrg.notifications, ...(value.notifications || {}) },
     emailSettings: {
       ...emptyOrg.emailSettings,
       ...(value.emailSettings || {}),
@@ -135,6 +137,7 @@ export default function RestaurantSettings({ organizationId }) {
           giftCards: org.giftCards,
           emailSettings: org.emailSettings,
           ordering: org.ordering,
+          notifications: org.notifications,
         }),
       });
       setOrg(mergeOrg(data.settings));
@@ -472,6 +475,57 @@ export default function RestaurantSettings({ organizationId }) {
                     }
                   />
                 </Field>
+                <div className="mt-5">
+                  <Field
+                    label="Online service fee per item ($)"
+                    hint="Restaurant-wide per-item fee used by customer checkout. Enter 0 for no fee."
+                  >
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className={input}
+                      value={((org.ordering?.serviceFeePerItemCents || 0) / 100).toFixed(2)}
+                      onChange={(e) =>
+                        setOrgPart(
+                          "ordering",
+                          "serviceFeePerItemCents",
+                          Math.max(0, Math.round(Number(e.target.value || 0) * 100)),
+                        )
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="mt-7 grid gap-4">
+                  {[
+                    ["orderEmails", "Order notification emails"],
+                    ["abandonedCartEmails", "Abandoned cart notification emails"],
+                    ["giftCardEmails", "Gift card notification emails"],
+                  ].map(([key, label]) => (
+                    <Field
+                      key={key}
+                      label={label}
+                      hint="Comma-separated email addresses. Stored per restaurant, not in server environment variables."
+                    >
+                      <input
+                        className={input}
+                        value={(org.notifications?.[key] || []).join(", ")}
+                        onChange={(e) =>
+                          setOrg((old) => ({
+                            ...old,
+                            notifications: {
+                              ...old.notifications,
+                              [key]: e.target.value
+                                .split(",")
+                                .map((v) => v.trim())
+                                .filter(Boolean),
+                            },
+                          }))
+                        }
+                      />
+                    </Field>
+                  ))}
+                </div>
               </div>
             </div>
           )}
