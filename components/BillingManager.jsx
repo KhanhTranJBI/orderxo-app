@@ -223,7 +223,10 @@ export default function BillingManager({ organizationId, subscription }) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-red-600">Subscription cancellation</p>
-                <h2 id="cancel-subscription-title" className="mt-1 text-xl font-bold text-slate-900">
+                <h2
+                  id="cancel-subscription-title"
+                  className="mt-1 text-xl font-bold text-slate-900"
+                >
                   Cancel your OrderXO subscription?
                 </h2>
               </div>
@@ -239,13 +242,14 @@ export default function BillingManager({ organizationId, subscription }) {
             </div>
 
             <p className="mt-4 text-sm leading-6 text-slate-600">
-              Your subscription will remain active until {formatDate(subscription?.currentPeriodEnd)}.
-              You can continue using OrderXO normally until that date.
+              Your subscription will remain active until{" "}
+              {formatDate(subscription?.currentPeriodEnd)}. You can continue using OrderXO normally
+              until that date.
             </p>
 
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              After the billing period ends, online ordering will be unavailable until you reactivate
-              your subscription.
+              After the billing period ends, online ordering will be unavailable until you
+              reactivate your subscription.
             </div>
 
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -260,9 +264,7 @@ export default function BillingManager({ organizationId, subscription }) {
               <button
                 type="button"
                 disabled={busy === "cancel"}
-                onClick={() =>
-                  post("/api/owner/billing/cancel", { organizationId }, "cancel")
-                }
+                onClick={() => post("/api/owner/billing/cancel", { organizationId }, "cancel")}
                 className="rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
               >
                 {busy === "cancel" ? "Scheduling cancellation…" : "Cancel subscription"}

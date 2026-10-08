@@ -1,14 +1,25 @@
 "use client";
+import HomepageBuilder from "./HomepageBuilder";
 import { ownerFetch } from "../lib/ownerFetch";
 
 import Link from "next/link";
+import RestaurantLinksSettings from "./RestaurantLinksSettings";
 import { useEffect, useState } from "react";
 
-const TABS = ["General", "Loyalty", "Gift Cards", "Email", "Ordering"];
+const TABS = [
+  "General",
+  "Social & Links",
+  "Homepage",
+  "Loyalty",
+  "Gift Cards",
+  "Email",
+  "Ordering",
+];
 
 const emptyOrg = {
   name: "",
   contactEmail: "",
+  website: { social: {}, navigationLinks: [], footerLinks: [] },
   branding: { logoUrl: "", primaryColor: "#111827", secondaryColor: "#ffffff" },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
@@ -36,6 +47,11 @@ function mergeOrg(value = {}) {
   return {
     ...emptyOrg,
     ...value,
+    website: {
+      ...emptyOrg.website,
+      ...(value.website || {}),
+      social: { ...(value.website?.social || {}) },
+    },
     branding: { ...emptyOrg.branding, ...(value.branding || {}) },
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
@@ -133,6 +149,7 @@ export default function RestaurantSettings({ organizationId }) {
         body: JSON.stringify({
           organizationId,
           branding: org.branding,
+          website: org.website,
           loyalty: org.loyalty,
           giftCards: org.giftCards,
           emailSettings: org.emailSettings,
@@ -254,6 +271,15 @@ export default function RestaurantSettings({ organizationId }) {
               </div>
             </div>
           )}
+
+          {tab === "Social & Links" && (
+            <RestaurantLinksSettings
+              value={org.website}
+              onChange={(website) => setOrg((old) => ({ ...old, website }))}
+            />
+          )}
+
+          {tab === "Homepage" && <HomepageBuilder organizationId={organizationId} />}
 
           {tab === "Loyalty" && (
             <div className="space-y-6">
