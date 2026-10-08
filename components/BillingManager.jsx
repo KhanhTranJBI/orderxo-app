@@ -168,6 +168,48 @@ export default function BillingManager({ organizationId, subscription }) {
           })}
         </div>
       </section>
+      {active && (
+        <section className="rounded-2xl border bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold">Subscription cancellation</h2>
+          {subscription?.cancelAtPeriodEnd ? (
+            <>
+              <p className="mt-2 text-sm text-amber-700">
+                Your subscription is scheduled to end on {formatDate(subscription.currentPeriodEnd)}
+                . OrderXO will continue working normally until then.
+              </p>
+              <button
+                disabled={!!busy}
+                onClick={() => post("/api/owner/billing/resume", { organizationId }, "resume")}
+                className="mt-4 rounded-xl bg-slate-900 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+              >
+                {busy === "resume" ? "Resuming…" : "Keep subscription"}
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-slate-600">
+                If you no longer use OrderXO, cancel at the end of your current billing period. Your
+                restaurant remains active until {formatDate(subscription?.currentPeriodEnd)}.
+              </p>
+              <button
+                disabled={!!busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `Cancel OrderXO at the end of the current billing period (${formatDate(subscription?.currentPeriodEnd)})?`,
+                    )
+                  )
+                    post("/api/owner/billing/cancel", { organizationId }, "cancel");
+                }}
+                className="mt-4 rounded-xl border border-red-300 px-4 py-2.5 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {busy === "cancel" ? "Scheduling cancellation…" : "Cancel subscription"}
+              </button>
+            </>
+          )}
+        </section>
+      )}
+
       <p className="text-xs text-slate-500">
         OrderXO does not collect card details on this page. Payment methods, invoices and billing
         recovery are handled by Stripe.

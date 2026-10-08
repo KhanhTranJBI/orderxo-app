@@ -81,6 +81,26 @@ export default async function Dashboard() {
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
+                  {org.status !== "active" && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                      <p className="font-semibold">Online ordering is currently unavailable.</p>
+                      <p className="mt-1">
+                        {org.suspensionReason === "subscription_canceled"
+                          ? "Your OrderXO subscription ended. Reactivate a plan to put the restaurant back online."
+                          : org.suspensionReason === "billing_unpaid"
+                            ? "There is a billing problem with your OrderXO subscription. Update billing to restore service."
+                            : "This restaurant is not currently active. Check Billing & subscription or contact OrderXO support."}
+                      </p>
+                      {isAdmin && (
+                        <Link
+                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                          className="mt-3 inline-block font-semibold underline"
+                        >
+                          Review billing & subscription
+                        </Link>
+                      )}
+                    </div>
+                  )}
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link
                       className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
