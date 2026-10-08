@@ -53,7 +53,7 @@ export default async function RestaurantManager({ params }) {
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <Link href="/dashboard" className="text-sm font-semibold text-orange-600">
-          ← Your restaurants
+          ← Dashboard
         </Link>
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -158,34 +158,6 @@ export default async function RestaurantManager({ params }) {
               );
             })}
         </div>
-        {isAdmin && (
-          <div className="mt-8 flex flex-wrap gap-3 border-t pt-6">
-            <Link
-              className="rounded-lg border bg-white px-4 py-2 font-semibold"
-              href={`/dashboard/restaurants/${id}/team`}
-            >
-              Admins & Managers
-            </Link>
-            <Link
-              className="rounded-lg border bg-white px-4 py-2 font-semibold"
-              href={`/dashboard/restaurants/${id}/team`}
-            >
-              Restaurant settings
-            </Link>
-            <Link
-              className="rounded-lg border bg-white px-4 py-2 font-semibold"
-              href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
-            >
-              Websites & domains
-            </Link>
-            <Link
-              className="rounded-lg border bg-white px-4 py-2 font-semibold"
-              href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-            >
-              Billing & Subscription
-            </Link>
-          </div>
-        )}
       </div>
     </main>
   );
