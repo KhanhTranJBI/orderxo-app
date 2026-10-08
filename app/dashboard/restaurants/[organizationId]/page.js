@@ -9,8 +9,7 @@ export const dynamic = "force-dynamic";
 const tools = [
   ["Orders", "orders", "Confirm, prepare, complete, refund and review orders."],
   ["Menu", "menu", "Items, categories, modifiers, pricing and availability."],
-  ["Store settings", "store", "Hours, ordering status and location notices."],
-  ["Location settings", "location-settings", "Location ordering and printer configuration."],
+  ["Store settings", "store", "Hours, ordering status, notices and printer configuration."],
   ["Manage users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Homepage slides", "homepage", "Manage the restaurant homepage hero content."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
@@ -113,9 +112,7 @@ export default async function RestaurantManager({ params }) {
                               ? "store.read"
                               : slug === "homepage"
                                 ? "homepage.read"
-                                : slug === "location-settings"
-                                  ? "store.read"
-                                  : "settings.read";
+                                : "settings.read";
               return can(need);
             })
             .map(([name, slug, description]) => {
@@ -134,9 +131,7 @@ export default async function RestaurantManager({ params }) {
                             ? "store.manage"
                             : slug === "homepage"
                               ? "homepage.manage"
-                              : slug === "location-settings"
-                                ? "store.manage"
-                                : null;
+                              : null;
               const readOnly = !isAdmin && managePermission && !can(managePermission);
               return (
                 <Link

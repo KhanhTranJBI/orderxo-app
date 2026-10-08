@@ -2,12 +2,32 @@
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock3, Info, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Clock3, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const defaultHours = () =>
   DAYS.map((day) => ({ day, open: "11:00", close: "19:00", isClosed: false }));
+
+const emptyPrinting = {
+  enabled: false,
+  provider: "none",
+  kitchen: { enabled: false, printerId: "", printerName: "", autoPrint: true },
+  receipt: { enabled: false, printerId: "", printerName: "", autoPrint: false },
+};
+
+async function printerReq(org, locationId, method = "GET", body) {
+  const q = new URLSearchParams({ organizationId: org, locationId });
+  const r = await ownerFetch(`/api/owner/locations/settings?${q}`, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify({ ...body, organizationId: org, locationId }) : undefined,
+    cache: "no-store",
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Printer settings request failed");
+  return d;
+}
 const emptyNotice = {
   title: "",
   message: "",
@@ -55,6 +75,9 @@ export default function StoreSettingsManager({ organizationId }) {
     [form, setForm] = useState(emptyNotice),
     [noticeSaving, setNoticeSaving] = useState(false),
     [deleting, setDeleting] = useState(null);
+  const [printing, setPrinting] = useState(emptyPrinting);
+  const [printingLoading, setPrintingLoading] = useState(false);
+  const [printingSaving, setPrintingSaving] = useState(false);
   useEffect(() => {
     if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
@@ -221,6 +244,62 @@ export default function StoreSettingsManager({ organizationId }) {
       setError(e.message);
     }
   };
+  useEffect(() => {
+    if (scope === "default" || !selectedLocationId) return;
+    let cancelled = false;
+    (async () => {
+      setPrintingLoading(true);
+      try {
+        const d = await printerReq(organizationId, selectedLocationId);
+        if (cancelled) return;
+        setPrinting({
+          ...emptyPrinting,
+          ...d.settings?.printing,
+          kitchen: { ...emptyPrinting.kitchen, ...d.settings?.printing?.kitchen },
+          receipt: { ...emptyPrinting.receipt, ...d.settings?.printing?.receipt },
+        });
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      } finally {
+        if (!cancelled) setPrintingLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationId, scope, selectedLocationId]);
+
+  useEffect(() => {
+    if (scope === "default" && tab === "printing") setTab("hours");
+  }, [scope, tab]);
+
+  const setPrintingField = (key, value) => setPrinting((current) => ({ ...current, [key]: value }));
+  const setPrinterField = (target, key, value) =>
+    setPrinting((current) => ({
+      ...current,
+      [target]: { ...current[target], [key]: value },
+    }));
+
+  const savePrinting = async () => {
+    if (!canManage || !selectedLocationId) return;
+    setPrintingSaving(true);
+    setError("");
+    try {
+      const d = await printerReq(organizationId, selectedLocationId, "PATCH", { printing });
+      setPrinting({
+        ...emptyPrinting,
+        ...d.settings?.printing,
+        kitchen: { ...emptyPrinting.kitchen, ...d.settings?.printing?.kitchen },
+        receipt: { ...emptyPrinting.receipt, ...d.settings?.printing?.receipt },
+      });
+      setMessage(`Printer settings saved for ${selectedLocation?.name || "location"}.`);
+      setTimeout(() => setMessage(""), 2500);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setPrintingSaving(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl">
@@ -235,7 +314,8 @@ export default function StoreSettingsManager({ organizationId }) {
         </p>
         <h1 className="mt-1 text-3xl font-bold">Store settings</h1>
         <p className="mt-2 text-slate-600">
-          Control ordering status, weekly business hours, and location notices.
+          Control ordering status, weekly business hours, notices, and physical printer
+          configuration.
         </p>
         <div className="mt-5 max-w-sm">
           <label className="mb-2 block text-sm font-semibold text-slate-700">Settings for</label>
@@ -273,6 +353,14 @@ export default function StoreSettingsManager({ organizationId }) {
           >
             <Info size={18} /> Notices
           </button>
+          {scope !== "default" && (
+            <button
+              onClick={() => setTab("printing")}
+              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "printing" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+            >
+              <Printer size={18} /> Printing
+            </button>
+          )}
         </div>
         {loading || loc.loading ? (
           <p className="mt-6">Loading settings…</p>
@@ -478,6 +566,114 @@ export default function StoreSettingsManager({ organizationId }) {
                       ))
                     )}
                   </div>
+                </section>
+              )}
+              {tab === "printing" && scope !== "default" && (
+                <section className="mt-5 rounded-2xl border bg-white p-6">
+                  <div>
+                    <h2 className="text-xl font-bold">Printing</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Physical printer IDs are always specific to{" "}
+                      {selectedLocation?.name || "this location"} and never inherit from Restaurant
+                      Default. API credentials remain server-side.
+                    </p>
+                  </div>
+                  {printingLoading ? (
+                    <p className="mt-5 text-sm text-slate-500">Loading printer settings…</p>
+                  ) : (
+                    <>
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <label className="flex items-center gap-3 font-medium">
+                          <input
+                            disabled={!canManage}
+                            type="checkbox"
+                            checked={!!printing.enabled}
+                            onChange={(e) => setPrintingField("enabled", e.target.checked)}
+                          />
+                          Enable printing
+                        </label>
+                        <div>
+                          <label className="mb-2 block text-sm font-semibold">
+                            Printer provider
+                          </label>
+                          <select
+                            disabled={!canManage}
+                            className="field"
+                            value={printing.provider || "none"}
+                            onChange={(e) => setPrintingField("provider", e.target.value)}
+                          >
+                            <option value="none">None</option>
+                            <option value="printnode">PrintNode</option>
+                            <option value="orderxo_agent">OrderXO Agent</option>
+                          </select>
+                        </div>
+                      </div>
+                      {["kitchen", "receipt"].map((target) => (
+                        <div key={target} className="mt-6 rounded-xl border p-5">
+                          <h3 className="font-bold capitalize">{target} printer</h3>
+                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold">Printer ID</label>
+                              <input
+                                disabled={!canManage}
+                                className="field"
+                                placeholder="PrintNode printer ID"
+                                value={printing[target]?.printerId || ""}
+                                onChange={(e) =>
+                                  setPrinterField(target, "printerId", e.target.value)
+                                }
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold">
+                                Printer name
+                              </label>
+                              <input
+                                disabled={!canManage}
+                                className="field"
+                                placeholder="Kitchen printer"
+                                value={printing[target]?.printerName || ""}
+                                onChange={(e) =>
+                                  setPrinterField(target, "printerName", e.target.value)
+                                }
+                              />
+                            </div>
+                            <label className="flex items-center gap-2 font-medium">
+                              <input
+                                disabled={!canManage}
+                                type="checkbox"
+                                checked={!!printing[target]?.enabled}
+                                onChange={(e) =>
+                                  setPrinterField(target, "enabled", e.target.checked)
+                                }
+                              />
+                              Enabled
+                            </label>
+                            <label className="flex items-center gap-2 font-medium">
+                              <input
+                                disabled={!canManage}
+                                type="checkbox"
+                                checked={!!printing[target]?.autoPrint}
+                                onChange={(e) =>
+                                  setPrinterField(target, "autoPrint", e.target.checked)
+                                }
+                              />
+                              Auto print
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                      {canManage && (
+                        <button
+                          disabled={printingSaving}
+                          onClick={savePrinting}
+                          className="primary mt-6"
+                        >
+                          {printingSaving ? "Saving…" : "Save printer settings"}
+                        </button>
+                      )}
+                    </>
+                  )}
                 </section>
               )}
             </>
