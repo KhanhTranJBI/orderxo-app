@@ -1,4 +1,5 @@
-import HomepageSlidesManager from "../../../../../components/management/HomepageSlidesManager";
+import { redirect } from "next/navigation";
+
 export default function Page({ params }) {
-  return <HomepageSlidesManager organizationId={params.organizationId} />;
+  redirect(`/dashboard/restaurants/${params.organizationId}/store`);
 }

@@ -202,12 +202,16 @@ function SlideModal({ slide, onClose, onSaved, organizationId, locationId }) {
     </div>
   );
 }
-export default function HomepageSlidesManager({ organizationId }) {
+export default function HomepageSlidesManager({
+  organizationId,
+  embedded = false,
+  scopeOverride = null,
+}) {
   const loc = useRestaurantLocation(organizationId);
   const permission = useRestaurantPermissions(organizationId);
   const canManage = permission.can("homepage.manage");
   const isAdmin = permission.isAdmin;
-  const [scope, setScope] = useState("default"),
+  const [scope, setScope] = useState(scopeOverride ?? "default"),
     [items, setItems] = useState([]),
     [useDefault, setUseDefault] = useState(false),
     [loading, setLoading] = useState(true),
@@ -218,6 +222,12 @@ export default function HomepageSlidesManager({ organizationId }) {
     [deleteLoading, setDeleteLoading] = useState(false),
     [switching, setSwitching] = useState(false);
   useEffect(() => {
+    if (scopeOverride !== null && scopeOverride !== undefined) {
+      setScope(scopeOverride);
+    }
+  }, [scopeOverride]);
+  useEffect(() => {
+    if (scopeOverride !== null && scopeOverride !== undefined) return;
     if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
     }
@@ -324,20 +334,34 @@ export default function HomepageSlidesManager({ organizationId }) {
     }
   };
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="text-sm font-semibold text-orange-600"
+    <div
+      className={embedded ? "text-slate-900" : "min-h-screen bg-slate-50 px-4 py-10 text-slate-900"}
+    >
+      <div className={embedded ? "" : "mx-auto max-w-6xl"}>
+        {!embedded && (
+          <Link
+            href={`/dashboard/restaurants/${organizationId}`}
+            className="text-sm font-semibold text-orange-600"
+          >
+            ← Restaurant workspace
+          </Link>
+        )}
+        {!embedded && (
+          <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
+            OrderXO Manager
+          </p>
+        )}
+        <div
+          className={
+            embedded
+              ? "flex flex-wrap items-end justify-between gap-4"
+              : "mt-1 flex flex-wrap items-end justify-between gap-4"
+          }
         >
-          ← Restaurant workspace
-        </Link>
-        <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
-          OrderXO Manager
-        </p>
-        <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Homepage slides</h1>
+            <h1 className={embedded ? "text-xl font-bold" : "text-3xl font-bold"}>
+              Homepage slides
+            </h1>
             <p className="mt-2 text-slate-600">
               Use restaurant default slides everywhere, or customize a location when needed.
             </p>
@@ -348,17 +372,19 @@ export default function HomepageSlidesManager({ organizationId }) {
             </button>
           )}
         </div>
-        <div className="mt-6 max-w-md">
-          <label className="text-sm font-semibold text-slate-600">Slides for</label>
-          <select className="field mt-2" value={scope} onChange={(e) => setScope(e.target.value)}>
-            {isAdmin && <option value="default">Restaurant Default</option>}
-            {loc.locations.map((l) => (
-              <option key={l._id || l.id} value={l._id || l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {scopeOverride === null || scopeOverride === undefined ? (
+          <div className="mt-6 max-w-md">
+            <label className="text-sm font-semibold text-slate-600">Slides for</label>
+            <select className="field mt-2" value={scope} onChange={(e) => setScope(e.target.value)}>
+              {isAdmin && <option value="default">Restaurant Default</option>}
+              {loc.locations.map((l) => (
+                <option key={l._id || l.id} value={l._id || l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         {locationId && (
           <div className="mt-5 rounded-2xl border bg-white p-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -470,6 +496,6 @@ export default function HomepageSlidesManager({ organizationId }) {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

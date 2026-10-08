@@ -2,9 +2,10 @@
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Clock3, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
+import { Clock3, Images, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
+import HomepageSlidesManager from "./HomepageSlidesManager";
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const defaultHours = () =>
   DAYS.map((day) => ({ day, open: "11:00", close: "19:00", isClosed: false }));
@@ -58,7 +59,9 @@ function localInput(v) {
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const permission = useRestaurantPermissions(organizationId);
+  const canReadStore = permission.can("store.read");
   const canManage = permission.can("store.manage");
+  const canReadHomepage = permission.can("homepage.read");
   const isAdmin = permission.isAdmin;
   const [tab, setTab] = useState("hours");
   const [scope, setScope] = useState("default"),
@@ -78,6 +81,10 @@ export default function StoreSettingsManager({ organizationId }) {
   const [printing, setPrinting] = useState(emptyPrinting);
   const [printingLoading, setPrintingLoading] = useState(false);
   const [printingSaving, setPrintingSaving] = useState(false);
+  useEffect(() => {
+    if (permission.loading) return;
+    if (!canReadStore && canReadHomepage) setTab("homepage");
+  }, [permission.loading, canReadStore, canReadHomepage]);
   useEffect(() => {
     if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
@@ -314,7 +321,7 @@ export default function StoreSettingsManager({ organizationId }) {
         </p>
         <h1 className="mt-1 text-3xl font-bold">Store settings</h1>
         <p className="mt-2 text-slate-600">
-          Control ordering status, weekly business hours, notices, and physical printer
+          Control business hours, notices, homepage slides, ordering status, and physical printer
           configuration.
         </p>
         <div className="mt-5 max-w-sm">
@@ -334,26 +341,38 @@ export default function StoreSettingsManager({ organizationId }) {
         {message && (
           <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>
         )}
-        {!permission.loading && !canManage && (
+        {!permission.loading && canReadStore && !canManage && (
           <p className="mt-4 rounded-lg border bg-white p-3 text-sm text-slate-700">
             <strong>Read only.</strong> Editing, deleting, status changes and customization require
             Manage store settings permission.
           </p>
         )}
         <div className="mt-6 flex gap-6 border-b bg-white px-5 pt-1 rounded-t-2xl border-x border-t">
-          <button
-            onClick={() => setTab("hours")}
-            className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "hours" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
-          >
-            <Clock3 size={18} /> Store Hours
-          </button>
-          <button
-            onClick={() => setTab("notices")}
-            className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "notices" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
-          >
-            <Info size={18} /> Notices
-          </button>
-          {scope !== "default" && (
+          {canReadStore && (
+            <>
+              <button
+                onClick={() => setTab("hours")}
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "hours" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+              >
+                <Clock3 size={18} /> Store Hours
+              </button>
+              <button
+                onClick={() => setTab("notices")}
+                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "notices" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+              >
+                <Info size={18} /> Notices
+              </button>
+            </>
+          )}
+          {canReadHomepage && (
+            <button
+              onClick={() => setTab("homepage")}
+              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "homepage" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+            >
+              <Images size={18} /> Homepage Slides
+            </button>
+          )}
+          {canReadStore && scope !== "default" && (
             <button
               onClick={() => setTab("printing")}
               className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "printing" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
@@ -566,6 +585,15 @@ export default function StoreSettingsManager({ organizationId }) {
                       ))
                     )}
                   </div>
+                </section>
+              )}
+              {tab === "homepage" && canReadHomepage && (
+                <section className="mt-5 rounded-2xl border bg-white p-6">
+                  <HomepageSlidesManager
+                    organizationId={organizationId}
+                    embedded
+                    scopeOverride={scope}
+                  />
                 </section>
               )}
               {tab === "printing" && scope !== "default" && (

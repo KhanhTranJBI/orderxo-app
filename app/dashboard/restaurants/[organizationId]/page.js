@@ -7,14 +7,13 @@ import AddLocationButton from "../../../../components/AddLocationButton";
 export const dynamic = "force-dynamic";
 
 const tools = [
-  ["Orders", "orders", "Confirm, prepare, complete, refund and review orders."],
-  ["Menu", "menu", "Items, categories, modifiers, pricing and availability."],
-  ["Store settings", "store", "Hours, ordering status, notices and printer configuration."],
-  ["Manage users", "users", "Customers, loyalty balances and email marketing preferences."],
-  ["Homepage slides", "homepage", "Manage the restaurant homepage hero content."],
-  ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
-  ["Gift cards", "gift-cards", "Gift card balances and activity."],
+  ["Orders Dashboard", "orders", "Confirm, prepare, complete, refund and review orders."],
+  ["Gift Cards Dashboard", "gift-cards", "Gift card balances and activity."],
   ["Financials", "financials", "Transactions, refunds, reports and statements."],
+  ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
+  ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
+  ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
+  ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
 ];
 
 export default async function RestaurantManager({ params }) {
@@ -109,11 +108,9 @@ export default async function RestaurantManager({ params }) {
                           : slug === "users"
                             ? "customers.read"
                             : slug === "store"
-                              ? "store.read"
-                              : slug === "homepage"
-                                ? "homepage.read"
-                                : "settings.read";
-              return can(need);
+                              ? null
+                              : "settings.read";
+              return slug === "store" ? can("store.read") || can("homepage.read") : can(need);
             })
             .map(([name, slug, description]) => {
               const managePermission =
@@ -128,11 +125,13 @@ export default async function RestaurantManager({ params }) {
                         : slug === "users"
                           ? "customers.manage"
                           : slug === "store"
-                            ? "store.manage"
-                            : slug === "homepage"
-                              ? "homepage.manage"
-                              : null;
-              const readOnly = !isAdmin && managePermission && !can(managePermission);
+                            ? null
+                            : null;
+              const readOnly =
+                !isAdmin &&
+                (slug === "store"
+                  ? !can("store.manage") && !can("homepage.manage")
+                  : managePermission && !can(managePermission));
               return (
                 <Link
                   key={slug}
