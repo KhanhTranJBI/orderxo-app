@@ -14,6 +14,7 @@ export default function BillingManager({ organizationId, subscription }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
   const pending = subscription?.pendingPlan;
@@ -193,14 +194,7 @@ export default function BillingManager({ organizationId, subscription }) {
               </p>
               <button
                 disabled={!!busy}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Cancel OrderXO at the end of the current billing period (${formatDate(subscription?.currentPeriodEnd)})?`,
-                    )
-                  )
-                    post("/api/owner/billing/cancel", { organizationId }, "cancel");
-                }}
+                onClick={() => setShowCancelModal(true)}
                 className="mt-4 rounded-xl border border-red-300 px-4 py-2.5 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
               >
                 {busy === "cancel" ? "Scheduling cancellation…" : "Cancel subscription"}
@@ -214,6 +208,69 @@ export default function BillingManager({ organizationId, subscription }) {
         OrderXO does not collect card details on this page. Payment methods, invoices and billing
         recovery are handled by Stripe.
       </p>
+
+      {showCancelModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-subscription-title"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && busy !== "cancel") setShowCancelModal(false);
+          }}
+        >
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-red-600">Subscription cancellation</p>
+                <h2 id="cancel-subscription-title" className="mt-1 text-xl font-bold text-slate-900">
+                  Cancel your OrderXO subscription?
+                </h2>
+              </div>
+              <button
+                type="button"
+                disabled={busy === "cancel"}
+                onClick={() => setShowCancelModal(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50"
+                aria-label="Close cancellation dialog"
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-slate-600">
+              Your subscription will remain active until {formatDate(subscription?.currentPeriodEnd)}.
+              You can continue using OrderXO normally until that date.
+            </p>
+
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              After the billing period ends, online ordering will be unavailable until you reactivate
+              your subscription.
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={busy === "cancel"}
+                onClick={() => setShowCancelModal(false)}
+                className="rounded-xl border px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Keep subscription
+              </button>
+              <button
+                type="button"
+                disabled={busy === "cancel"}
+                onClick={() =>
+                  post("/api/owner/billing/cancel", { organizationId }, "cancel")
+                }
+                className="rounded-xl bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {busy === "cancel" ? "Scheduling cancellation…" : "Cancel subscription"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
