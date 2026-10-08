@@ -611,6 +611,15 @@ export default function StoreSettingsManager({ organizationId }) {
 
           {canReadStore && scope !== "default" && (
             <button
+              onClick={() => setTab("locationDetails")}
+              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "locationDetails" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+            >
+              <Info size={18} /> Location Details
+            </button>
+          )}
+
+          {canReadStore && scope !== "default" && (
+            <button
               onClick={() => setTab("printing")}
               className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
                 tab === "printing"
@@ -879,15 +888,17 @@ export default function StoreSettingsManager({ organizationId }) {
                 </section>
               )}
 
-              {tab === "printing" && scope !== "default" && (
+              {(tab === "printing" || tab === "locationDetails") && scope !== "default" && (
                 <section className="mt-5 rounded-2xl border bg-white p-6">
                   <div>
-                    <h2 className="text-xl font-bold">Printing</h2>
+                    <h2 className="text-xl font-bold">
+                      {tab === "locationDetails" ? "Location Details & Pickup Address" : "Printing"}
+                    </h2>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Physical printer IDs are always specific to{" "}
-                      {selectedLocation?.name || "this location"} and never inherit from Restaurant
-                      Default. API credentials remain server-side.
+                      {tab === "locationDetails"
+                        ? "Set the address, phone, directions and pickup instructions customers see on your website and at checkout."
+                        : `Printer settings for ${selectedLocation?.name || "this location"}. API credentials remain server-side.`}
                     </p>
                   </div>
 
@@ -895,178 +906,191 @@ export default function StoreSettingsManager({ organizationId }) {
                     <p className="mt-5 text-sm text-slate-500">Loading printer settings…</p>
                   ) : (
                     <>
-                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                        <label className="flex items-center gap-3 font-medium">
-                          <input
-                            disabled={!canManage}
-                            type="checkbox"
-                            checked={!!printing.enabled}
-                            onChange={(e) => setPrintingField("enabled", e.target.checked)}
-                          />
-                          Enable printing
-                        </label>
-
-                        <div>
-                          <label className="mb-2 block text-sm font-semibold">
-                            Printer provider
-                          </label>
-
-                          <select
-                            disabled={!canManage}
-                            className="field"
-                            value={printing.provider || "none"}
-                            onChange={(e) => setPrintingField("provider", e.target.value)}
-                          >
-                            <option value="none">None</option>
-                            <option value="printnode">PrintNode</option>
-                            <option value="orderxo_agent">OrderXO Agent</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {["kitchen", "receipt"].map((target) => (
-                        <div key={target} className="mt-6 rounded-xl border p-5">
-                          <h3 className="font-bold capitalize">{target} printer</h3>
-
-                          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                            <div>
-                              <label className="mb-2 block text-sm font-semibold">Printer ID</label>
-
+                      {tab === "printing" && (
+                        <>
+                          {" "}
+                          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                            <label className="flex items-center gap-3 font-medium">
                               <input
                                 disabled={!canManage}
-                                className="field"
-                                placeholder="PrintNode printer ID"
-                                value={printing[target]?.printerId || ""}
-                                onChange={(e) =>
-                                  setPrinterField(target, "printerId", e.target.value)
-                                }
+                                type="checkbox"
+                                checked={!!printing.enabled}
+                                onChange={(e) => setPrintingField("enabled", e.target.checked)}
                               />
-                            </div>
+                              Enable printing
+                            </label>
 
                             <div>
                               <label className="mb-2 block text-sm font-semibold">
-                                Printer name
+                                Printer provider
                               </label>
 
-                              <input
+                              <select
                                 disabled={!canManage}
                                 className="field"
-                                placeholder="Kitchen printer"
-                                value={printing[target]?.printerName || ""}
-                                onChange={(e) =>
-                                  setPrinterField(target, "printerName", e.target.value)
-                                }
-                              />
+                                value={printing.provider || "none"}
+                                onChange={(e) => setPrintingField("provider", e.target.value)}
+                              >
+                                <option value="none">None</option>
+                                <option value="printnode">PrintNode</option>
+                                <option value="orderxo_agent">OrderXO Agent</option>
+                              </select>
                             </div>
-
-                            <label className="flex items-center gap-2 font-medium">
-                              <input
-                                disabled={!canManage}
-                                type="checkbox"
-                                checked={!!printing[target]?.enabled}
-                                onChange={(e) =>
-                                  setPrinterField(target, "enabled", e.target.checked)
-                                }
-                              />
-                              Enabled
-                            </label>
-
-                            <label className="flex items-center gap-2 font-medium">
-                              <input
-                                disabled={!canManage}
-                                type="checkbox"
-                                checked={!!printing[target]?.autoPrint}
-                                onChange={(e) =>
-                                  setPrinterField(target, "autoPrint", e.target.checked)
-                                }
-                              />
-                              Auto print
-                            </label>
                           </div>
-                        </div>
-                      ))}
+                          {["kitchen", "receipt"].map((target) => (
+                            <div key={target} className="mt-6 rounded-xl border p-5">
+                              <h3 className="font-bold capitalize">{target} printer</h3>
 
+                              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div>
+                                  <label className="mb-2 block text-sm font-semibold">
+                                    Printer ID
+                                  </label>
+
+                                  <input
+                                    disabled={!canManage}
+                                    className="field"
+                                    placeholder="PrintNode printer ID"
+                                    value={printing[target]?.printerId || ""}
+                                    onChange={(e) =>
+                                      setPrinterField(target, "printerId", e.target.value)
+                                    }
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="mb-2 block text-sm font-semibold">
+                                    Printer name
+                                  </label>
+
+                                  <input
+                                    disabled={!canManage}
+                                    className="field"
+                                    placeholder="Kitchen printer"
+                                    value={printing[target]?.printerName || ""}
+                                    onChange={(e) =>
+                                      setPrinterField(target, "printerName", e.target.value)
+                                    }
+                                  />
+                                </div>
+
+                                <label className="flex items-center gap-2 font-medium">
+                                  <input
+                                    disabled={!canManage}
+                                    type="checkbox"
+                                    checked={!!printing[target]?.enabled}
+                                    onChange={(e) =>
+                                      setPrinterField(target, "enabled", e.target.checked)
+                                    }
+                                  />
+                                  Enabled
+                                </label>
+
+                                <label className="flex items-center gap-2 font-medium">
+                                  <input
+                                    disabled={!canManage}
+                                    type="checkbox"
+                                    checked={!!printing[target]?.autoPrint}
+                                    onChange={(e) =>
+                                      setPrinterField(target, "autoPrint", e.target.checked)
+                                    }
+                                  />
+                                  Auto print
+                                </label>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
                       {/* FIXED: Fragment wraps tax + save button */}
                       {canManage && (
                         <>
-                          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <h3 className="md:col-span-2 font-semibold text-lg">
-                              Location Details & Pickup Address
-                            </h3>
-                            {[
-                              ["line1", "Street address"],
-                              ["line2", "Suite / unit"],
-                              ["city", "City"],
-                              ["state", "State"],
-                              ["postalCode", "ZIP / postal code"],
-                              ["country", "Country"],
-                            ].map(([key, label]) => (
-                              <label key={key} className="text-sm font-medium text-slate-700">
-                                {label}
-                                <input
-                                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
-                                  value={locationDetails.address?.[key] || ""}
-                                  onChange={(e) =>
-                                    setLocationDetails((v) => ({
-                                      ...v,
-                                      address: { ...v.address, [key]: e.target.value },
-                                    }))
-                                  }
-                                />
+                          {tab === "locationDetails" && (
+                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <h3 className="md:col-span-2 font-semibold text-lg">
+                                Location Details & Pickup Address
+                              </h3>
+                              {[
+                                ["line1", "Street address"],
+                                ["line2", "Suite / unit"],
+                                ["city", "City"],
+                                ["state", "State"],
+                                ["postalCode", "ZIP / postal code"],
+                                ["country", "Country"],
+                              ].map(([key, label]) => (
+                                <label key={key} className="text-sm font-medium text-slate-700">
+                                  {label}
+                                  <input
+                                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                                    value={locationDetails.address?.[key] || ""}
+                                    onChange={(e) =>
+                                      setLocationDetails((v) => ({
+                                        ...v,
+                                        address: { ...v.address, [key]: e.target.value },
+                                      }))
+                                    }
+                                  />
+                                </label>
+                              ))}
+                              {[
+                                ["phone", "Phone number"],
+                                ["googleMapUrl", "Google Maps directions URL"],
+                                ["pickupInstructions", "Pickup instructions"],
+                              ].map(([key, label]) => (
+                                <label key={key} className="text-sm font-medium text-slate-700">
+                                  {label}
+                                  <input
+                                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
+                                    value={locationDetails[key] || ""}
+                                    onChange={(e) =>
+                                      setLocationDetails((v) => ({ ...v, [key]: e.target.value }))
+                                    }
+                                  />
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          {tab === "printing" && (
+                            <div className="mt-6 max-w-sm">
+                              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                                Sales tax rate (%)
                               </label>
-                            ))}
-                            {[
-                              ["phone", "Phone number"],
-                              ["googleMapUrl", "Google Maps directions URL"],
-                              ["pickupInstructions", "Pickup instructions"],
-                            ].map(([key, label]) => (
-                              <label key={key} className="text-sm font-medium text-slate-700">
-                                {label}
-                                <input
-                                  className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2"
-                                  value={locationDetails[key] || ""}
-                                  onChange={(e) =>
-                                    setLocationDetails((v) => ({ ...v, [key]: e.target.value }))
-                                  }
-                                />
-                              </label>
-                            ))}
-                          </div>
-                          <div className="mt-6 max-w-sm">
-                            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                              Sales tax rate (%)
-                            </label>
 
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
-                              step="0.001"
-                              className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
-                              value={(Number(locationOrdering.taxRate || 0) * 100).toString()}
-                              onChange={(e) =>
-                                setLocationOrdering((current) => ({
-                                  ...current,
-                                  taxRate: Math.max(
-                                    0,
-                                    Math.min(1, Number(e.target.value || 0) / 100),
-                                  ),
-                                }))
-                              }
-                            />
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.001"
+                                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                                value={(Number(locationOrdering.taxRate || 0) * 100).toString()}
+                                onChange={(e) =>
+                                  setLocationOrdering((current) => ({
+                                    ...current,
+                                    taxRate: Math.max(
+                                      0,
+                                      Math.min(1, Number(e.target.value || 0) / 100),
+                                    ),
+                                  }))
+                                }
+                              />
 
-                            <p className="mt-1 text-xs text-slate-500">
-                              Location-specific tax rate used by customer checkout, e.g. 9.2 for
-                              9.2%.
-                            </p>
-                          </div>
+                              <p className="mt-1 text-xs text-slate-500">
+                                Location-specific tax rate used by customer checkout, e.g. 9.2 for
+                                9.2%.
+                              </p>
+                            </div>
+                          )}
 
                           <button
                             disabled={printingSaving}
                             onClick={savePrinting}
                             className="primary mt-6"
                           >
-                            {printingSaving ? "Saving…" : "Save location settings"}
+                            {printingSaving
+                              ? "Saving…"
+                              : tab === "locationDetails"
+                                ? "Save location details"
+                                : "Save printing & tax"}
                           </button>
                         </>
                       )}
