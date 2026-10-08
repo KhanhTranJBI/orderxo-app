@@ -51,3 +51,7 @@ Manager permissions are split into read/manage pairs. Restaurant workspace shows
 - PrintNode printer IDs are stored per Location; credentials remain server-side.
 - Store Settings and Homepage Slides now enforce read-only UI: read-only managers cannot add/edit/delete/toggle/reorder/customize.
 - Managers cannot edit Restaurant Default store/homepage content; only assigned location scopes are shown.
+
+## Restaurant-wide ordering default
+
+`abandonedCartIntervalMinutes` is organization-wide and is managed from Restaurant Settings > Ordering. Location Settings now contains only physical/location-specific configuration such as printer IDs.

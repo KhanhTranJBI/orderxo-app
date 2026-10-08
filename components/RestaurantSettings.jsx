@@ -2,9 +2,9 @@
 import { ownerFetch } from "../lib/ownerFetch";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-const TABS = ["General", "Loyalty", "Gift Cards", "Email"];
+const TABS = ["General", "Loyalty", "Gift Cards", "Email", "Ordering"];
 
 const emptyOrg = {
   name: "",
@@ -12,6 +12,7 @@ const emptyOrg = {
   branding: { logoUrl: "", primaryColor: "#111827", secondaryColor: "#ffffff" },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
+  ordering: { abandonedCartIntervalMinutes: 20 },
   emailSettings: {
     fromName: "",
     sendingDomain: "",
@@ -30,16 +31,6 @@ const emptyOrg = {
   },
 };
 
-const emptyLocation = {
-  ordering: { abandonedCartIntervalMinutes: 20 },
-  printing: {
-    enabled: false,
-    provider: "none",
-    kitchen: { enabled: false, printerId: "", printerName: "", autoPrint: true },
-    receipt: { enabled: false, printerId: "", printerName: "", autoPrint: false },
-  },
-};
-
 function mergeOrg(value = {}) {
   return {
     ...emptyOrg,
@@ -47,25 +38,12 @@ function mergeOrg(value = {}) {
     branding: { ...emptyOrg.branding, ...(value.branding || {}) },
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
+    ordering: { ...emptyOrg.ordering, ...(value.ordering || {}) },
     emailSettings: {
       ...emptyOrg.emailSettings,
       ...(value.emailSettings || {}),
       subjects: { ...emptyOrg.emailSettings.subjects, ...(value.emailSettings?.subjects || {}) },
       messages: { ...emptyOrg.emailSettings.messages, ...(value.emailSettings?.messages || {}) },
-    },
-  };
-}
-
-function mergeLocation(value = {}) {
-  return {
-    ...emptyLocation,
-    ...value,
-    ordering: { ...emptyLocation.ordering, ...(value.ordering || {}) },
-    printing: {
-      ...emptyLocation.printing,
-      ...(value.printing || {}),
-      kitchen: { ...emptyLocation.printing.kitchen, ...(value.printing?.kitchen || {}) },
-      receipt: { ...emptyLocation.printing.receipt, ...(value.printing?.receipt || {}) },
     },
   };
 }
@@ -156,6 +134,7 @@ export default function RestaurantSettings({ organizationId }) {
           loyalty: org.loyalty,
           giftCards: org.giftCards,
           emailSettings: org.emailSettings,
+          ordering: org.ordering,
         }),
       });
       setOrg(mergeOrg(data.settings));
@@ -171,7 +150,7 @@ export default function RestaurantSettings({ organizationId }) {
     return (
       <main className="mx-auto max-w-4xl p-8">
         <Link href="/dashboard" className="font-semibold text-orange-700">
-          ← Your restaurants
+          ← Dashboard
         </Link>
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
@@ -182,7 +161,7 @@ export default function RestaurantSettings({ organizationId }) {
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
         <Link href="/dashboard" className="text-sm font-semibold text-orange-700">
-          ← Your restaurants
+          ← Dashboard
         </Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -191,7 +170,7 @@ export default function RestaurantSettings({ organizationId }) {
             </p>
             <h1 className="mt-1 text-3xl font-bold">{org.name || "Restaurant"}</h1>
             <p className="mt-2 text-slate-600">
-              Manage restaurant-wide branding, loyalty, gift cards and email settings.
+              Manage restaurant-wide branding, loyalty, gift cards, email and ordering defaults.
             </p>
           </div>
         </div>
@@ -465,6 +444,34 @@ export default function RestaurantSettings({ organizationId }) {
                     </Field>
                   ))}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {tab === "Ordering" && (
+            <div className="space-y-7">
+              <div>
+                <h2 className="text-xl font-bold">Ordering</h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Restaurant-wide ordering defaults shared by every location.
+                </p>
+              </div>
+              <div className="max-w-xl">
+                <Field
+                  label="Abandoned cart interval (minutes)"
+                  hint="Used across all locations when determining when an inactive cart is considered abandoned."
+                >
+                  <input
+                    type="number"
+                    min="1"
+                    max="10080"
+                    className={input}
+                    value={org.ordering?.abandonedCartIntervalMinutes ?? 20}
+                    onChange={(e) =>
+                      setOrgPart("ordering", "abandonedCartIntervalMinutes", Number(e.target.value))
+                    }
+                  />
+                </Field>
               </div>
             </div>
           )}

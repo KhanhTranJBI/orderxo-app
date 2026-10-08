@@ -6,7 +6,6 @@ import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 
 const empty = {
-  ordering: { abandonedCartIntervalMinutes: 20 },
   printing: {
     enabled: false,
     provider: "none",
@@ -49,7 +48,6 @@ export default function LocationSettingsManager({ organizationId }) {
         setSettings({
           ...empty,
           ...d.settings,
-          ordering: { ...empty.ordering, ...d.settings?.ordering },
           printing: {
             ...empty.printing,
             ...d.settings?.printing,
@@ -78,7 +76,6 @@ export default function LocationSettingsManager({ organizationId }) {
     setError("");
     try {
       const d = await request(organizationId, locationId, "PATCH", {
-        ordering: settings.ordering,
         printing: settings.printing,
       });
       setSettings(d.settings);
@@ -106,7 +103,7 @@ export default function LocationSettingsManager({ organizationId }) {
             </p>
             <h1 className="mt-1 text-3xl font-bold">Location configuration</h1>
             <p className="mt-2 text-slate-600">
-              Ordering and physical printer configuration are stored separately for each location.
+              Physical printer configuration is stored separately for each location.
             </p>
           </div>
           <div className="min-w-[240px]">
@@ -141,29 +138,6 @@ export default function LocationSettingsManager({ organizationId }) {
         ) : (
           locationId && (
             <div className="mt-7 space-y-6">
-              <section className="rounded-2xl border bg-white p-6">
-                <h2 className="text-xl font-bold">Ordering</h2>
-                <label className="mt-5 block text-sm font-semibold">
-                  Abandoned cart interval (minutes)
-                </label>
-                <input
-                  disabled={!canManage}
-                  type="number"
-                  min="1"
-                  max="10080"
-                  className="field mt-2"
-                  value={settings.ordering?.abandonedCartIntervalMinutes ?? 20}
-                  onChange={(e) =>
-                    setSettings((s) => ({
-                      ...s,
-                      ordering: {
-                        ...s.ordering,
-                        abandonedCartIntervalMinutes: Number(e.target.value),
-                      },
-                    }))
-                  }
-                />
-              </section>
               <section className="rounded-2xl border bg-white p-6">
                 <h2 className="text-xl font-bold">Printing</h2>
                 <p className="mt-1 text-sm text-slate-500">
