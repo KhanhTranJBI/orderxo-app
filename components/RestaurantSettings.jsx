@@ -23,6 +23,7 @@ const emptyOrg = {
   website: { social: {}, navigationLinks: [], footerLinks: [], footerGroups: [] },
   branding: {
     logoUrl: "",
+    faviconUrl: "",
     primaryColor: "#111827",
     secondaryColor: "#ffffff",
     backgroundColor: "#ffffff",
@@ -270,6 +271,14 @@ export default function RestaurantSettings({ organizationId }) {
                     value={org.branding.logoUrl || ""}
                     onChange={(e) => setOrgPart("branding", "logoUrl", e.target.value)}
                     placeholder="https://..."
+                  />
+                </Field>
+                <Field label="Favicon URL (browser tab icon)">
+                  <input
+                    className={input}
+                    value={org.branding.faviconUrl || ""}
+                    onChange={(e) => setOrgPart("branding", "faviconUrl", e.target.value)}
+                    placeholder="https://.../favicon.png (falls back to logo)"
                   />
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
