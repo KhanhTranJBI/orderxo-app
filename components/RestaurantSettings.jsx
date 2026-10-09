@@ -19,7 +19,8 @@ const TABS = [
 const emptyOrg = {
   name: "",
   contactEmail: "",
-  website: { social: {}, navigationLinks: [], footerLinks: [] },
+  businessStartYear: "",
+  website: { social: {}, navigationLinks: [], footerLinks: [], footerGroups: [] },
   branding: {
     logoUrl: "",
     primaryColor: "#111827",
@@ -153,6 +154,7 @@ export default function RestaurantSettings({ organizationId }) {
         method: "PATCH",
         body: JSON.stringify({
           organizationId,
+          businessStartYear: org.businessStartYear,
           branding: org.branding,
           website: org.website,
           loyalty: org.loyalty,
@@ -247,6 +249,19 @@ export default function RestaurantSettings({ organizationId }) {
                     className={`${input} bg-slate-50`}
                     value={org.contactEmail || ""}
                     disabled
+                  />
+                </Field>
+                <Field label="Business start year">
+                  <input
+                    type="number"
+                    min="1800"
+                    max={new Date().getFullYear()}
+                    className={input}
+                    value={org.businessStartYear ?? ""}
+                    placeholder="e.g. 2023"
+                    onChange={(e) =>
+                      setOrg((old) => ({ ...old, businessStartYear: e.target.value }))
+                    }
                   />
                 </Field>
                 <Field label="Logo URL">

@@ -124,8 +124,86 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
         value={value.navigationLinks}
         onChange={(links) => change("navigationLinks", links)}
       />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">Footer link groups</h3>
+            <p className="text-xs text-slate-500">
+              Create headings such as Sister Restaurants or Partners.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg border px-3 py-2 text-sm"
+            onClick={() =>
+              change("footerGroups", [
+                ...(value.footerGroups || []),
+                { title: "", enabled: true, links: [] },
+              ])
+            }
+          >
+            + Add category
+          </button>
+        </div>
+        {(value.footerGroups || []).map((group, index) => (
+          <div key={index} className="rounded-xl border p-4 space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                className={`${input} flex-1`}
+                placeholder="Category heading"
+                value={group.title || ""}
+                onChange={(e) =>
+                  change(
+                    "footerGroups",
+                    value.footerGroups.map((g, i) =>
+                      i === index ? { ...g, title: e.target.value } : g,
+                    ),
+                  )
+                }
+              />
+              <label className="text-sm flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={group.enabled !== false}
+                  onChange={(e) =>
+                    change(
+                      "footerGroups",
+                      value.footerGroups.map((g, i) =>
+                        i === index ? { ...g, enabled: e.target.checked } : g,
+                      ),
+                    )
+                  }
+                />{" "}
+                Visible
+              </label>
+              <button
+                type="button"
+                className="text-red-600 text-sm"
+                onClick={() =>
+                  change(
+                    "footerGroups",
+                    value.footerGroups.filter((_, i) => i !== index),
+                  )
+                }
+              >
+                Remove category
+              </button>
+            </div>
+            <LinkEditor
+              title="External links"
+              value={group.links}
+              onChange={(links) =>
+                change(
+                  "footerGroups",
+                  value.footerGroups.map((g, i) => (i === index ? { ...g, links } : g)),
+                )
+              }
+            />
+          </div>
+        ))}
+      </div>
       <LinkEditor
-        title="Footer links (sister restaurants, partners, etc.)"
+        title="Legacy footer links (shown as More Links until migrated)"
         value={value.footerLinks}
         onChange={(links) => change("footerLinks", links)}
       />
