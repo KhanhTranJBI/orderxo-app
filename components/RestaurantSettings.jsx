@@ -33,7 +33,13 @@ const emptyOrg = {
   ordering: {
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
-    serviceFee: { enabled: false, type: "fixed", fixedCents: 150, percentageBps: 0 },
+    serviceFee: {
+      enabled: false,
+      type: "fixed",
+      fixedCents: 150,
+      perItemCents: 100,
+      percentageBps: 0,
+    },
   },
   notifications: { orderEmails: [], abandonedCartEmails: [], giftCardEmails: [] },
   emailSettings: {
@@ -588,6 +594,7 @@ export default function RestaurantSettings({ organizationId }) {
                       }
                     >
                       <option value="fixed">Fixed amount per order</option>
+                      <option value="per_item">Fixed amount per item</option>
                       <option value="percentage">Percentage of discounted food subtotal</option>
                     </select>
                   </Field>
@@ -606,6 +613,26 @@ export default function RestaurantSettings({ organizationId }) {
                             percentageBps: Math.max(
                               0,
                               Math.min(1000, Math.round(Number(e.target.value || 0) * 100)),
+                            ),
+                          })
+                        }
+                      />
+                    </Field>
+                  ) : org.ordering?.serviceFee?.type === "per_item" ? (
+                    <Field label="Fixed fee per item ($)">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        className={input}
+                        value={((org.ordering.serviceFee.perItemCents ?? 100) / 100).toFixed(2)}
+                        onChange={(e) =>
+                          setOrgPart("ordering", "serviceFee", {
+                            ...org.ordering.serviceFee,
+                            perItemCents: Math.max(
+                              0,
+                              Math.min(10000, Math.round(Number(e.target.value || 0) * 100)),
                             ),
                           })
                         }
@@ -633,13 +660,16 @@ export default function RestaurantSettings({ organizationId }) {
                     </Field>
                   )}
                   <p className="text-xs text-gray-500">
-                    Example on $35 discounted food subtotal: $
+                    Example on $35 discounted food subtotal (3 items): $
                     {org.ordering?.serviceFee?.enabled
                       ? (
                           (org.ordering.serviceFee.type === "fixed"
                             ? org.ordering.serviceFee.fixedCents
-                            : Math.round((3500 * org.ordering.serviceFee.percentageBps) / 10000)) /
-                          100
+                            : org.ordering.serviceFee.type === "per_item"
+                              ? (org.ordering.serviceFee.perItemCents ?? 100) * 3
+                              : Math.round(
+                                  (3500 * org.ordering.serviceFee.percentageBps) / 10000,
+                                )) / 100
                         ).toFixed(2)
                       : "0.00"}
                   </p>
