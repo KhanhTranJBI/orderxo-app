@@ -20,6 +20,14 @@ export default async function Billing({ searchParams }) {
           ← Dashboard
         </Link>
         <h1 className="mt-6 text-3xl font-bold">Billing & Subscription</h1>
+        {id && (
+          <Link
+            href={`/dashboard/settings/payments?organizationId=${encodeURIComponent(id)}`}
+            className="mt-3 inline-block font-semibold text-orange-700"
+          >
+            Restaurant Payments / Stripe Connect →
+          </Link>
+        )}
         <p className="mb-7 mt-2 text-slate-600">
           Manage your OrderXO plan, payment method and invoices through Stripe Billing.
         </p>
