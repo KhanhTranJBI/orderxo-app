@@ -292,15 +292,25 @@ export default function RestaurantSettings({ organizationId }) {
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Primary color">
                     <input
-                      className={input}
-                      value={org.branding.primaryColor || ""}
+                      type="color"
+                      className="h-11 w-full rounded border"
+                      value={
+                        /^#[0-9a-fA-F]{6}$/.test(org.branding.primaryColor || "")
+                          ? org.branding.primaryColor
+                          : "#F97015"
+                      }
                       onChange={(e) => setOrgPart("branding", "primaryColor", e.target.value)}
                     />
                   </Field>
                   <Field label="Secondary color">
                     <input
-                      className={input}
-                      value={org.branding.secondaryColor || ""}
+                      type="color"
+                      className="h-11 w-full rounded border"
+                      value={
+                        /^#[0-9a-fA-F]{6}$/.test(org.branding.secondaryColor || "")
+                          ? org.branding.secondaryColor
+                          : "#FFFFFF"
+                      }
                       onChange={(e) => setOrgPart("branding", "secondaryColor", e.target.value)}
                     />
                   </Field>
