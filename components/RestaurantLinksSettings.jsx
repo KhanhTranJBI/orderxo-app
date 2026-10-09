@@ -10,7 +10,7 @@ const socialFields = [
   ["youtube", "YouTube"],
 ];
 
-function LinkEditor({ title, value = [], onChange }) {
+function LinkEditor({ title, value = [], onChange, allowImages = false }) {
   const links = Array.isArray(value) ? value : [];
   const edit = (index, key, val) =>
     onChange(links.map((item, i) => (i === index ? { ...item, [key]: val } : item)));
@@ -44,6 +44,31 @@ function LinkEditor({ title, value = [], onChange }) {
               onChange={(e) => edit(index, "url", e.target.value)}
             />
           </div>
+          {allowImages && (
+            <label className="block space-y-1 text-sm">
+              <span className="font-medium">Image URL (optional)</span>
+              <input
+                aria-label="Link image URL"
+                className={input}
+                placeholder="https://example.com/logo.png"
+                value={link.imageUrl || ""}
+                onChange={(e) => edit(index, "imageUrl", e.target.value)}
+              />
+              <span className="block text-xs text-slate-500">
+                Use a publicly accessible HTTPS image URL. Appears before the link name.
+              </span>
+              {/^https:\/\//i.test(link.imageUrl || "") && (
+                <img
+                  src={link.imageUrl}
+                  alt="Navigation link preview"
+                  className="mt-2 h-9 w-9 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              )}
+            </label>
+          )}
           <div className="flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -95,6 +120,7 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
       </div>
       <LinkEditor
         title="Navigation links (DoorDash, delivery, etc.)"
+        allowImages
         value={value.navigationLinks}
         onChange={(links) => change("navigationLinks", links)}
       />
