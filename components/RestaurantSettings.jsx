@@ -20,7 +20,12 @@ const emptyOrg = {
   name: "",
   contactEmail: "",
   website: { social: {}, navigationLinks: [], footerLinks: [] },
-  branding: { logoUrl: "", primaryColor: "#111827", secondaryColor: "#ffffff" },
+  branding: {
+    logoUrl: "",
+    primaryColor: "#111827",
+    secondaryColor: "#ffffff",
+    backgroundColor: "#ffffff",
+  },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
   ordering: { abandonedCartIntervalMinutes: 20, serviceFeePerItemCents: 0 },
@@ -265,6 +270,14 @@ export default function RestaurantSettings({ organizationId }) {
                       className={input}
                       value={org.branding.secondaryColor || ""}
                       onChange={(e) => setOrgPart("branding", "secondaryColor", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Background color">
+                    <input
+                      type="color"
+                      className="h-11 w-full rounded border"
+                      value={org.branding.backgroundColor || "#ffffff"}
+                      onChange={(e) => setOrgPart("branding", "backgroundColor", e.target.value)}
                     />
                   </Field>
                 </div>

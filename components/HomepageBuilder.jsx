@@ -17,7 +17,6 @@ const defaultSections = ["hero", "featuredMenu", "about", "gallery"].map((type, 
 }));
 const defaultPage = {
   template: "modern",
-  theme: { primaryColor: "#ea580c", backgroundColor: "#ffffff" },
   sections: defaultSections,
 };
 export default function HomepageBuilder({ organizationId }) {
@@ -26,7 +25,12 @@ export default function HomepageBuilder({ organizationId }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
-    [mobile, setMobile] = useState(false);
+    [mobile, setMobile] = useState(false),
+    [branding, setBranding] = useState({
+      primaryColor: "#111827",
+      secondaryColor: "#ffffff",
+      backgroundColor: "#ffffff",
+    });
   useEffect(() => {
     if (!organizationId) return;
     fetch(`/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`)
@@ -35,6 +39,7 @@ export default function HomepageBuilder({ organizationId }) {
         if (!r.ok) throw Error(d.error || "Unable to load");
         setDraft(d.settings?.homepageDraft || d.settings?.homepagePublished || defaultPage);
         setPublished(d.settings?.homepagePublished || null);
+        setBranding(d.settings?.branding || {});
       })
       .catch((e) => setError(e.message));
   }, [organizationId]);
@@ -114,21 +119,7 @@ export default function HomepageBuilder({ organizationId }) {
               ))}
             </select>
           </label>
-          <div className="flex gap-4">
-            {["primaryColor", "backgroundColor"].map((k) => (
-              <label key={k} className="text-sm">
-                {k}
-                <input
-                  type="color"
-                  className="ml-2"
-                  value={draft.theme[k]}
-                  onChange={(e) =>
-                    setDraft({ ...draft, theme: { ...draft.theme, [k]: e.target.value } })
-                  }
-                />
-              </label>
-            ))}
-          </div>
+          <p className="text-xs text-slate-500">Theme colors are managed in General settings.</p>
           {draft.sections.map((s, i) => (
             <div key={s.id} className="rounded-lg border p-3 space-y-2">
               <div className="flex items-center justify-between">
@@ -194,7 +185,7 @@ export default function HomepageBuilder({ organizationId }) {
           </div>
           <div
             className={`mx-auto overflow-hidden rounded-xl border shadow ${mobile ? "max-w-xs" : "w-full"}`}
-            style={{ background: draft.theme.backgroundColor }}
+            style={{ background: branding.backgroundColor || "#ffffff" }}
           >
             {draft.sections
               .filter((s) => s.enabled)
@@ -204,7 +195,7 @@ export default function HomepageBuilder({ organizationId }) {
                   className="p-6 text-center"
                   style={
                     s.type === "hero"
-                      ? { background: draft.theme.primaryColor, color: "white" }
+                      ? { background: branding.primaryColor || "#111827", color: "white" }
                       : {}
                   }
                 >
