@@ -30,7 +30,11 @@ const emptyOrg = {
   },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
-  ordering: { abandonedCartIntervalMinutes: 20, serviceFeePerItemCents: 0 },
+  ordering: {
+    abandonedCartIntervalMinutes: 20,
+    serviceFeePerItemCents: 0,
+    serviceFee: { enabled: false, type: "fixed", fixedCents: 150, percentageBps: 0 },
+  },
   notifications: { orderEmails: [], abandonedCartEmails: [], giftCardEmails: [] },
   emailSettings: {
     fromName: "",
@@ -62,7 +66,11 @@ function mergeOrg(value = {}) {
     branding: { ...emptyOrg.branding, ...(value.branding || {}) },
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
-    ordering: { ...emptyOrg.ordering, ...(value.ordering || {}) },
+    ordering: {
+      ...emptyOrg.ordering,
+      ...(value.ordering || {}),
+      serviceFee: { ...emptyOrg.ordering.serviceFee, ...(value.ordering?.serviceFee || {}) },
+    },
     notifications: { ...emptyOrg.notifications, ...(value.notifications || {}) },
     emailSettings: {
       ...emptyOrg.emailSettings,
@@ -538,26 +546,93 @@ export default function RestaurantSettings({ organizationId }) {
                     }
                   />
                 </Field>
-                <div className="mt-5">
-                  <Field
-                    label="Online service fee per item ($)"
-                    hint="Restaurant-wide per-item fee used by customer checkout. Enter 0 for no fee."
-                  >
+                <div className="mt-5 space-y-4 rounded-xl border border-gray-200 p-4">
+                  <h3 className="font-semibold">Online Service Fee</h3>
+                  <p className="text-sm text-gray-500">
+                    Charged once per online order (fixed) or as a percentage of discounted food
+                    subtotal. Tax and tips are excluded from the percentage base. Review local fee
+                    disclosure and tax rules before enabling.
+                  </p>
+                  <label className="flex items-center gap-2 text-sm">
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className={input}
-                      value={((org.ordering?.serviceFeePerItemCents || 0) / 100).toFixed(2)}
+                      type="checkbox"
+                      checked={org.ordering?.serviceFee?.enabled === true}
                       onChange={(e) =>
-                        setOrgPart(
-                          "ordering",
-                          "serviceFeePerItemCents",
-                          Math.max(0, Math.round(Number(e.target.value || 0) * 100)),
-                        )
+                        setOrgPart("ordering", "serviceFee", {
+                          ...org.ordering.serviceFee,
+                          enabled: e.target.checked,
+                        })
                       }
                     />
+                    Enable online service fee
+                  </label>
+                  <Field label="Fee type">
+                    <select
+                      className={input}
+                      value={org.ordering?.serviceFee?.type || "fixed"}
+                      onChange={(e) =>
+                        setOrgPart("ordering", "serviceFee", {
+                          ...org.ordering.serviceFee,
+                          type: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="fixed">Fixed amount per order</option>
+                      <option value="percentage">Percentage of discounted food subtotal</option>
+                    </select>
                   </Field>
+                  {org.ordering?.serviceFee?.type === "percentage" ? (
+                    <Field label="Fee percentage (%)">
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        step="0.01"
+                        className={input}
+                        value={(org.ordering.serviceFee.percentageBps / 100).toFixed(2)}
+                        onChange={(e) =>
+                          setOrgPart("ordering", "serviceFee", {
+                            ...org.ordering.serviceFee,
+                            percentageBps: Math.max(
+                              0,
+                              Math.min(1000, Math.round(Number(e.target.value || 0) * 100)),
+                            ),
+                          })
+                        }
+                      />
+                    </Field>
+                  ) : (
+                    <Field label="Fixed fee per order ($)">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        className={input}
+                        value={(org.ordering.serviceFee.fixedCents / 100).toFixed(2)}
+                        onChange={(e) =>
+                          setOrgPart("ordering", "serviceFee", {
+                            ...org.ordering.serviceFee,
+                            fixedCents: Math.max(
+                              0,
+                              Math.min(10000, Math.round(Number(e.target.value || 0) * 100)),
+                            ),
+                          })
+                        }
+                      />
+                    </Field>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Example on $35 discounted food subtotal: $
+                    {org.ordering?.serviceFee?.enabled
+                      ? (
+                          (org.ordering.serviceFee.type === "fixed"
+                            ? org.ordering.serviceFee.fixedCents
+                            : Math.round((3500 * org.ordering.serviceFee.percentageBps) / 10000)) /
+                          100
+                        ).toFixed(2)
+                      : "0.00"}
+                  </p>
                 </div>
                 <div className="mt-7 grid gap-4">
                   {[
