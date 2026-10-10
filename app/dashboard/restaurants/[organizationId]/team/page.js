@@ -82,7 +82,7 @@ export default function Team() {
     setForm(blank);
     load();
   };
-  const isProtectedOwner = (m) => Boolean(m?.isOwner || m?.role === "owner");
+  const isProtectedOwner = (m) => m?.role === "owner";
   const openEdit = (m) => {
     if (isProtectedOwner(m)) return;
     setEditing({
@@ -94,7 +94,6 @@ export default function Team() {
       permissions:
         m.role === "admin" ? defaultPermissions : normalizePermissions(m.permissions || []),
       status: m.status || "active",
-      isOwner: false,
     });
   };
   const saveEdit = async () => {

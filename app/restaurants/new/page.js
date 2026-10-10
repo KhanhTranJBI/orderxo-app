@@ -14,7 +14,7 @@ export default async function Page() {
       : [];
   const canCreateRestaurant =
     organizations.length === 0 ||
-    organizations.some((org) => Boolean(org.isOwner) || org.role === "owner");
+    organizations.some((org) => org.role === "owner");
   if (!canCreateRestaurant) redirect("/dashboard");
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">

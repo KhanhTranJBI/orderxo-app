@@ -19,7 +19,7 @@ export default async function Dashboard() {
   // A brand-new verified account with no memberships may create its first restaurant.
   const canCreateRestaurant =
     organizations.length === 0 ||
-    organizations.some((org) => Boolean(org.isOwner) || org.role === "owner");
+    organizations.some((org) => org.role === "owner");
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
@@ -63,7 +63,7 @@ export default async function Dashboard() {
           <div className="grid gap-5 md:grid-cols-2">
             {organizations.map((org) => {
               const id = String(org._id || org.id || "");
-              const isOwner = Boolean(org.isOwner) || org.role === "owner";
+              const isOwner = org.role === "owner";
               const isAdmin = isOwner || org.role === "admin";
               const roleLabel = isOwner
                 ? "Owner"
