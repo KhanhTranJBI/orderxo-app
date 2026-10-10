@@ -67,6 +67,14 @@ export default async function RestaurantManager({ params }) {
             {org.status || "pending"}
           </span>
         </div>
+        {isAdmin && (
+          <Link
+            href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
+            className="mt-6 block rounded-xl border border-orange-200 bg-orange-50 p-5 font-semibold text-orange-800"
+          >
+            View restaurant setup checklist and go-live readiness →
+          </Link>
+        )}
         <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>

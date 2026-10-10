@@ -101,6 +101,19 @@ export default async function Dashboard() {
                       )}
                     </div>
                   )}
+                  {isAdmin && (
+                    <Link
+                      href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
+                      className="mt-4 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100"
+                    >
+                      <span className="font-bold text-orange-900">
+                        Restaurant setup & go-live checklist →
+                      </span>
+                      <p className="mt-1 text-sm text-orange-800">
+                        Check required steps, connect Stripe, and activate online ordering.
+                      </p>
+                    </Link>
+                  )}
                   <div className="mt-6 flex flex-wrap gap-3">
                     <Link
                       className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
