@@ -10,6 +10,12 @@ import {
   ShoppingCart,
   X,
   BellRing,
+  Check,
+  Printer,
+  RotateCcw,
+  Ban,
+  CreditCard,
+  Monitor,
 } from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
 const usd = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`,
@@ -47,7 +53,6 @@ export default function OrdersManager({ organizationId }) {
 function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const [tab, setTab] = useState("active-orders"),
     [active, setActive] = useState([]),
-    [pending, setPending] = useState([]),
     [carts, setCarts] = useState([]),
     [history, setHistory] = useState([]),
     [report, setReport] = useState(null),
@@ -67,12 +72,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const t = new URLSearchParams(window.location.hash.slice(1)).get("tab");
-      if (
-        ["active-carts", "active-orders", "pending-payments", "orders-history", "report"].includes(
-          t,
-        )
-      )
-        setTab(t);
+      if (["active-carts", "active-orders", "orders-history", "report"].includes(t)) setTab(t);
     }
   }, []);
   const selectTab = (id) => {
@@ -93,10 +93,6 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       } else if (tab === "active-orders") {
         d = await get("orders", organizationId, locationId);
         setActive(d.orders || []);
-        setPagination(d.pagination);
-      } else if (tab === "pending-payments") {
-        d = await get("orders", organizationId, locationId, { paymentState: "pending" });
-        setPending(d.orders || []);
         setPagination(d.pagination);
       } else if (tab === "orders-history") {
         d = await get("orders/history", organizationId, locationId, {
@@ -162,7 +158,6 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const tabs = [
     { id: "active-carts", label: "Active Carts", Icon: ShoppingCart, count: carts.length },
     { id: "active-orders", label: "Active Orders", Icon: Flame, count: active.length },
-    { id: "pending-payments", label: "Pending Payments", Icon: History, count: pending.length },
     {
       id: "orders-history",
       label: "Orders History",
@@ -192,7 +187,6 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
               {label}
               {(id === "orders-history" ||
                 id === "report" ||
-                id === "pending-payments" ||
                 id === "active-orders" ||
                 id === "active-carts") && <span>({count || 0})</span>}
             </button>
@@ -229,15 +223,13 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
         ) : tab === "active-carts" ? (
           <ActiveCarts carts={carts} />
         ) : tab === "active-orders" ? (
-          <ActiveOrders orders={active} />
-        ) : tab === "pending-payments" ? (
-          <>
-            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-              These orders have not been confirmed as paid. Check Stripe payment status before
-              preparing food.
-            </div>
-            <ActiveOrders orders={pending} pending />
-          </>
+          <ActiveOrders
+            orders={active}
+            canManage={canManage}
+            organizationId={organizationId}
+            locationId={locationId}
+            onChanged={load}
+          />
         ) : tab === "orders-history" ? (
           <HistoryTable orders={history} pagination={pagination} page={page} setPage={setPage} />
         ) : (
@@ -374,26 +366,91 @@ function ActiveCarts({ carts }) {
     </div>
   );
 }
-function ActiveOrders({ orders, pending = false }) {
-  if (!orders.length)
-    return (
-      <Empty>
-        {pending
-          ? "No pending payments at this location."
-          : "No active paid orders at this location."}
-      </Empty>
+function OrderChannel({ channel }) {
+  const kiosk = channel === "terminal" || channel === "kiosk";
+  const Icon = kiosk ? Monitor : CreditCard;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${kiosk ? "bg-violet-100 text-violet-700" : "bg-blue-100 text-blue-700"}`}
+    >
+      <Icon size={13} />
+      {kiosk ? "KIOSK" : "ONLINE"}
+    </span>
+  );
+}
+function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged }) {
+  const [dialog, setDialog] = useState(null);
+  const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const post = async (path, body) => {
+    const query = new URLSearchParams({ organizationId, locationId });
+    const response = await ownerFetch(`/api/owner/manage/admin/orders/${path}?${query}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, organizationId, locationId }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Action failed");
+    return data;
+  };
+  const act = async () => {
+    if (!dialog || busy) return;
+    setBusy(true);
+    setActionError("");
+    try {
+      const { order, action } = dialog;
+      if (action === "refund" || action === "cancel") {
+        const cents = Math.round(Number(amount) * 100);
+        if (!Number.isSafeInteger(cents) || cents <= 0)
+          throw new Error("Enter a valid refund amount");
+        await post(action, {
+          orderId: order._id,
+          amountCents: cents,
+          reason: reason.trim() || (action === "cancel" ? "Order cancelled" : "Admin refund"),
+        });
+      } else if (action === "print") {
+        await post("print", { orderId: order._id });
+      } else {
+        await post("update-status", { orderId: order._id, status: action });
+      }
+      setDialog(null);
+      await onChanged();
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const open = (order, action) => {
+    setActionError("");
+    setReason("");
+    setAmount(
+      (
+        (Number(order.amountPaidCents || order.totalAmountCents || 0) -
+          Number(order.refundedAmountCents || 0) -
+          Number(order.onlineServiceFeeCents || 0)) /
+        100
+      ).toFixed(2),
     );
+    setDialog({ order, action });
+  };
+  if (!orders.length) return <Empty>No active paid orders at this location.</Empty>;
   return (
     <div className="space-y-4">
       {orders.map((order) => (
         <div key={order._id} className="rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="flex justify-between gap-4">
-            <div>
-              <div className="text-lg font-bold">
-                #{order.orderNumber || String(order._id).slice(-6)}
+          <div className="flex flex-wrap justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <strong className="text-lg">
+                  #{order.orderNumber || String(order._id).slice(-6)}
+                </strong>
+                <OrderChannel channel={order.paymentChannel} />
               </div>
-              <div className="text-sm text-slate-500">
-                {order.customer?.name || "Guest"} · {order.customer?.email || ""}
+              <div className="text-sm text-slate-600">
+                {order.customer?.name || "Guest"} · {order.customer?.email || "No email"}
               </div>
               <div className="text-xs text-slate-400">
                 {new Date(order.createdAt).toLocaleString()}
@@ -401,19 +458,145 @@ function ActiveOrders({ orders, pending = false }) {
             </div>
             <div className="text-right">
               <div className="text-lg font-bold">{usd(order.totalAmountCents)}</div>
-              <span
-                className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-semibold capitalize ${pending ? "bg-amber-100 text-amber-800" : "bg-orange-100 text-orange-700"}`}
-              >
-                {pending ? "Payment pending" : order.status}
+              <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold capitalize text-orange-700">
+                {order.status}
               </span>
             </div>
           </div>
           <OrderItems items={order.items} />
+          {canManage && (
+            <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
+              {order.status === "paid" && (
+                <button
+                  onClick={() => open(order, "preparing")}
+                  className="rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white hover:bg-orange-600"
+                >
+                  <Check size={16} className="mr-1 inline" />
+                  Confirm
+                </button>
+              )}
+              {order.status === "preparing" && (
+                <button
+                  onClick={() => open(order, "ready")}
+                  className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
+                >
+                  Mark Ready
+                </button>
+              )}
+              {order.status === "ready" && (
+                <button
+                  onClick={() => open(order, "completed")}
+                  className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
+                >
+                  Complete
+                </button>
+              )}
+              <button
+                onClick={() => open(order, "print")}
+                className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
+              >
+                <Printer size={16} className="mr-1 inline" />
+                Print
+              </button>
+              <button
+                onClick={() => open(order, "refund")}
+                className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
+              >
+                <RotateCcw size={16} className="mr-1 inline" />
+                Refund
+              </button>
+              <button
+                onClick={() => open(order, "cancel")}
+                className="rounded-xl border border-red-200 px-4 py-2 font-semibold text-red-600"
+              >
+                <Ban size={16} className="mr-1 inline" />
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       ))}
+      {dialog && (
+        <div
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !busy) setDialog(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Order action confirmation"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+          >
+            <h3 className="text-xl font-bold capitalize">
+              {dialog.action === "preparing"
+                ? "Confirm order"
+                : dialog.action === "ready"
+                  ? "Mark order ready"
+                  : dialog.action === "completed"
+                    ? "Complete order"
+                    : `${dialog.action} order`}
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Order #{dialog.order.orderNumber}. This action will update the order immediately.
+            </p>
+            {(dialog.action === "refund" || dialog.action === "cancel") && (
+              <div className="mt-4 space-y-3">
+                <label className="block text-sm font-medium">
+                  Refund amount ($)
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    className="mt-1 w-full rounded-lg border p-3"
+                  />
+                </label>
+                <label className="block text-sm font-medium">
+                  Reason
+                  <input
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Reason for refund or cancellation"
+                    className="mt-1 w-full rounded-lg border p-3"
+                  />
+                </label>
+                <p className="text-xs text-amber-700">
+                  Cancellation also requests a refund through the existing API. Review the amount
+                  before proceeding.
+                </p>
+              </div>
+            )}
+            {actionError && (
+              <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                {actionError}
+              </p>
+            )}
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                disabled={busy}
+                onClick={() => setDialog(null)}
+                className="rounded-xl border px-4 py-2"
+              >
+                Back
+              </button>
+              <button
+                disabled={busy}
+                onClick={act}
+                className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                {busy ? "Processing..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 const type = (o) => (o.orderType || "to_go").replace("_", " ");
 function HistoryTable({ orders, pagination, page, setPage }) {
   if (!orders.length) return <Empty>No orders found.</Empty>;
