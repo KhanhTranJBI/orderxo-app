@@ -383,6 +383,10 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const [directBusyId, setDirectBusyId] = useState(null);
+  const [inlineError, setInlineError] = useState("");
+  const [refundMode, setRefundMode] = useState("amount");
+  const [selectedItems, setSelectedItems] = useState({});
   const [actionError, setActionError] = useState("");
   const post = async (path, body) => {
     const query = new URLSearchParams({ organizationId, locationId });
@@ -395,6 +399,28 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
     if (!response.ok) throw new Error(data.error || "Action failed");
     return data;
   };
+  const confirmImmediately = async (order) => {
+    if (directBusyId) return;
+    setDirectBusyId(String(order._id));
+    setInlineError("");
+    try {
+      await post("update-status", { orderId: order._id, status: "preparing" });
+      await onChanged();
+    } catch (err) {
+      setInlineError(`Order #${order.orderNumber || order._id}: ${err.message}`);
+    } finally {
+      setDirectBusyId(null);
+    }
+  };
+  const itemRefundCents = (order) =>
+    (order.items || []).reduce((sum, item, index) => {
+      if (!selectedItems[index]) return sum;
+      const cents =
+        item.totalPriceCents != null
+          ? Number(item.totalPriceCents)
+          : Math.round(Number(item.totalPrice || 0) * 100);
+      return sum + (Number.isFinite(cents) ? cents : 0);
+    }, 0);
   const act = async () => {
     if (!dialog || busy) return;
     setBusy(true);
@@ -402,7 +428,10 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
     try {
       const { order, action } = dialog;
       if (action === "refund" || action === "cancel") {
-        const cents = Math.round(Number(amount) * 100);
+        const cents =
+          action === "refund" && refundMode === "items"
+            ? itemRefundCents(order)
+            : Math.round(Number(amount) * 100);
         if (!Number.isSafeInteger(cents) || cents <= 0)
           throw new Error("Enter a valid refund amount");
         await post(action, {
@@ -426,6 +455,8 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
   const open = (order, action) => {
     setActionError("");
     setReason("");
+    setRefundMode("amount");
+    setSelectedItems({});
     setAmount(
       (
         (Number(order.amountPaidCents || order.totalAmountCents || 0) -
@@ -439,6 +470,11 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
   if (!orders.length) return <Empty>No active paid orders at this location.</Empty>;
   return (
     <div className="space-y-4">
+      {inlineError && (
+        <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+          {inlineError}
+        </p>
+      )}
       {orders.map((order) => (
         <div key={order._id} className="rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap justify-between gap-4">
@@ -468,11 +504,12 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
             <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
               {order.status === "paid" && (
                 <button
-                  onClick={() => open(order, "preparing")}
+                  onClick={() => confirmImmediately(order)}
+                  disabled={Boolean(directBusyId)}
                   className="rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white hover:bg-orange-600"
                 >
                   <Check size={16} className="mr-1 inline" />
-                  Confirm
+                  {directBusyId === String(order._id) ? "Confirming..." : "Confirm"}
                 </button>
               )}
               {order.status === "preparing" && (
@@ -543,17 +580,76 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
             </p>
             {(dialog.action === "refund" || dialog.action === "cancel") && (
               <div className="mt-4 space-y-3">
-                <label className="block text-sm font-medium">
-                  Refund amount ($)
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1 w-full rounded-lg border p-3"
-                  />
-                </label>
+                {dialog.action === "refund" && (
+                  <div className="space-y-3">
+                    <div className="flex gap-4 text-sm">
+                      <label>
+                        <input
+                          type="radio"
+                          checked={refundMode === "amount"}
+                          onChange={() => setRefundMode("amount")}
+                        />{" "}
+                        Custom amount
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          checked={refundMode === "items"}
+                          onChange={() => setRefundMode("items")}
+                        />{" "}
+                        Select items
+                      </label>
+                    </div>
+                    {refundMode === "items" && (
+                      <div className="max-h-48 space-y-2 overflow-y-auto rounded-lg border p-3">
+                        {(dialog.order.items || []).map((item, index) => (
+                          <label
+                            key={index}
+                            className="flex items-center justify-between gap-3 text-sm"
+                          >
+                            <span>
+                              <input
+                                type="checkbox"
+                                checked={Boolean(selectedItems[index])}
+                                onChange={(e) =>
+                                  setSelectedItems((p) => ({ ...p, [index]: e.target.checked }))
+                                }
+                              />{" "}
+                              {item.quantity || 1}× {item.name}
+                            </span>
+                            <span>
+                              {usd(
+                                item.totalPriceCents ??
+                                  Math.round(Number(item.totalPrice || 0) * 100),
+                              )}
+                            </span>
+                          </label>
+                        ))}
+                        <p className="font-semibold">
+                          Selected subtotal: {usd(itemRefundCents(dialog.order))}
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          Item selection calculates a subtotal-based refund amount. Tax, tips,
+                          discounts and previously refunded items are not automatically allocated;
+                          review before submitting.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(dialog.action !== "refund" || refundMode === "amount") && (
+                  <label className="block text-sm font-medium">
+                    Refund amount ($)
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="mt-1 w-full rounded-lg border p-3"
+                    />
+                  </label>
+                )}
                 <label className="block text-sm font-medium">
                   Reason
                   <input
