@@ -1,6 +1,6 @@
 "use client";
 import { ownerFetch } from "../../lib/ownerFetch";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   Flame,
@@ -51,6 +51,9 @@ export default function OrdersManager({ organizationId }) {
   );
 }
 function Orders({ organizationId, locationId, locationLoading, canManage }) {
+  const [alertOrderIds, setAlertOrderIds] = useState([]);
+  const seenOrdersRef = useRef(new Set());
+  const initializedLocationRef = useRef(null);
   const [tab, setTab] = useState("active-orders"),
     [active, setActive] = useState([]),
     [carts, setCarts] = useState([]),
@@ -76,10 +79,36 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     }
   }, []);
   const selectTab = (id) => {
+    if (id === "active-orders") setAlertOrderIds([]);
     setTab(id);
     setPage(1);
     if (typeof window !== "undefined") window.location.hash = `tab=${id}`;
   };
+  // Only notify for newly arriving, paid-but-unconfirmed orders. The first
+  // snapshot establishes a baseline and never interrupts an owner on tab change.
+  // Confirmed/preparing orders are not eligible for alerts.
+  const observeActiveOrders = useCallback(
+    (orders) => {
+      const eligible = orders.filter(
+        (order) => order?.status === "paid" && order?.paymentStatus === "paid" && order?._id,
+      );
+      const ids = eligible.map((order) => String(order._id));
+      if (initializedLocationRef.current !== locationId) {
+        initializedLocationRef.current = locationId;
+        seenOrdersRef.current = new Set(ids);
+        setAlertOrderIds([]);
+        return;
+      }
+      const fresh = ids.filter((id) => !seenOrdersRef.current.has(id));
+      ids.forEach((id) => seenOrdersRef.current.add(id));
+      if (fresh.length) {
+        setAlertOrderIds((previous) => [...new Set([...previous, ...fresh])]);
+      }
+      // Clear alerts once another staff member confirms or completes an order.
+      setAlertOrderIds((previous) => previous.filter((id) => ids.includes(id)));
+    },
+    [locationId],
+  );
   const load = useCallback(async () => {
     if (!locationId) return;
     setLoading(true);
@@ -93,6 +122,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       } else if (tab === "active-orders") {
         d = await get("orders", organizationId, locationId);
         setActive(d.orders || []);
+        observeActiveOrders(d.orders || []);
         setPagination(d.pagination);
       } else if (tab === "orders-history") {
         d = await get("orders/history", organizationId, locationId, {
@@ -111,7 +141,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     } finally {
       setLoading(false);
     }
-  }, [organizationId, locationId, tab, page, debounced]);
+  }, [organizationId, locationId, tab, page, debounced, observeActiveOrders]);
   useEffect(() => {
     load();
   }, [load]);
@@ -124,6 +154,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     try {
       const d = await get("orders", organizationId, locationId);
       setActive(d.orders || []);
+      observeActiveOrders(d.orders || []);
     } catch (e) {
       console.error("Unable to refresh active orders", e);
     }
@@ -236,8 +267,8 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           <ReportTable report={report} />
         )}
       </div>
-      {tab !== "active-orders" && active.length > 0 && (
-        <ActiveOrderAlert count={active.length} onView={() => selectTab("active-orders")} />
+      {tab !== "active-orders" && alertOrderIds.length > 0 && (
+        <ActiveOrderAlert count={alertOrderIds.length} onView={() => selectTab("active-orders")} />
       )}
     </div>
   );
@@ -399,12 +430,12 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
     if (!response.ok) throw new Error(data.error || "Action failed");
     return data;
   };
-  const confirmImmediately = async (order) => {
+  const updateStatusImmediately = async (order, status) => {
     if (directBusyId) return;
     setDirectBusyId(String(order._id));
     setInlineError("");
     try {
-      await post("update-status", { orderId: order._id, status: "preparing" });
+      await post("update-status", { orderId: order._id, status });
       await onChanged();
     } catch (err) {
       setInlineError(`Order #${order.orderNumber || order._id}: ${err.message}`);
@@ -504,7 +535,7 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
             <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
               {order.status === "paid" && (
                 <button
-                  onClick={() => confirmImmediately(order)}
+                  onClick={() => updateStatusImmediately(order, "preparing")}
                   disabled={Boolean(directBusyId)}
                   className="rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white hover:bg-orange-600"
                 >
@@ -514,18 +545,20 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
               )}
               {order.status === "preparing" && (
                 <button
-                  onClick={() => open(order, "ready")}
+                  onClick={() => updateStatusImmediately(order, "ready")}
+                  disabled={Boolean(directBusyId)}
                   className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
                 >
-                  Mark Ready
+                  {directBusyId === String(order._id) ? "Updating..." : "Mark Ready"}
                 </button>
               )}
               {order.status === "ready" && (
                 <button
-                  onClick={() => open(order, "completed")}
+                  onClick={() => updateStatusImmediately(order, "completed")}
+                  disabled={Boolean(directBusyId)}
                   className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
                 >
-                  Complete
+                  {directBusyId === String(order._id) ? "Updating..." : "Ready Pickup"}
                 </button>
               )}
               <button
