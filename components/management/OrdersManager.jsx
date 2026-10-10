@@ -723,98 +723,66 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
   );
 }
 
-const type = (o) => (o.orderType || "to_go").replace("_", " ");
+const type = (o) => (o.orderType || "to_go").replace(/_/g, " ");
+const historyDate = (value, options) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-US", options);
+};
+const historyType = (order) => {
+  const value = type(order).toLowerCase();
+  return value === "to go" || value === "pickup" ? "To Go" : value.replace(/\b\w/g, (c) => c.toUpperCase());
+};
+const HistoryPill = ({ children, tone = "green" }) => {
+  const tones = {
+    orange: "border-orange-200 bg-orange-50 text-orange-700",
+    teal: "border-teal-200 bg-teal-50 text-teal-700",
+    green: "border-green-200 bg-green-50 text-green-700",
+    red: "border-red-200 bg-red-50 text-red-700",
+    gray: "border-slate-200 bg-slate-100 text-slate-600",
+  };
+  return <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold ${tones[tone]}`}>{children}</span>;
+};
 function HistoryTable({ orders, pagination, page, setPage }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     if (!selectedOrder) return;
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") setSelectedOrder(null);
-    };
+    const onKeyDown = (event) => { if (event.key === "Escape") setSelectedOrder(null); };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedOrder]);
+  const headers = ["Order", "Date", "Customer", "Type", "Channel", "Status", "Items", "Subtotal", "Tax", "Tip", "Order Service Fee", "Gross Sales", "Rewards Redeemed", "Promotion", "Refunded", "Transaction Fee", "Net"];
   return (
     <>
-      {!orders.length ? (
-        <Empty>No orders found.</Empty>
-      ) : (
-        <div className="overflow-x-auto rounded-2xl bg-white shadow">
-          <table className="min-w-[1500px] w-full text-sm">
+      {!orders.length ? <Empty>No orders found.</Empty> : (
+        <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
+          <table className="w-full min-w-[1700px] text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
-              <tr>
-                {[
-                  "Order",
-                  "Date",
-                  "Customer",
-                  "Type",
-                  "Channel",
-                  "Status",
-                  "Items",
-                  "Subtotal",
-                  "Tax",
-                  "Tip",
-                  "Order Service Fee",
-                  "Gross Sales",
-                  "Rewards Redeemed",
-                  "Promotion",
-                  "Refunded",
-                  "Transaction Fee",
-                  "Net",
-                ].map((h) => (
-                  <th key={h} className="px-4 py-4 font-bold">
-                    {h}
-                  </th>
-                ))}
-              </tr>
+              <tr>{headers.map((h) => <th key={h} className="px-4 py-5 text-sm font-bold">{h}</th>)}</tr>
             </thead>
             <tbody>
-              {orders.map((o) => {
+              {orders.map((o, index) => {
                 const promo = Number(o.promoDiscountCents || 0) / 100;
+                const status = String(o.status || "pending").toLowerCase();
                 return (
-                  <tr key={o._id} className="border-t hover:bg-slate-50">
-                    <td className="px-4 py-3 font-semibold">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedOrder(o)}
-                        className="font-bold text-orange-600 hover:text-orange-700 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
-                        aria-label={`View details for order ${o.orderNumber}`}
-                      >
-                        #{o.orderNumber}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {new Date(o.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div>{o.customer?.name || "Guest"}</div>
-                      <div className="text-xs text-slate-400">{o.customer?.email}</div>
-                    </td>
-                    <td className="px-4 py-3 capitalize">{type(o)}</td>
-                    <td className="px-4 py-3 capitalize">{o.paymentChannel || "online"}</td>
-                    <td className="px-4 py-3 capitalize">{o.status}</td>
-                    <td className="px-4 py-3">
-                      {(o.items || []).reduce((s, i) => s + (i.quantity || 1), 0)}
-                    </td>
-                    <td className="px-4 py-3">{usd(o.subtotalCents)}</td>
-                    <td className="px-4 py-3 text-blue-600">{usd(o.taxCents)}</td>
-                    <td className="px-4 py-3 text-blue-600">{usd(o.tipCents)}</td>
-                    <td className="px-4 py-3 text-blue-600">{usd(o.onlineServiceFeeCents)}</td>
-                    <td className="px-4 py-3 font-semibold">{usd(o.totalAmountCents)}</td>
-                    <td className="px-4 py-3 text-red-600">-{usdD(o.rewardsRedeemed)}</td>
-                    <td className="px-4 py-3">
-                      {o.promoCode && promo > 0 ? (
-                        <>
-                          <div className="font-semibold text-green-700">{o.promoCode}</div>
-                          <div className="text-red-600">-{usdD(promo)}</div>
-                        </>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-red-600">-{usdD(o.refunded)}</td>
-                    <td className="px-4 py-3 text-red-600">-{usdD(o.stripeFee)}</td>
-                    <td className="px-4 py-3 font-bold text-green-600">{usdD(o.net)}</td>
+                  <tr key={o._id || index} className={`border-t border-slate-100 transition hover:bg-orange-50/40 ${index % 2 === 0 ? "bg-slate-50/40" : "bg-white"}`}>
+                    <td className="px-4 py-5"><button type="button" onClick={() => setSelectedOrder(o)} className="whitespace-nowrap font-bold text-orange-600 hover:text-orange-700 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500" aria-label={`View details for order ${o.orderNumber}`}>#{o.orderNumber || String(o._id || "").slice(-8)}</button></td>
+                    <td className="px-4 py-5 text-slate-500"><span className="block whitespace-nowrap">{historyDate(o.createdAt, {year:"numeric",month:"numeric",day:"numeric"})}</span><span className="block whitespace-nowrap">{historyDate(o.createdAt, {hour:"numeric",minute:"2-digit",second:"2-digit"})}</span></td>
+                    <td className="max-w-[180px] px-4 py-5 font-medium text-slate-900">{o.customer?.name || "Guest"}</td>
+                    <td className="px-4 py-5"><HistoryPill tone="orange">{historyType(o)}</HistoryPill></td>
+                    <td className="px-4 py-5"><HistoryPill tone="teal">{String(o.paymentChannel || "online").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}</HistoryPill></td>
+                    <td className="px-4 py-5"><HistoryPill tone={status === "cancelled" || status === "deleted" ? "red" : status === "completed" || status === "ready" ? "green" : "gray"}>{status}</HistoryPill></td>
+                    <td className="px-4 py-5 font-semibold">{(o.items || []).reduce((sum,item)=>sum+Number(item.quantity || 1),0)}</td>
+                    <td className="px-4 py-5 font-medium">{usd(o.subtotalCents)}</td>
+                    <td className="px-4 py-5 font-medium text-blue-600">{usd(o.taxCents)}</td>
+                    <td className="px-4 py-5 font-medium text-blue-600">{usd(o.tipCents)}</td>
+                    <td className="px-4 py-5 font-medium text-blue-600">{usd(o.onlineServiceFeeCents)}</td>
+                    <td className="px-4 py-5 font-bold">{usd(o.totalAmountCents)}</td>
+                    <td className="px-4 py-5 text-red-600">-{usdD(o.rewardsRedeemed)}</td>
+                    <td className="px-4 py-5">{o.promoCode && promo > 0 ? <><span className="font-semibold text-green-700">{o.promoCode}</span><div className="text-red-600">-{usdD(promo)}</div></> : <span className="text-slate-400">—</span>}</td>
+                    <td className="px-4 py-5 text-red-600">-{usdD(o.refunded)}</td>
+                    <td className="px-4 py-5 text-red-600">-{usdD(o.stripeFee)}</td>
+                    <td className="px-4 py-5 font-bold text-green-600">{usdD(o.net)}</td>
                   </tr>
                 );
               })}
@@ -822,30 +790,8 @@ function HistoryTable({ orders, pagination, page, setPage }) {
           </table>
         </div>
       )}
-      {selectedOrder && (
-        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />
-      )}
-      {pagination?.totalPages > 1 && (
-        <div className="mt-4 flex justify-end gap-2">
-          <button
-            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Previous
-          </button>
-          <span className="px-3 py-2 text-sm text-slate-500">
-            Page {page} of {pagination.totalPages}
-          </span>
-          <button
-            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
-            disabled={page >= pagination.totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {selectedOrder && <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+      {pagination?.totalPages > 1 && <div className="mt-4 flex items-center justify-end gap-3"><button className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(p=>p-1)}>Previous</button><span className="text-sm text-slate-500">Page {page} of {pagination.totalPages}</span><button className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40" disabled={page >= pagination.totalPages} onClick={() => setPage(p=>p+1)}>Next</button></div>}
     </>
   );
 }
@@ -946,118 +892,60 @@ function ReportTable({ report }) {
 }
 
 function OrderHistoryDetails({ order, onClose }) {
-  const timestamp = (value) => {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
-  };
+  const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0);
+  const status = String(order.status || "pending").toLowerCase();
   const timeline = [
-    ["Ordered", order.createdAt],
-    ["Confirmed", order.preparedAt || order.confirmedAt],
-    ["Ready for Pickup", order.readyAt],
-    ["Picked up", order.pickedAt || order.completedAt],
-    ["Cancelled", order.cancelledAt],
-  ].filter(([, value]) => Boolean(value));
-  const line = (label, cents, emphasize = false) => (
-    <div
-      className={`flex justify-between gap-4 py-1 ${emphasize ? "font-bold text-slate-900" : "text-slate-600"}`}
-    >
-      <span>{label}</span>
-      <span>{usd(cents)}</span>
+    ["🧾", "Ordered", order.createdAt],
+    ["👍", "Confirmed", order.confirmedAt || order.preparedAt],
+    ["✅", "Ready for Pickup", order.readyAt],
+    ["🥡", "Picked up", order.pickedAt || order.completedAt],
+    ["✖", "Cancelled", order.cancelledAt],
+  ].filter(([, , value]) => Boolean(value));
+  const cents = (value) => Number(value || 0);
+  const line = (label, value, style = "") => (
+    <div className={`flex items-center justify-between gap-4 border-b border-slate-200 py-3 text-sm sm:text-base ${style}`}>
+      <span>{label}</span><span className="whitespace-nowrap font-medium">{usd(value)}</span>
     </div>
   );
   return (
-    <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-3 sm:p-6"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="history-order-title"
-        className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
-      >
-        <div className="flex items-start justify-between gap-4 border-b px-5 py-5 sm:px-7">
-          <div>
-            <h2 id="history-order-title" className="text-2xl font-bold text-slate-900">
-              Order #{order.orderNumber}
-            </h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-              <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">
-                {type(order)}
-              </span>
-              <span className="rounded-full bg-teal-50 px-3 py-1 font-semibold capitalize text-teal-700">
-                {order.paymentChannel || "online"}
-              </span>
-              <span className="rounded-full bg-green-50 px-3 py-1 font-semibold capitalize text-green-700">
-                {order.status}
-              </span>
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-2 sm:p-5" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="history-order-title" className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex shrink-0 justify-end border-b border-slate-200 px-4 py-3"><button type="button" onClick={onClose} aria-label="Close order details" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><X size={26}/></button></div>
+        <div className="overflow-y-auto px-5 py-6 sm:px-8">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3"><h2 id="history-order-title" className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Order #{order.orderNumber || String(order._id || "").slice(-8)}</h2><HistoryPill tone="orange">{historyType(order)}</HistoryPill><HistoryPill tone="teal">{String(order.paymentChannel || "online").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}</HistoryPill></div>
+              <p className="mt-1 text-sm text-slate-500 sm:text-base">{historyDate(order.createdAt, {year:"numeric",month:"numeric",day:"numeric"})} · {order.pickupTime || "ASAP"}</p>
             </div>
-            <p className="mt-2 text-sm text-slate-500">
-              {timestamp(order.createdAt)} · {order.pickupTime || "ASAP"}
-            </p>
+            <span className={`rounded-full px-4 py-1 text-sm font-extrabold uppercase ${status === "cancelled" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{status}</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close order details"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="space-y-6 overflow-y-auto px-5 py-6 sm:px-7">
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <h3 className="mb-3 font-bold text-blue-800">Customer</h3>
-            <p className="font-semibold">{order.customer?.name || "Guest"}</p>
-            {order.customer?.email && (
-              <a className="text-blue-700 underline" href={`mailto:${order.customer.email}`}>
-                {order.customer.email}
-              </a>
-            )}
-            {order.customer?.phone && (
-              <p>
-                <a className="text-blue-700 underline" href={`tel:${order.customer.phone}`}>
-                  {order.customer.phone}
-                </a>
-              </p>
-            )}
+          <div className="mt-7 flex items-center justify-between text-lg font-semibold text-blue-600"><span>Total Items</span><span className="rounded-full bg-blue-600 px-3 py-1 text-sm text-white">{count}</span></div>
+          <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm sm:text-base">
+            <h3 className="mb-3 font-bold text-blue-700">👤 Customer</h3>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-blue-700"><span>Name</span><span className="min-w-0 text-right font-semibold text-blue-900">{order.customer?.name || "Guest"}</span><span>Email</span><span className="min-w-0 break-all text-right font-semibold text-blue-900">{order.customer?.email ? <a className="underline" href={`mailto:${order.customer.email}`}>{order.customer.email}</a> : "—"}</span><span>Phone</span><span className="text-right font-semibold text-blue-900">{order.customer?.phone ? <a className="underline" href={`tel:${order.customer.phone}`}>{order.customer.phone}</a> : "—"}</span></div>
           </div>
-          <div className="rounded-xl bg-slate-50 p-4">
-            <h3 className="mb-3 font-bold">Order Timeline</h3>
-            {timeline.map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4 border-t py-2 text-sm">
-                <span>{label}</span>
-                <span className="text-right font-semibold">{timestamp(value)}</span>
+          <div className="mt-6 rounded-2xl bg-slate-50 p-5"><h3 className="mb-2 font-bold text-slate-700">Order Timeline</h3>{timeline.length ? timeline.map(([emoji,label,value]) => <div key={label} className="flex items-center justify-between gap-4 border-t border-slate-200 py-3 text-sm sm:text-base"><span className="text-slate-500">{emoji} {label}</span><span className="font-medium text-slate-900">{historyDate(value,{hour:"numeric",minute:"2-digit"})}</span></div>) : <p className="text-slate-500">No timeline available.</p>}</div>
+          <div className="mt-7 divide-y divide-slate-200">
+            {(order.items || []).map((item,index) => (
+              <div key={index} className="flex items-start gap-4 py-5">
+                {item.image ? <img src={item.image} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20"/> : <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100 sm:h-20 sm:w-20"/>}
+                <div className="min-w-0 flex-1"><p className="font-bold text-slate-900">{item.quantity || 1}× {item.name || `Item ${index+1}`}</p><ModifierSelections item={item}/></div>
+                <span className="shrink-0 font-bold text-orange-600">{usd(item.totalPriceCents ?? Math.round(Number(item.totalPrice || 0)*100))}</span>
               </div>
             ))}
           </div>
-          <div>
-            <h3 className="font-bold">
-              Items (
-              {(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0)})
-            </h3>
-            <OrderItems items={order.items} />
-          </div>
-          {order.specialInstructions && (
-            <div className="rounded-xl bg-amber-50 p-4">
-              <h3 className="font-bold">Special instructions</h3>
-              <p className="mt-1">{order.specialInstructions}</p>
-            </div>
-          )}
-          <div className="rounded-xl border p-4">
-            <h3 className="mb-3 font-bold">Payment Summary</h3>
-            {line("Food subtotal", order.subtotalCents)}
-            {Number(order.promoDiscountCents || 0) > 0 &&
-              line("Promotion discount", -order.promoDiscountCents)}
+          {order.specialInstructions && <div className="mt-5 rounded-xl bg-amber-50 p-4"><h3 className="font-bold">Special instructions</h3><p>{order.specialInstructions}</p></div>}
+          <div className="mt-7">
+            {line("Subtotal", order.subtotalCents)}
+            {cents(order.promoDiscountCents)>0 && line("Promotion Discount", -cents(order.promoDiscountCents), "text-red-600")}
             {line("Tax", order.taxCents)}
+            {line("Order Service Fee", order.onlineServiceFeeCents)}
             {line("Tip", order.tipCents)}
-            {line("Online service fee", order.onlineServiceFeeCents)}
-            {line("Gross total", order.totalAmountCents, true)}
-            {Number(order.refundedAmountCents || 0) > 0 &&
-              line("Refunded", -order.refundedAmountCents)}
+            {line("Total", order.totalAmountCents, "font-bold text-orange-600")}
+            <div className="flex items-center justify-between border-b border-slate-200 py-3 text-sm sm:text-base"><span>Payment Method</span><span className="font-semibold capitalize">{order.paymentMethod || "Card"}</span></div>
+            {line("Amount Charged", order.amountChargedCents ?? order.totalAmountCents, "text-orange-600")}
+            {(cents(order.refundedAmountCents)>0 || Number(order.refunded || 0)>0) && line("Refunded", cents(order.refundedAmountCents) ? -cents(order.refundedAmountCents) : -Math.round(Number(order.refunded)*100), "text-red-600")}
+            {Number(order.pointsEarned || order.loyaltyPointsEarned || 0)>0 && <div className="flex justify-between py-3 text-sm sm:text-base"><span className="text-slate-500">Loyalty Points Earned</span><span className="font-bold text-green-700">+{order.pointsEarned || order.loyaltyPointsEarned} pts</span></div>}
           </div>
         </div>
       </section>
