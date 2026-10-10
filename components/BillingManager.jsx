@@ -10,11 +10,19 @@ const plans = [
 const rank = Object.fromEntries(plans.map((p) => [p.id, p.rank]));
 const activeStatuses = new Set(["active", "trialing"]);
 
-export default function BillingManager({ organizationId, subscription }) {
+export default function BillingManager({ organizationId, subscription, locationBilling }) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [newLocationName, setNewLocationName] = useState("");
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const usd = (cents) => (Number(cents || 0) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  async function addLocation() {
+    if (!newLocationName.trim()) { setError("Enter a location name."); return; }
+    setShowLocationModal(false);
+    await post("/api/owner/locations", { organizationId, name: newLocationName.trim() }, "add-location");
+  }
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
   const pending = subscription?.pendingPlan;
@@ -101,6 +109,33 @@ export default function BillingManager({ organizationId, subscription }) {
         </div>
       </section>
 
+      {locationBilling && (
+        <section className="rounded-2xl border bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold">Multi-location billing</h2>
+          <p className="mt-2 text-sm text-slate-600">One plan for all locations. The first location pays full price; every additional location gets 20% off its subscription fee.</p>
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between"><span>First location</span><strong>{usd(locationBilling.baseMonthlyCents)}</strong></div>
+            <div className="flex justify-between"><span>{Math.max(0, locationBilling.locationCount - 1)} additional locations (20% off each)</span><strong>{usd(Math.max(0, locationBilling.locationCount - 1) * locationBilling.additionalMonthlyCents)}</strong></div>
+            <div className="flex justify-between border-t pt-3 text-base"><strong>Estimated monthly subscription</strong><strong>{usd(locationBilling.monthlyTotalCents)}</strong></div>
+          </div>
+          <p className="mt-3 text-xs text-slate-500">Plus the 1% OrderXO platform fee on eligible food sales. Stripe payment processing fees are separate. Changes during a billing period may include prorations.</p>
+          <button type="button" disabled={!active || !!busy || !!pending} onClick={() => setShowLocationModal(true)} className="mt-4 rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white disabled:opacity-50">Add a location</button>
+        </section>
+      )}
+      {showLocationModal && locationBilling && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowLocationModal(false); }}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="add-location-title">
+            <h3 id="add-location-title" className="text-xl font-bold">Add restaurant location</h3>
+            <p className="mt-2 text-sm text-slate-600">Your subscription will increase by <strong>{usd(locationBilling.additionalMonthlyCents)}/month</strong> plus applicable prorations. Stripe will invoice the change immediately.</p>
+            <label htmlFor="new-location-name" className="mt-4 block text-sm font-medium">Location name</label>
+            <input id="new-location-name" value={newLocationName} onChange={(e) => setNewLocationName(e.target.value)} maxLength={120} className="mt-1 w-full rounded-xl border p-3" placeholder="e.g. Poulsbo" />
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setShowLocationModal(false)} className="rounded-xl border px-4 py-2">Cancel</button>
+              <button type="button" onClick={addLocation} disabled={!newLocationName.trim()} className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">Confirm and bill</button>
+            </div>
+          </div>
+        </div>
+      )}
       <section>
         <h2 className="text-xl font-bold">Choose a plan</h2>
         <p className="mt-1 text-sm text-slate-500">

@@ -34,7 +34,7 @@ export default async function Billing({ searchParams }) {
         {!id ? (
           <p>Select a restaurant from your dashboard.</p>
         ) : result?.status === 200 ? (
-          <BillingManager organizationId={id} subscription={result.data.subscription || {}} />
+          <BillingManager organizationId={id} subscription={result.data.subscription || {}} locationBilling={result.data.locationBilling || null} />
         ) : (
           <p className="rounded-lg bg-red-50 p-4 text-red-800">
             Unable to load subscription. Check organization access and admin API configuration.
