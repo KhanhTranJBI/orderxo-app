@@ -333,7 +333,34 @@ function ModifierSelections({ item }) {
     </div>
   );
 }
-function OrderItems({ items }) {
+// Cart snapshots can contain cents-based or legacy dollar-based item prices.
+// Never treat a missing price as $0; show an unavailable label instead.
+function cartItemCents(item) {
+  const qty = Math.max(1, Number(item.quantity) || 1);
+  const numeric = (value) =>
+    value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  if (numeric(item.totalPriceCents)) return Math.round(Number(item.totalPriceCents));
+  if (numeric(item.unitPriceCents)) return Math.round(Number(item.unitPriceCents) * qty);
+  if (numeric(item.totalPrice)) return Math.round(Number(item.totalPrice) * 100);
+  if (numeric(item.price)) return Math.round(Number(item.price) * qty * 100);
+  if (numeric(item.unitPrice)) return Math.round(Number(item.unitPrice) * qty * 100);
+  return null;
+}
+function cartSubtotalCents(cart) {
+  const amounts = (cart.items || []).map(cartItemCents);
+  if (amounts.length && amounts.every((value) => value !== null)) {
+    return amounts.reduce((sum, value) => sum + value, 0);
+  }
+  if (
+    cart.subtotalCents !== null &&
+    cart.subtotalCents !== undefined &&
+    Number.isFinite(Number(cart.subtotalCents))
+  ) {
+    return Math.round(Number(cart.subtotalCents));
+  }
+  return null;
+}
+function OrderItems({ items, isCart = false }) {
   return (
     <div className="mt-4 space-y-3 border-t pt-4">
       {(items || []).map((item, index) => (
@@ -349,8 +376,15 @@ function OrderItems({ items }) {
             </div>
             <ModifierSelections item={item} />
           </div>
-          {Number.isFinite(Number(item.totalPriceCents)) && (
-            <div className="font-semibold text-orange-600">{usd(item.totalPriceCents)}</div>
+          {isCart ? (
+            <div className="shrink-0 font-semibold text-orange-600">
+              {cartItemCents(item) === null ? "Price unavailable" : usd(cartItemCents(item))}
+            </div>
+          ) : (
+            item.totalPriceCents != null &&
+            Number.isFinite(Number(item.totalPriceCents)) && (
+              <div className="font-semibold text-orange-600">{usd(item.totalPriceCents)}</div>
+            )
           )}
         </div>
       ))}
@@ -361,7 +395,11 @@ function OrderItems({ items }) {
 const ACTIVE_CART_WINDOW_MS = 5 * 60 * 1000;
 function isRecentlyActiveCart(cart, now) {
   const lastActivity = new Date(cart.lastActivityAt || cart.updatedAt || cart.createdAt).getTime();
-  return Number.isFinite(lastActivity) && lastActivity <= now && now - lastActivity <= ACTIVE_CART_WINDOW_MS;
+  return (
+    Number.isFinite(lastActivity) &&
+    lastActivity <= now &&
+    now - lastActivity <= ACTIVE_CART_WINDOW_MS
+  );
 }
 function ActiveCarts({ carts }) {
   const [now, setNow] = useState(() => Date.now());
@@ -373,7 +411,10 @@ function ActiveCarts({ carts }) {
   return (
     <div className="space-y-4">
       {carts.map((cart) => (
-        <div key={cart._id} className={`rounded-2xl border bg-white p-5 shadow-sm ${isRecentlyActiveCart(cart, now) ? "border-green-400" : "border-slate-200"}`}>
+        <div
+          key={cart._id}
+          className={`rounded-2xl border bg-white p-5 shadow-sm ${isRecentlyActiveCart(cart, now) ? "border-green-400" : "border-slate-200"}`}
+        >
           <div className="flex justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
@@ -386,20 +427,16 @@ function ActiveCarts({ carts }) {
             </div>
             <div className="text-right">
               <div className="text-lg font-bold">
-                {usd(
-                  cart.subtotalCents ??
-                    (cart.items || []).reduce(
-                      (sum, item) => sum + (Number(item.totalPriceCents) || 0),
-                      0,
-                    ),
-                )}
+                {cartSubtotalCents(cart) === null
+                  ? "Subtotal unavailable"
+                  : usd(cartSubtotalCents(cart))}
               </div>
               <div className="text-xs text-slate-500">
                 {new Date(cart.lastActivityAt || cart.updatedAt).toLocaleString()}
               </div>
             </div>
           </div>
-          <OrderItems items={cart.items} />
+          <OrderItems items={cart.items} isCart />
         </div>
       ))}
     </div>
@@ -742,7 +779,9 @@ const historyDate = (value, options) => {
 };
 const historyType = (order) => {
   const value = type(order).toLowerCase();
-  return value === "to go" || value === "pickup" ? "To Go" : value.replace(/\b\w/g, (c) => c.toUpperCase());
+  return value === "to go" || value === "pickup"
+    ? "To Go"
+    : value.replace(/\b\w/g, (c) => c.toUpperCase());
 };
 const HistoryPill = ({ children, tone = "green" }) => {
   const tones = {
@@ -752,45 +791,141 @@ const HistoryPill = ({ children, tone = "green" }) => {
     red: "border-red-200 bg-red-50 text-red-700",
     gray: "border-slate-200 bg-slate-100 text-slate-600",
   };
-  return <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold ${tones[tone]}`}>{children}</span>;
+  return (
+    <span
+      className={`inline-flex items-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold ${tones[tone]}`}
+    >
+      {children}
+    </span>
+  );
 };
 function HistoryTable({ orders, pagination, page, setPage }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     if (!selectedOrder) return;
-    const onKeyDown = (event) => { if (event.key === "Escape") setSelectedOrder(null); };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedOrder(null);
+    };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [selectedOrder]);
-  const headers = ["Order", "Date", "Customer", "Type", "Channel", "Status", "Items", "Subtotal", "Tax", "Tip", "Order Service Fee", "Gross Sales", "Rewards Redeemed", "Promotion", "Refunded", "Transaction Fee", "Net"];
+  const headers = [
+    "Order",
+    "Date",
+    "Customer",
+    "Type",
+    "Channel",
+    "Status",
+    "Items",
+    "Subtotal",
+    "Tax",
+    "Tip",
+    "Order Service Fee",
+    "Gross Sales",
+    "Rewards Redeemed",
+    "Promotion",
+    "Refunded",
+    "Transaction Fee",
+    "Net",
+  ];
   return (
     <>
-      {!orders.length ? <Empty>No orders found.</Empty> : (
+      {!orders.length ? (
+        <Empty>No orders found.</Empty>
+      ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
           <table className="w-full min-w-[1700px] text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
-              <tr>{headers.map((h) => <th key={h} className="px-4 py-5 text-sm font-bold">{h}</th>)}</tr>
+              <tr>
+                {headers.map((h) => (
+                  <th key={h} className="px-4 py-5 text-sm font-bold">
+                    {h}
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {orders.map((o, index) => {
                 const promo = Number(o.promoDiscountCents || 0) / 100;
                 const status = String(o.status || "pending").toLowerCase();
                 return (
-                  <tr key={o._id || index} className={`border-t border-slate-100 transition hover:bg-orange-50/40 ${index % 2 === 0 ? "bg-slate-50/40" : "bg-white"}`}>
-                    <td className="px-4 py-5"><button type="button" onClick={() => setSelectedOrder(o)} className="whitespace-nowrap font-bold text-orange-600 hover:text-orange-700 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500" aria-label={`View details for order ${o.orderNumber}`}>#{o.orderNumber || String(o._id || "").slice(-8)}</button></td>
-                    <td className="px-4 py-5 text-slate-500"><span className="block whitespace-nowrap">{historyDate(o.createdAt, {year:"numeric",month:"numeric",day:"numeric"})}</span><span className="block whitespace-nowrap">{historyDate(o.createdAt, {hour:"numeric",minute:"2-digit",second:"2-digit"})}</span></td>
-                    <td className="max-w-[180px] px-4 py-5 font-medium text-slate-900">{o.customer?.name || "Guest"}</td>
-                    <td className="px-4 py-5"><HistoryPill tone="orange">{historyType(o)}</HistoryPill></td>
-                    <td className="px-4 py-5"><HistoryPill tone="teal">{String(o.paymentChannel || "online").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}</HistoryPill></td>
-                    <td className="px-4 py-5"><HistoryPill tone={status === "cancelled" || status === "deleted" ? "red" : status === "completed" || status === "ready" ? "green" : "gray"}>{status}</HistoryPill></td>
-                    <td className="px-4 py-5 font-semibold">{(o.items || []).reduce((sum,item)=>sum+Number(item.quantity || 1),0)}</td>
+                  <tr
+                    key={o._id || index}
+                    className={`border-t border-slate-100 transition hover:bg-orange-50/40 ${index % 2 === 0 ? "bg-slate-50/40" : "bg-white"}`}
+                  >
+                    <td className="px-4 py-5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrder(o)}
+                        className="whitespace-nowrap font-bold text-orange-600 hover:text-orange-700 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
+                        aria-label={`View details for order ${o.orderNumber}`}
+                      >
+                        #{o.orderNumber || String(o._id || "").slice(-8)}
+                      </button>
+                    </td>
+                    <td className="px-4 py-5 text-slate-500">
+                      <span className="block whitespace-nowrap">
+                        {historyDate(o.createdAt, {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                        })}
+                      </span>
+                      <span className="block whitespace-nowrap">
+                        {historyDate(o.createdAt, {
+                          hour: "numeric",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        })}
+                      </span>
+                    </td>
+                    <td className="max-w-[180px] px-4 py-5 font-medium text-slate-900">
+                      {o.customer?.name || "Guest"}
+                    </td>
+                    <td className="px-4 py-5">
+                      <HistoryPill tone="orange">{historyType(o)}</HistoryPill>
+                    </td>
+                    <td className="px-4 py-5">
+                      <HistoryPill tone="teal">
+                        {String(o.paymentChannel || "online")
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (c) => c.toUpperCase())}
+                      </HistoryPill>
+                    </td>
+                    <td className="px-4 py-5">
+                      <HistoryPill
+                        tone={
+                          status === "cancelled" || status === "deleted"
+                            ? "red"
+                            : status === "completed" || status === "ready"
+                              ? "green"
+                              : "gray"
+                        }
+                      >
+                        {status}
+                      </HistoryPill>
+                    </td>
+                    <td className="px-4 py-5 font-semibold">
+                      {(o.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0)}
+                    </td>
                     <td className="px-4 py-5 font-medium">{usd(o.subtotalCents)}</td>
                     <td className="px-4 py-5 font-medium text-blue-600">{usd(o.taxCents)}</td>
                     <td className="px-4 py-5 font-medium text-blue-600">{usd(o.tipCents)}</td>
-                    <td className="px-4 py-5 font-medium text-blue-600">{usd(o.onlineServiceFeeCents)}</td>
+                    <td className="px-4 py-5 font-medium text-blue-600">
+                      {usd(o.onlineServiceFeeCents)}
+                    </td>
                     <td className="px-4 py-5 font-bold">{usd(o.totalAmountCents)}</td>
                     <td className="px-4 py-5 text-red-600">-{usdD(o.rewardsRedeemed)}</td>
-                    <td className="px-4 py-5">{o.promoCode && promo > 0 ? <><span className="font-semibold text-green-700">{o.promoCode}</span><div className="text-red-600">-{usdD(promo)}</div></> : <span className="text-slate-400">—</span>}</td>
+                    <td className="px-4 py-5">
+                      {o.promoCode && promo > 0 ? (
+                        <>
+                          <span className="font-semibold text-green-700">{o.promoCode}</span>
+                          <div className="text-red-600">-{usdD(promo)}</div>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-5 text-red-600">-{usdD(o.refunded)}</td>
                     <td className="px-4 py-5 text-red-600">-{usdD(o.stripeFee)}</td>
                     <td className="px-4 py-5 font-bold text-green-600">{usdD(o.net)}</td>
@@ -801,8 +936,30 @@ function HistoryTable({ orders, pagination, page, setPage }) {
           </table>
         </div>
       )}
-      {selectedOrder && <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
-      {pagination?.totalPages > 1 && <div className="mt-4 flex items-center justify-end gap-3"><button className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40" disabled={page <= 1} onClick={() => setPage(p=>p-1)}>Previous</button><span className="text-sm text-slate-500">Page {page} of {pagination.totalPages}</span><button className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40" disabled={page >= pagination.totalPages} onClick={() => setPage(p=>p+1)}>Next</button></div>}
+      {selectedOrder && (
+        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      )}
+      {pagination?.totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-end gap-3">
+          <button
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </button>
+          <span className="text-sm text-slate-500">
+            Page {page} of {pagination.totalPages}
+          </span>
+          <button
+            className="rounded-lg border bg-white px-4 py-2 disabled:opacity-40"
+            disabled={page >= pagination.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </>
   );
 }
@@ -914,49 +1071,184 @@ function OrderHistoryDetails({ order, onClose }) {
   ].filter(([, , value]) => Boolean(value));
   const cents = (value) => Number(value || 0);
   const line = (label, value, style = "") => (
-    <div className={`flex items-center justify-between gap-4 border-b border-slate-200 py-3 text-sm sm:text-base ${style}`}>
-      <span>{label}</span><span className="whitespace-nowrap font-medium">{usd(value)}</span>
+    <div
+      className={`flex items-center justify-between gap-4 border-b border-slate-200 py-3 text-sm sm:text-base ${style}`}
+    >
+      <span>{label}</span>
+      <span className="whitespace-nowrap font-medium">{usd(value)}</span>
     </div>
   );
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-2 sm:p-5" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="history-order-title" className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex shrink-0 justify-end border-b border-slate-200 px-4 py-3"><button type="button" onClick={onClose} aria-label="Close order details" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"><X size={26}/></button></div>
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-2 sm:p-5"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-order-title"
+        className="flex max-h-[96dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+        <div className="flex shrink-0 justify-end border-b border-slate-200 px-4 py-3">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close order details"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+          >
+            <X size={26} />
+          </button>
+        </div>
         <div className="overflow-y-auto px-5 py-6 sm:px-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-3"><h2 id="history-order-title" className="text-2xl font-extrabold text-slate-950 sm:text-3xl">Order #{order.orderNumber || String(order._id || "").slice(-8)}</h2><HistoryPill tone="orange">{historyType(order)}</HistoryPill><HistoryPill tone="teal">{String(order.paymentChannel || "online").replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}</HistoryPill></div>
-              <p className="mt-1 text-sm text-slate-500 sm:text-base">{historyDate(order.createdAt, {year:"numeric",month:"numeric",day:"numeric"})} · {order.pickupTime || "ASAP"}</p>
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h2
+                  id="history-order-title"
+                  className="text-2xl font-extrabold text-slate-950 sm:text-3xl"
+                >
+                  Order #{order.orderNumber || String(order._id || "").slice(-8)}
+                </h2>
+                <HistoryPill tone="orange">{historyType(order)}</HistoryPill>
+                <HistoryPill tone="teal">
+                  {String(order.paymentChannel || "online")
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                </HistoryPill>
+              </div>
+              <p className="mt-1 text-sm text-slate-500 sm:text-base">
+                {historyDate(order.createdAt, {
+                  year: "numeric",
+                  month: "numeric",
+                  day: "numeric",
+                })}{" "}
+                · {order.pickupTime || "ASAP"}
+              </p>
             </div>
-            <span className={`rounded-full px-4 py-1 text-sm font-extrabold uppercase ${status === "cancelled" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>{status}</span>
+            <span
+              className={`rounded-full px-4 py-1 text-sm font-extrabold uppercase ${status === "cancelled" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
+            >
+              {status}
+            </span>
           </div>
-          <div className="mt-7 flex items-center justify-between text-lg font-semibold text-blue-600"><span>Total Items</span><span className="rounded-full bg-blue-600 px-3 py-1 text-sm text-white">{count}</span></div>
+          <div className="mt-7 flex items-center justify-between text-lg font-semibold text-blue-600">
+            <span>Total Items</span>
+            <span className="rounded-full bg-blue-600 px-3 py-1 text-sm text-white">{count}</span>
+          </div>
           <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm sm:text-base">
             <h3 className="mb-3 font-bold text-blue-700">👤 Customer</h3>
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-blue-700"><span>Name</span><span className="min-w-0 text-right font-semibold text-blue-900">{order.customer?.name || "Guest"}</span><span>Email</span><span className="min-w-0 break-all text-right font-semibold text-blue-900">{order.customer?.email ? <a className="underline" href={`mailto:${order.customer.email}`}>{order.customer.email}</a> : "—"}</span><span>Phone</span><span className="text-right font-semibold text-blue-900">{order.customer?.phone ? <a className="underline" href={`tel:${order.customer.phone}`}>{order.customer.phone}</a> : "—"}</span></div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-blue-700">
+              <span>Name</span>
+              <span className="min-w-0 text-right font-semibold text-blue-900">
+                {order.customer?.name || "Guest"}
+              </span>
+              <span>Email</span>
+              <span className="min-w-0 break-all text-right font-semibold text-blue-900">
+                {order.customer?.email ? (
+                  <a className="underline" href={`mailto:${order.customer.email}`}>
+                    {order.customer.email}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </span>
+              <span>Phone</span>
+              <span className="text-right font-semibold text-blue-900">
+                {order.customer?.phone ? (
+                  <a className="underline" href={`tel:${order.customer.phone}`}>
+                    {order.customer.phone}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </span>
+            </div>
           </div>
-          <div className="mt-6 rounded-2xl bg-slate-50 p-5"><h3 className="mb-2 font-bold text-slate-700">Order Timeline</h3>{timeline.length ? timeline.map(([emoji,label,value]) => <div key={label} className="flex items-center justify-between gap-4 border-t border-slate-200 py-3 text-sm sm:text-base"><span className="text-slate-500">{emoji} {label}</span><span className="font-medium text-slate-900">{historyDate(value,{hour:"numeric",minute:"2-digit"})}</span></div>) : <p className="text-slate-500">No timeline available.</p>}</div>
+          <div className="mt-6 rounded-2xl bg-slate-50 p-5">
+            <h3 className="mb-2 font-bold text-slate-700">Order Timeline</h3>
+            {timeline.length ? (
+              timeline.map(([emoji, label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between gap-4 border-t border-slate-200 py-3 text-sm sm:text-base"
+                >
+                  <span className="text-slate-500">
+                    {emoji} {label}
+                  </span>
+                  <span className="font-medium text-slate-900">
+                    {historyDate(value, { hour: "numeric", minute: "2-digit" })}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-slate-500">No timeline available.</p>
+            )}
+          </div>
           <div className="mt-7 divide-y divide-slate-200">
-            {(order.items || []).map((item,index) => (
+            {(order.items || []).map((item, index) => (
               <div key={index} className="flex items-start gap-4 py-5">
-                {item.image ? <img src={item.image} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20"/> : <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100 sm:h-20 sm:w-20"/>}
-                <div className="min-w-0 flex-1"><p className="font-bold text-slate-900">{item.quantity || 1}× {item.name || `Item ${index+1}`}</p><ModifierSelections item={item}/></div>
-                <span className="shrink-0 font-bold text-orange-600">{usd(item.totalPriceCents ?? Math.round(Number(item.totalPrice || 0)*100))}</span>
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20"
+                  />
+                ) : (
+                  <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100 sm:h-20 sm:w-20" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-slate-900">
+                    {item.quantity || 1}× {item.name || `Item ${index + 1}`}
+                  </p>
+                  <ModifierSelections item={item} />
+                </div>
+                <span className="shrink-0 font-bold text-orange-600">
+                  {usd(item.totalPriceCents ?? Math.round(Number(item.totalPrice || 0) * 100))}
+                </span>
               </div>
             ))}
           </div>
-          {order.specialInstructions && <div className="mt-5 rounded-xl bg-amber-50 p-4"><h3 className="font-bold">Special instructions</h3><p>{order.specialInstructions}</p></div>}
+          {order.specialInstructions && (
+            <div className="mt-5 rounded-xl bg-amber-50 p-4">
+              <h3 className="font-bold">Special instructions</h3>
+              <p>{order.specialInstructions}</p>
+            </div>
+          )}
           <div className="mt-7">
             {line("Subtotal", order.subtotalCents)}
-            {cents(order.promoDiscountCents)>0 && line("Promotion Discount", -cents(order.promoDiscountCents), "text-red-600")}
+            {cents(order.promoDiscountCents) > 0 &&
+              line("Promotion Discount", -cents(order.promoDiscountCents), "text-red-600")}
             {line("Tax", order.taxCents)}
             {line("Order Service Fee", order.onlineServiceFeeCents)}
             {line("Tip", order.tipCents)}
             {line("Total", order.totalAmountCents, "font-bold text-orange-600")}
-            <div className="flex items-center justify-between border-b border-slate-200 py-3 text-sm sm:text-base"><span>Payment Method</span><span className="font-semibold capitalize">{order.paymentMethod || "Card"}</span></div>
-            {line("Amount Charged", order.amountChargedCents ?? order.totalAmountCents, "text-orange-600")}
-            {(cents(order.refundedAmountCents)>0 || Number(order.refunded || 0)>0) && line("Refunded", cents(order.refundedAmountCents) ? -cents(order.refundedAmountCents) : -Math.round(Number(order.refunded)*100), "text-red-600")}
-            {Number(order.pointsEarned || order.loyaltyPointsEarned || 0)>0 && <div className="flex justify-between py-3 text-sm sm:text-base"><span className="text-slate-500">Loyalty Points Earned</span><span className="font-bold text-green-700">+{order.pointsEarned || order.loyaltyPointsEarned} pts</span></div>}
+            <div className="flex items-center justify-between border-b border-slate-200 py-3 text-sm sm:text-base">
+              <span>Payment Method</span>
+              <span className="font-semibold capitalize">{order.paymentMethod || "Card"}</span>
+            </div>
+            {line(
+              "Amount Charged",
+              order.amountChargedCents ?? order.totalAmountCents,
+              "text-orange-600",
+            )}
+            {(cents(order.refundedAmountCents) > 0 || Number(order.refunded || 0) > 0) &&
+              line(
+                "Refunded",
+                cents(order.refundedAmountCents)
+                  ? -cents(order.refundedAmountCents)
+                  : -Math.round(Number(order.refunded) * 100),
+                "text-red-600",
+              )}
+            {Number(order.pointsEarned || order.loyaltyPointsEarned || 0) > 0 && (
+              <div className="flex justify-between py-3 text-sm sm:text-base">
+                <span className="text-slate-500">Loyalty Points Earned</span>
+                <span className="font-bold text-green-700">
+                  +{order.pointsEarned || order.loyaltyPointsEarned} pts
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </section>
