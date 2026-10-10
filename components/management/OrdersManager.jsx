@@ -357,12 +357,23 @@ function OrderItems({ items }) {
     </div>
   );
 }
+// A cart is visually active only when the shopper interacted recently.
+const ACTIVE_CART_WINDOW_MS = 5 * 60 * 1000;
+function isRecentlyActiveCart(cart, now) {
+  const lastActivity = new Date(cart.lastActivityAt || cart.updatedAt || cart.createdAt).getTime();
+  return Number.isFinite(lastActivity) && lastActivity <= now && now - lastActivity <= ACTIVE_CART_WINDOW_MS;
+}
 function ActiveCarts({ carts }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(interval);
+  }, []);
   if (!carts.length) return <Empty>No active carts at this location.</Empty>;
   return (
     <div className="space-y-4">
       {carts.map((cart) => (
-        <div key={cart._id} className="rounded-2xl border border-green-400 bg-white p-5 shadow-sm">
+        <div key={cart._id} className={`rounded-2xl border bg-white p-5 shadow-sm ${isRecentlyActiveCart(cart, now) ? "border-green-400" : "border-slate-200"}`}>
           <div className="flex justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
