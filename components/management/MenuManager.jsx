@@ -74,7 +74,7 @@ function ModifierEditor({ group, onClose, onSave }) {
         },
   );
   const add = () =>
-    setF({ ...f, options: [...f.options, { name: "", price: "0", isActive: true }] });
+    setF({ ...f, options: [...f.options, { name: "", image: "", price: "0", isActive: true }] });
   return (
     <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto p-6">
@@ -132,36 +132,87 @@ function ModifierEditor({ group, onClose, onSave }) {
             + Add option
           </button>
         </div>
-        <div className="space-y-2 mt-2">
-          {f.options.map((o, i) => (
-            <div className="grid grid-cols-[1fr_120px_40px] gap-2" key={o._id || i}>
-              <input
-                className="field"
-                value={o.name}
-                placeholder="Option name"
-                onChange={(e) => {
-                  const a = [...f.options];
-                  a[i] = { ...o, name: e.target.value };
-                  setF({ ...f, options: a });
-                }}
-              />
-              <input
-                className="field"
-                type="number"
-                step=".01"
-                min="0"
-                value={o.price}
-                onChange={(e) => {
-                  const a = [...f.options];
-                  a[i] = { ...o, price: e.target.value };
-                  setF({ ...f, options: a });
-                }}
-              />
-              <button onClick={() => setF({ ...f, options: f.options.filter((_, x) => x !== i) })}>
-                <Trash2 className="text-red-500" size={18} />
-              </button>
-            </div>
-          ))}
+        <div className="space-y-3 mt-3">
+          {f.options.map((o, i) => {
+            const update = (changes) =>
+              setF((previous) => ({
+                ...previous,
+                options: previous.options.map((option, index) =>
+                  index === i ? { ...option, ...changes } : option,
+                ),
+              }));
+            return (
+              <div key={o._id || i} className="rounded-2xl border border-slate-200 p-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-slate-50">
+                    {o.image ? (
+                      <img
+                        src={o.image}
+                        alt={o.name || "Option"}
+                        className="h-full w-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.visibility = "hidden";
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-400">No image</span>
+                    )}
+                  </div>
+                  <div className="min-w-[180px] flex-1 space-y-2">
+                    <label className="block text-xs font-semibold text-slate-500">
+                      Name
+                      <input
+                        className="field mt-1"
+                        value={o.name}
+                        placeholder="Option name"
+                        onChange={(e) => update({ name: e.target.value })}
+                      />
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-500">
+                      Image URL
+                      <input
+                        className="field mt-1"
+                        value={o.image || ""}
+                        placeholder="/images/options/example.png"
+                        onChange={(e) => update({ image: e.target.value })}
+                      />
+                    </label>
+                  </div>
+                  <label className="w-28 text-xs font-semibold text-slate-500">
+                    Price ($)
+                    <input
+                      className="field mt-1"
+                      type="number"
+                      step=".01"
+                      min="0"
+                      value={o.price}
+                      onChange={(e) => update({ price: e.target.value })}
+                    />
+                  </label>
+                  <label className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
+                    <input
+                      type="checkbox"
+                      checked={o.isActive !== false}
+                      onChange={(e) => update({ isActive: e.target.checked })}
+                    />
+                    {o.isActive !== false ? "Active" : "Inactive"}
+                  </label>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${o.name || "option"}`}
+                    onClick={() =>
+                      setF((previous) => ({
+                        ...previous,
+                        options: previous.options.filter((_, x) => x !== i),
+                      }))
+                    }
+                  >
+                    <Trash2 className="text-red-500" size={19} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div className="flex justify-end gap-2 mt-6">
           <button className="secondary" onClick={onClose}>

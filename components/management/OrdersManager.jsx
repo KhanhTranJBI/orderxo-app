@@ -47,6 +47,7 @@ export default function OrdersManager({ organizationId }) {
 function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const [tab, setTab] = useState("active-orders"),
     [active, setActive] = useState([]),
+    [pending, setPending] = useState([]),
     [carts, setCarts] = useState([]),
     [history, setHistory] = useState([]),
     [report, setReport] = useState(null),
@@ -66,7 +67,12 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const t = new URLSearchParams(window.location.hash.slice(1)).get("tab");
-      if (["active-carts", "active-orders", "orders-history", "report"].includes(t)) setTab(t);
+      if (
+        ["active-carts", "active-orders", "pending-payments", "orders-history", "report"].includes(
+          t,
+        )
+      )
+        setTab(t);
     }
   }, []);
   const selectTab = (id) => {
@@ -87,6 +93,10 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       } else if (tab === "active-orders") {
         d = await get("orders", organizationId, locationId);
         setActive(d.orders || []);
+        setPagination(d.pagination);
+      } else if (tab === "pending-payments") {
+        d = await get("orders", organizationId, locationId, { paymentState: "pending" });
+        setPending(d.orders || []);
         setPagination(d.pagination);
       } else if (tab === "orders-history") {
         d = await get("orders/history", organizationId, locationId, {
@@ -152,6 +162,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const tabs = [
     { id: "active-carts", label: "Active Carts", Icon: ShoppingCart, count: carts.length },
     { id: "active-orders", label: "Active Orders", Icon: Flame, count: active.length },
+    { id: "pending-payments", label: "Pending Payments", Icon: History, count: pending.length },
     {
       id: "orders-history",
       label: "Orders History",
@@ -179,7 +190,11 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             >
               <Icon size={20} />
               {label}
-              {(id === "orders-history" || id === "report") && <span>({count || 0})</span>}
+              {(id === "orders-history" ||
+                id === "report" ||
+                id === "pending-payments" ||
+                id === "active-orders" ||
+                id === "active-carts") && <span>({count || 0})</span>}
             </button>
           ))}
         </div>
@@ -215,6 +230,14 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           <ActiveCarts carts={carts} />
         ) : tab === "active-orders" ? (
           <ActiveOrders orders={active} />
+        ) : tab === "pending-payments" ? (
+          <>
+            <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              These orders have not been confirmed as paid. Check Stripe payment status before
+              preparing food.
+            </div>
+            <ActiveOrders orders={pending} pending />
+          </>
         ) : tab === "orders-history" ? (
           <HistoryTable orders={history} pagination={pagination} page={page} setPage={setPage} />
         ) : (
@@ -274,65 +297,118 @@ function Empty({ children }) {
     <div className="rounded-2xl border bg-white p-12 text-center text-slate-500">{children}</div>
   );
 }
-function ActiveCarts({ carts }) {
-  if (!carts.length) return <Empty>No active carts at this location.</Empty>;
+function ModifierSelections({ item }) {
+  const entries = Object.entries(item.selectedModifiers || {});
+  if (!entries.length) return null;
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {carts.map((c) => (
-        <div key={c._id} className="rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="flex justify-between gap-4">
-            <div>
-              <div className="font-bold">{c.customer?.name || "Guest"}</div>
-              <div className="text-sm text-slate-500">
-                {c.customer?.email || "No email"} · {c.source || "online"}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold">{usd(c.subtotalCents)}</div>
-              <div className="text-xs text-slate-400">
-                {new Date(c.lastActivityAt || c.updatedAt).toLocaleString()}
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 border-t pt-3 text-sm text-slate-600">
-            {(c.items || []).map((i, n) => (
-              <div key={n}>
-                {i.quantity || 1}× {i.name}
-              </div>
-            ))}
-          </div>
+    <div className="mt-1 space-y-1 text-xs text-slate-500">
+      {entries.map(([id, group]) => (
+        <div key={id}>
+          <span className="font-bold uppercase text-slate-600">
+            {group?.title || "Modifiers"}:{" "}
+          </span>
+          {(group?.selections || []).map((selection) => selection.name).join(", ") || "—"}
         </div>
       ))}
     </div>
   );
 }
-function ActiveOrders({ orders }) {
-  if (!orders.length) return <Empty>No active orders at this location.</Empty>;
+function OrderItems({ items }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {orders.map((o) => (
-        <div key={o._id} className="rounded-2xl border bg-white p-5 shadow-sm">
+    <div className="mt-4 space-y-3 border-t pt-4">
+      {(items || []).map((item, index) => (
+        <div key={index} className="flex items-start gap-3">
+          {item.image ? (
+            <img src={item.image} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100" />
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-slate-900">
+              {item.quantity || 1}× {item.name || `Item ${index + 1}`}
+            </div>
+            <ModifierSelections item={item} />
+          </div>
+          {Number.isFinite(Number(item.totalPriceCents)) && (
+            <div className="font-semibold text-orange-600">{usd(item.totalPriceCents)}</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+function ActiveCarts({ carts }) {
+  if (!carts.length) return <Empty>No active carts at this location.</Empty>;
+  return (
+    <div className="space-y-4">
+      {carts.map((cart) => (
+        <div key={cart._id} className="rounded-2xl border border-green-400 bg-white p-5 shadow-sm">
           <div className="flex justify-between gap-4">
             <div>
-              <div className="text-lg font-bold">#{o.orderNumber || String(o._id).slice(-6)}</div>
+              <div className="flex items-center gap-2">
+                <strong className="text-lg">{cart.customer?.name || "Guest"}</strong>
+                <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-bold uppercase text-blue-700">
+                  {cart.source || "online"}
+                </span>
+              </div>
+              <div className="text-sm text-slate-500">{cart.customer?.email || "No email"}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-lg font-bold">
+                {usd(
+                  cart.subtotalCents ??
+                    (cart.items || []).reduce(
+                      (sum, item) => sum + (Number(item.totalPriceCents) || 0),
+                      0,
+                    ),
+                )}
+              </div>
+              <div className="text-xs text-slate-500">
+                {new Date(cart.lastActivityAt || cart.updatedAt).toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <OrderItems items={cart.items} />
+        </div>
+      ))}
+    </div>
+  );
+}
+function ActiveOrders({ orders, pending = false }) {
+  if (!orders.length)
+    return (
+      <Empty>
+        {pending
+          ? "No pending payments at this location."
+          : "No active paid orders at this location."}
+      </Empty>
+    );
+  return (
+    <div className="space-y-4">
+      {orders.map((order) => (
+        <div key={order._id} className="rounded-2xl border bg-white p-5 shadow-sm">
+          <div className="flex justify-between gap-4">
+            <div>
+              <div className="text-lg font-bold">
+                #{order.orderNumber || String(order._id).slice(-6)}
+              </div>
               <div className="text-sm text-slate-500">
-                {o.customer?.name || "Guest"} · {new Date(o.createdAt).toLocaleString()}
+                {order.customer?.name || "Guest"} · {order.customer?.email || ""}
+              </div>
+              <div className="text-xs text-slate-400">
+                {new Date(order.createdAt).toLocaleString()}
               </div>
             </div>
             <div className="text-right">
-              <div className="font-bold">{usd(o.totalAmountCents)}</div>
-              <span className="mt-1 inline-block rounded-full bg-orange-100 px-2 py-1 text-xs font-semibold capitalize text-orange-700">
-                {o.status}
+              <div className="text-lg font-bold">{usd(order.totalAmountCents)}</div>
+              <span
+                className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-semibold capitalize ${pending ? "bg-amber-100 text-amber-800" : "bg-orange-100 text-orange-700"}`}
+              >
+                {pending ? "Payment pending" : order.status}
               </span>
             </div>
           </div>
-          <div className="mt-4 border-t pt-3 text-sm text-slate-600">
-            {(o.items || []).map((i, n) => (
-              <div key={n}>
-                {i.quantity || 1}× {i.name}
-              </div>
-            ))}
-          </div>
+          <OrderItems items={order.items} />
         </div>
       ))}
     </div>
