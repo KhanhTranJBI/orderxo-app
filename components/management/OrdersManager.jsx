@@ -216,10 +216,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             >
               <Icon size={20} />
               {label}
-              {(id === "orders-history" ||
-                id === "report" ||
-                id === "active-orders" ||
-                id === "active-carts") && <span>({count || 0})</span>}
+              {tab === id && <span>({count ?? 0})</span>}
             </button>
           ))}
         </div>
@@ -728,82 +725,106 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
 
 const type = (o) => (o.orderType || "to_go").replace("_", " ");
 function HistoryTable({ orders, pagination, page, setPage }) {
-  if (!orders.length) return <Empty>No orders found.</Empty>;
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  useEffect(() => {
+    if (!selectedOrder) return;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setSelectedOrder(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedOrder]);
   return (
     <>
-      <div className="overflow-x-auto rounded-2xl bg-white shadow">
-        <table className="min-w-[1500px] w-full text-sm">
-          <thead className="bg-slate-50 text-left text-slate-600">
-            <tr>
-              {[
-                "Order",
-                "Date",
-                "Customer",
-                "Type",
-                "Channel",
-                "Status",
-                "Items",
-                "Subtotal",
-                "Tax",
-                "Tip",
-                "Order Service Fee",
-                "Gross Sales",
-                "Rewards Redeemed",
-                "Promotion",
-                "Refunded",
-                "Transaction Fee",
-                "Net",
-              ].map((h) => (
-                <th key={h} className="px-4 py-4 font-bold">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map((o) => {
-              const promo = Number(o.promoDiscountCents || 0) / 100;
-              return (
-                <tr key={o._id} className="border-t hover:bg-slate-50">
-                  <td className="px-4 py-3 font-semibold">#{o.orderNumber}</td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {new Date(o.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div>{o.customer?.name || "Guest"}</div>
-                    <div className="text-xs text-slate-400">{o.customer?.email}</div>
-                  </td>
-                  <td className="px-4 py-3 capitalize">{type(o)}</td>
-                  <td className="px-4 py-3 capitalize">{o.paymentChannel || "online"}</td>
-                  <td className="px-4 py-3 capitalize">{o.status}</td>
-                  <td className="px-4 py-3">
-                    {(o.items || []).reduce((s, i) => s + (i.quantity || 1), 0)}
-                  </td>
-                  <td className="px-4 py-3">{usd(o.subtotalCents)}</td>
-                  <td className="px-4 py-3 text-blue-600">{usd(o.taxCents)}</td>
-                  <td className="px-4 py-3 text-blue-600">{usd(o.tipCents)}</td>
-                  <td className="px-4 py-3 text-blue-600">{usd(o.onlineServiceFeeCents)}</td>
-                  <td className="px-4 py-3 font-semibold">{usd(o.totalAmountCents)}</td>
-                  <td className="px-4 py-3 text-red-600">-{usdD(o.rewardsRedeemed)}</td>
-                  <td className="px-4 py-3">
-                    {o.promoCode && promo > 0 ? (
-                      <>
-                        <div className="font-semibold text-green-700">{o.promoCode}</div>
-                        <div className="text-red-600">-{usdD(promo)}</div>
-                      </>
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-red-600">-{usdD(o.refunded)}</td>
-                  <td className="px-4 py-3 text-red-600">-{usdD(o.stripeFee)}</td>
-                  <td className="px-4 py-3 font-bold text-green-600">{usdD(o.net)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      {!orders.length ? (
+        <Empty>No orders found.</Empty>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl bg-white shadow">
+          <table className="min-w-[1500px] w-full text-sm">
+            <thead className="bg-slate-50 text-left text-slate-600">
+              <tr>
+                {[
+                  "Order",
+                  "Date",
+                  "Customer",
+                  "Type",
+                  "Channel",
+                  "Status",
+                  "Items",
+                  "Subtotal",
+                  "Tax",
+                  "Tip",
+                  "Order Service Fee",
+                  "Gross Sales",
+                  "Rewards Redeemed",
+                  "Promotion",
+                  "Refunded",
+                  "Transaction Fee",
+                  "Net",
+                ].map((h) => (
+                  <th key={h} className="px-4 py-4 font-bold">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => {
+                const promo = Number(o.promoDiscountCents || 0) / 100;
+                return (
+                  <tr key={o._id} className="border-t hover:bg-slate-50">
+                    <td className="px-4 py-3 font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedOrder(o)}
+                        className="font-bold text-orange-600 hover:text-orange-700 hover:underline focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
+                        aria-label={`View details for order ${o.orderNumber}`}
+                      >
+                        #{o.orderNumber}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {new Date(o.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>{o.customer?.name || "Guest"}</div>
+                      <div className="text-xs text-slate-400">{o.customer?.email}</div>
+                    </td>
+                    <td className="px-4 py-3 capitalize">{type(o)}</td>
+                    <td className="px-4 py-3 capitalize">{o.paymentChannel || "online"}</td>
+                    <td className="px-4 py-3 capitalize">{o.status}</td>
+                    <td className="px-4 py-3">
+                      {(o.items || []).reduce((s, i) => s + (i.quantity || 1), 0)}
+                    </td>
+                    <td className="px-4 py-3">{usd(o.subtotalCents)}</td>
+                    <td className="px-4 py-3 text-blue-600">{usd(o.taxCents)}</td>
+                    <td className="px-4 py-3 text-blue-600">{usd(o.tipCents)}</td>
+                    <td className="px-4 py-3 text-blue-600">{usd(o.onlineServiceFeeCents)}</td>
+                    <td className="px-4 py-3 font-semibold">{usd(o.totalAmountCents)}</td>
+                    <td className="px-4 py-3 text-red-600">-{usdD(o.rewardsRedeemed)}</td>
+                    <td className="px-4 py-3">
+                      {o.promoCode && promo > 0 ? (
+                        <>
+                          <div className="font-semibold text-green-700">{o.promoCode}</div>
+                          <div className="text-red-600">-{usdD(promo)}</div>
+                        </>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-red-600">-{usdD(o.refunded)}</td>
+                    <td className="px-4 py-3 text-red-600">-{usdD(o.stripeFee)}</td>
+                    <td className="px-4 py-3 font-bold text-green-600">{usdD(o.net)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {selectedOrder && (
+        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      )}
       {pagination?.totalPages > 1 && (
         <div className="mt-4 flex justify-end gap-2">
           <button
@@ -920,6 +941,126 @@ function ReportTable({ report }) {
           </tr>
         </tfoot>
       </table>
+    </div>
+  );
+}
+
+function OrderHistoryDetails({ order, onClose }) {
+  const timestamp = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
+  };
+  const timeline = [
+    ["Ordered", order.createdAt],
+    ["Confirmed", order.preparedAt || order.confirmedAt],
+    ["Ready for Pickup", order.readyAt],
+    ["Picked up", order.pickedAt || order.completedAt],
+    ["Cancelled", order.cancelledAt],
+  ].filter(([, value]) => Boolean(value));
+  const line = (label, cents, emphasize = false) => (
+    <div
+      className={`flex justify-between gap-4 py-1 ${emphasize ? "font-bold text-slate-900" : "text-slate-600"}`}
+    >
+      <span>{label}</span>
+      <span>{usd(cents)}</span>
+    </div>
+  );
+  return (
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-3 sm:p-6"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-order-title"
+        className="flex max-h-[92dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+      >
+        <div className="flex items-start justify-between gap-4 border-b px-5 py-5 sm:px-7">
+          <div>
+            <h2 id="history-order-title" className="text-2xl font-bold text-slate-900">
+              Order #{order.orderNumber}
+            </h2>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              <span className="rounded-full bg-orange-50 px-3 py-1 font-semibold text-orange-700">
+                {type(order)}
+              </span>
+              <span className="rounded-full bg-teal-50 px-3 py-1 font-semibold capitalize text-teal-700">
+                {order.paymentChannel || "online"}
+              </span>
+              <span className="rounded-full bg-green-50 px-3 py-1 font-semibold capitalize text-green-700">
+                {order.status}
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              {timestamp(order.createdAt)} · {order.pickupTime || "ASAP"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close order details"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="space-y-6 overflow-y-auto px-5 py-6 sm:px-7">
+          <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <h3 className="mb-3 font-bold text-blue-800">Customer</h3>
+            <p className="font-semibold">{order.customer?.name || "Guest"}</p>
+            {order.customer?.email && (
+              <a className="text-blue-700 underline" href={`mailto:${order.customer.email}`}>
+                {order.customer.email}
+              </a>
+            )}
+            {order.customer?.phone && (
+              <p>
+                <a className="text-blue-700 underline" href={`tel:${order.customer.phone}`}>
+                  {order.customer.phone}
+                </a>
+              </p>
+            )}
+          </div>
+          <div className="rounded-xl bg-slate-50 p-4">
+            <h3 className="mb-3 font-bold">Order Timeline</h3>
+            {timeline.map(([label, value]) => (
+              <div key={label} className="flex justify-between gap-4 border-t py-2 text-sm">
+                <span>{label}</span>
+                <span className="text-right font-semibold">{timestamp(value)}</span>
+              </div>
+            ))}
+          </div>
+          <div>
+            <h3 className="font-bold">
+              Items (
+              {(order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0)})
+            </h3>
+            <OrderItems items={order.items} />
+          </div>
+          {order.specialInstructions && (
+            <div className="rounded-xl bg-amber-50 p-4">
+              <h3 className="font-bold">Special instructions</h3>
+              <p className="mt-1">{order.specialInstructions}</p>
+            </div>
+          )}
+          <div className="rounded-xl border p-4">
+            <h3 className="mb-3 font-bold">Payment Summary</h3>
+            {line("Food subtotal", order.subtotalCents)}
+            {Number(order.promoDiscountCents || 0) > 0 &&
+              line("Promotion discount", -order.promoDiscountCents)}
+            {line("Tax", order.taxCents)}
+            {line("Tip", order.tipCents)}
+            {line("Online service fee", order.onlineServiceFeeCents)}
+            {line("Gross total", order.totalAmountCents, true)}
+            {Number(order.refundedAmountCents || 0) > 0 &&
+              line("Refunded", -order.refundedAmountCents)}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

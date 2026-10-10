@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
 export default function PasswordlessSignIn() {
@@ -31,6 +32,20 @@ export default function PasswordlessSignIn() {
       setBusy(false);
     }
   }
+
+  const googleButton = (
+    <button
+      type="button"
+      onClick={() =>
+        signIn("google", {
+          callbackUrl: `/auth/google-complete?next=${encodeURIComponent(safeNext)}`,
+        })
+      }
+      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 hover:bg-slate-50"
+    >
+      Continue with Google
+    </button>
+  );
 
   return sent ? (
     <div className="space-y-4">
@@ -70,6 +85,12 @@ export default function PasswordlessSignIn() {
       >
         {busy ? "Sending…" : "Email me a sign-in link"}
       </button>
+      <div className="flex items-center gap-3 text-xs text-slate-400">
+        <span className="h-px flex-1 bg-slate-200" />
+        OR
+        <span className="h-px flex-1 bg-slate-200" />
+      </div>
+      {googleButton}
       <p className="text-center text-xs text-slate-500">
         No password required. The sign-in link is one-time and expires shortly.
       </p>
