@@ -532,20 +532,12 @@ export default function StoreSettingsManager({ organizationId }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl">
-        <nav aria-label="Store settings navigation" className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-orange-600 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
-          >
-            ← Dashboard / Home
-          </Link>
-          <Link
-            href={`/dashboard/restaurants/${organizationId}`}
-            className="inline-flex items-center rounded-lg px-2 py-1 text-sm font-semibold text-orange-600 hover:bg-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-orange-500"
-          >
-            Restaurant workspace →
-          </Link>
-        </nav>
+        <Link
+          href={`/dashboard/restaurants/${organizationId}`}
+          className="text-sm font-semibold text-orange-600"
+        >
+          ← Restaurant workspace
+        </Link>
 
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
