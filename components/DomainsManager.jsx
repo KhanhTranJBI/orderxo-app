@@ -1,7 +1,7 @@
 "use client";
 import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
-import toast from "react-toastify";
+import { toast } from "react-toastify";
 
 const clean = (s) =>
   String(s || "")

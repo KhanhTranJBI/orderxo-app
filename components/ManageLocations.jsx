@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ownerFetch } from "../lib/ownerFetch";
-import toast from "react-toastify";
+import { toast } from "react-toastify";
 
 export default function ManageLocations({ organizationId, locations, owner }) {
   const router = useRouter();
