@@ -194,7 +194,7 @@ export default function RestaurantSettings({ organizationId }) {
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
     );
-  if (loading) return <main className="mx-auto max-w-5xl p-8">Loading restaurant settings…</main>;
+  if (loading) return <main className="mx-auto max-w-6xl p-8">Loading restaurant settings…</main>;
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
