@@ -15,6 +15,7 @@ export default function BillingManager({ organizationId, subscription, locationB
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [confirmPlan, setConfirmPlan] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
   const [showLocationModal, setShowLocationModal] = useState(false);
   const usd = (cents) => (Number(cents || 0) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -26,6 +27,24 @@ export default function BillingManager({ organizationId, subscription, locationB
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
   const pending = subscription?.pendingPlan;
+  const monthlyPrices = { starter: 7900, growth: 12900, pro: 19900 };
+  const count = Math.max(1, Number(locationBilling?.locationCount) || 1);
+  const estimatedMonthly = (planId) => {
+    const base = monthlyPrices[planId];
+    return base + Math.round(base * 0.8) * (count - 1);
+  };
+  const currentMonthly = locationBilling?.monthlyTotalCents != null
+    ? Number(locationBilling.monthlyTotalCents)
+    : estimatedMonthly(current);
+  const targetMonthly = confirmPlan ? estimatedMonthly(confirmPlan.id) : 0;
+  const upgradeDelta = targetMonthly - currentMonthly;
+  const closePlanModal = () => { if (!busy) setConfirmPlan(null); };
+  const confirmPlanChange = async () => {
+    if (!confirmPlan || busy) return;
+    const selected = confirmPlan;
+    setConfirmPlan(null);
+    await post("/api/owner/billing/change-plan", { organizationId, plan: selected.id }, `change-${selected.id}`);
+  };
 
   async function post(path, body, key, expectUrl = false) {
     setBusy(key);
@@ -177,20 +196,10 @@ export default function BillingManager({ organizationId, subscription, locationB
                 </p>
                 <button
                   disabled={disabled}
-                  onClick={() =>
-                    active
-                      ? post(
-                          "/api/owner/billing/change-plan",
-                          { organizationId, plan: plan.id },
-                          `change-${plan.id}`,
-                        )
-                      : post(
-                          "/api/owner/billing/checkout",
-                          { organizationId, plan: plan.id },
-                          `checkout-${plan.id}`,
-                          true,
-                        )
-                  }
+                  onClick={() => {
+                    if (active) setConfirmPlan(plan);
+                    else post("/api/owner/billing/checkout", { organizationId, plan: plan.id }, `checkout-${plan.id}`, true);
+                  }}
                   className={`mt-5 w-full rounded-xl px-4 py-2.5 font-semibold disabled:opacity-50 ${isCurrent ? "border bg-white text-slate-700" : "bg-orange-600 text-white hover:bg-orange-700"}`}
                 >
                   {busy === `change-${plan.id}`
@@ -204,6 +213,41 @@ export default function BillingManager({ organizationId, subscription, locationB
           })}
         </div>
       </section>
+      {confirmPlan && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
+          role="presentation"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) closePlanModal(); }}
+        >
+          <div role="dialog" aria-modal="true" aria-labelledby="plan-confirm-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-orange-600">Subscription change</p>
+                <h3 id="plan-confirm-title" className="mt-1 text-xl font-bold">
+                  {rank[confirmPlan.id] > rank[current] ? "Upgrade" : "Downgrade"} to {confirmPlan.name}?
+                </h3>
+              </div>
+              <button type="button" onClick={closePlanModal} aria-label="Close dialog" className="rounded-full px-2 text-2xl text-slate-500 hover:bg-slate-100">×</button>
+            </div>
+            <p className="mt-3 text-sm text-slate-600">This plan applies to all {count} restaurant {count === 1 ? "location" : "locations"} in your organization.</p>
+            <div className="mt-5 space-y-3 rounded-xl border bg-slate-50 p-4 text-sm">
+              <div className="flex justify-between gap-3"><span>Current {plans.find(p => p.id === current)?.name || current} monthly fee</span><strong>{usd(currentMonthly)}</strong></div>
+              <div className="flex justify-between gap-3"><span>New {confirmPlan.name} monthly fee</span><strong>{usd(targetMonthly)}</strong></div>
+              <div className="flex justify-between gap-3 border-t pt-3"><span>Monthly difference</span><strong className={upgradeDelta > 0 ? "text-orange-600" : "text-green-700"}>{upgradeDelta > 0 ? "+" : upgradeDelta < 0 ? "−" : ""}{usd(Math.abs(upgradeDelta))}</strong></div>
+            </div>
+            {rank[confirmPlan.id] > rank[current] ? (
+              <p className="mt-4 text-sm text-slate-600">Your upgrade will be requested immediately. Stripe may calculate a prorated charge for the remainder of the billing period. The exact amount due today is not shown here and depends on Stripe billing; this confirmation is not a payment receipt.</p>
+            ) : (
+              <p className="mt-4 text-sm text-slate-600">Your downgrade will be scheduled for the end of your current billing period. No immediate refund is promised.</p>
+            )}
+            <p className="mt-3 text-xs text-slate-500">Prices exclude the 1% OrderXO platform fee, payment processing fees, and applicable taxes.</p>
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={closePlanModal} className="rounded-xl border px-4 py-2.5 font-semibold">Keep current plan</button>
+              <button type="button" onClick={confirmPlanChange} className="rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700">Confirm {rank[confirmPlan.id] > rank[current] ? "upgrade" : "downgrade"}</button>
+            </div>
+          </div>
+        </div>
+      )}
       {active && (
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Subscription cancellation</h2>
