@@ -3,6 +3,7 @@
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Clock3, Images, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
@@ -119,6 +120,9 @@ function localInput(v) {
 
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
+  const searchParams = useSearchParams();
+  const requestedLocationId = searchParams.get("locationId");
+  const requestedTab = searchParams.get("tab");
   const permission = useRestaurantPermissions(organizationId);
 
   const canReadStore = permission.can("store.read");
@@ -172,6 +176,15 @@ export default function StoreSettingsManager({ organizationId }) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
     }
   }, [permission.loading, isAdmin, scope, loc.locations]);
+
+  useEffect(() => {
+    if (requestedLocationId && loc.locations.some((l) => String(l._id || l.id) === requestedLocationId)) {
+      setScope(requestedLocationId);
+      if (["locationDetails", "hours", "printing", "notices", "homepage"].includes(requestedTab)) {
+        setTab(requestedTab);
+      }
+    }
+  }, [requestedLocationId, requestedTab, loc.locations]);
 
   const selectedLocationId = scope === "default" ? "" : scope;
 

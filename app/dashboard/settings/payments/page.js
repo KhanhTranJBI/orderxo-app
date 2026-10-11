@@ -28,7 +28,11 @@ export default async function Payments({ searchParams }) {
         <h1 className="text-3xl font-bold">Payments</h1>
         {searchParams?.connect && (
           <p className="rounded-lg border bg-white p-3">
-            Stripe connection result: {searchParams.connect}. Check the status below.
+            {searchParams.connect === "reuse_available"
+              ? "This Stripe account is already connected to another location in your organization. Select an existing account below to share it with this location."
+              : searchParams.connect === "already_used"
+                ? "This Stripe account belongs to another organization and cannot be assigned here."
+                : `Stripe connection result: ${searchParams.connect}. Check the status below.`}
           </p>
         )}
         {!organizationId ? (
@@ -38,7 +42,7 @@ export default async function Payments({ searchParams }) {
         ) : locations.length === 0 ? (
           <p>No restaurant locations available.</p>
         ) : (
-          <StripeConnectManager organizationId={organizationId} locations={locations} />
+          <StripeConnectManager organizationId={organizationId} locations={locations} initialLocationId={searchParams?.locationId} />
         )}
       </div>
     </main>
