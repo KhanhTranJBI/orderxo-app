@@ -22,9 +22,6 @@ export default async function Payments({ searchParams }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-3xl space-y-6">
-        <Link href="/dashboard" className="font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <h1 className="text-3xl font-bold">Payments</h1>
         {searchParams?.connect && (
           <p className="rounded-lg border bg-white p-3">
@@ -42,7 +39,11 @@ export default async function Payments({ searchParams }) {
         ) : locations.length === 0 ? (
           <p>No restaurant locations available.</p>
         ) : (
-          <StripeConnectManager organizationId={organizationId} locations={locations} initialLocationId={searchParams?.locationId} />
+          <StripeConnectManager
+            organizationId={organizationId}
+            locations={locations}
+            initialLocationId={searchParams?.locationId}
+          />
         )}
       </div>
     </main>

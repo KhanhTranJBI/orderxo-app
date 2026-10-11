@@ -18,11 +18,19 @@ export default function BillingManager({ organizationId, subscription, locationB
   const [confirmPlan, setConfirmPlan] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const usd = (cents) => (Number(cents || 0) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
+  const usd = (cents) =>
+    (Number(cents || 0) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
   async function addLocation() {
-    if (!newLocationName.trim()) { setError("Enter a location name."); return; }
+    if (!newLocationName.trim()) {
+      setError("Enter a location name.");
+      return;
+    }
     setShowLocationModal(false);
-    await post("/api/owner/locations", { organizationId, name: newLocationName.trim() }, "add-location");
+    await post(
+      "/api/owner/locations",
+      { organizationId, name: newLocationName.trim() },
+      "add-location",
+    );
   }
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
@@ -33,17 +41,24 @@ export default function BillingManager({ organizationId, subscription, locationB
     const base = monthlyPrices[planId];
     return base + Math.round(base * 0.8) * (count - 1);
   };
-  const currentMonthly = locationBilling?.monthlyTotalCents != null
-    ? Number(locationBilling.monthlyTotalCents)
-    : estimatedMonthly(current);
+  const currentMonthly =
+    locationBilling?.monthlyTotalCents != null
+      ? Number(locationBilling.monthlyTotalCents)
+      : estimatedMonthly(current);
   const targetMonthly = confirmPlan ? estimatedMonthly(confirmPlan.id) : 0;
   const upgradeDelta = targetMonthly - currentMonthly;
-  const closePlanModal = () => { if (!busy) setConfirmPlan(null); };
+  const closePlanModal = () => {
+    if (!busy) setConfirmPlan(null);
+  };
   const confirmPlanChange = async () => {
     if (!confirmPlan || busy) return;
     const selected = confirmPlan;
     setConfirmPlan(null);
-    await post("/api/owner/billing/change-plan", { organizationId, plan: selected.id }, `change-${selected.id}`);
+    await post(
+      "/api/owner/billing/change-plan",
+      { organizationId, plan: selected.id },
+      `change-${selected.id}`,
+    );
   };
 
   async function post(path, body, key, expectUrl = false) {
@@ -131,26 +146,94 @@ export default function BillingManager({ organizationId, subscription, locationB
       {locationBilling && (
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold">Multi-location billing</h2>
-          <p className="mt-2 text-sm text-slate-600">One plan for all locations. The first location pays full price; every additional location gets 20% off its subscription fee.</p>
+          <p className="mt-2 text-sm text-slate-600">
+            One plan for all locations. The first location pays full price; every additional
+            location gets 20% off its subscription fee.
+          </p>
           <div className="mt-4 space-y-2 text-sm">
-            <div className="flex justify-between"><span>First location</span><strong>{usd(locationBilling.baseMonthlyCents)}</strong></div>
-            <div className="flex justify-between"><span>{Math.max(0, locationBilling.locationCount - 1)} additional locations (20% off each)</span><strong>{usd(Math.max(0, locationBilling.locationCount - 1) * locationBilling.additionalMonthlyCents)}</strong></div>
-            <div className="flex justify-between border-t pt-3 text-base"><strong>Estimated monthly subscription</strong><strong>{usd(locationBilling.monthlyTotalCents)}</strong></div>
+            <div className="flex justify-between">
+              <span>First location</span>
+              <strong>{usd(locationBilling.baseMonthlyCents)}</strong>
+            </div>
+            <div className="flex justify-between">
+              <span>
+                {Math.max(0, locationBilling.locationCount - 1)} additional locations (20% off each)
+              </span>
+              <strong>
+                {usd(
+                  Math.max(0, locationBilling.locationCount - 1) *
+                    locationBilling.additionalMonthlyCents,
+                )}
+              </strong>
+            </div>
+            <div className="flex justify-between border-t pt-3 text-base">
+              <strong>Estimated monthly subscription</strong>
+              <strong>{usd(locationBilling.monthlyTotalCents)}</strong>
+            </div>
           </div>
-          <p className="mt-3 text-xs text-slate-500">Plus the 1% OrderXO platform fee on eligible food sales. Stripe payment processing fees are separate. Changes during a billing period may include prorations.</p>
-          <button type="button" disabled={!active || !!busy || !!pending} onClick={() => setShowLocationModal(true)} className="mt-4 rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white disabled:opacity-50">Add a location</button>
+          <p className="mt-3 text-xs text-slate-500">
+            Plus the 1% OrderXO platform fee on eligible food sales. Stripe payment processing fees
+            are separate. Changes during a billing period may include prorations.
+          </p>
+          <button
+            type="button"
+            disabled={!active || !!busy || !!pending}
+            onClick={() => setShowLocationModal(true)}
+            className="mt-4 rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white disabled:opacity-50"
+          >
+            Add a location
+          </button>
         </section>
       )}
       {showLocationModal && locationBilling && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setShowLocationModal(false); }}>
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" role="dialog" aria-modal="true" aria-labelledby="add-location-title">
-            <h3 id="add-location-title" className="text-xl font-bold">Add restaurant location</h3>
-            <p className="mt-2 text-sm text-slate-600">Your subscription will increase by <strong>{usd(locationBilling.additionalMonthlyCents)}/month</strong> plus applicable prorations. Stripe will invoice the change immediately.</p>
-            <label htmlFor="new-location-name" className="mt-4 block text-sm font-medium">Location name</label>
-            <input id="new-location-name" value={newLocationName} onChange={(e) => setNewLocationName(e.target.value)} maxLength={120} className="mt-1 w-full rounded-xl border p-3" placeholder="e.g. Poulsbo" />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowLocationModal(false);
+          }}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-location-title"
+          >
+            <h3 id="add-location-title" className="text-xl font-bold">
+              Add restaurant location
+            </h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Your subscription will increase by{" "}
+              <strong>{usd(locationBilling.additionalMonthlyCents)}/month</strong> plus applicable
+              prorations. Stripe will invoice the change immediately.
+            </p>
+            <label htmlFor="new-location-name" className="mt-4 block text-sm font-medium">
+              Location name
+            </label>
+            <input
+              id="new-location-name"
+              value={newLocationName}
+              onChange={(e) => setNewLocationName(e.target.value)}
+              maxLength={120}
+              className="mt-1 w-full rounded-xl border p-3"
+              placeholder="e.g. Poulsbo"
+            />
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" onClick={() => setShowLocationModal(false)} className="rounded-xl border px-4 py-2">Cancel</button>
-              <button type="button" onClick={addLocation} disabled={!newLocationName.trim()} className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">Confirm and bill</button>
+              <button
+                type="button"
+                onClick={() => setShowLocationModal(false)}
+                className="rounded-xl border px-4 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={addLocation}
+                disabled={!newLocationName.trim()}
+                className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                Confirm and bill
+              </button>
             </div>
           </div>
         </div>
@@ -198,7 +281,13 @@ export default function BillingManager({ organizationId, subscription, locationB
                   disabled={disabled}
                   onClick={() => {
                     if (active) setConfirmPlan(plan);
-                    else post("/api/owner/billing/checkout", { organizationId, plan: plan.id }, `checkout-${plan.id}`, true);
+                    else
+                      post(
+                        "/api/owner/billing/checkout",
+                        { organizationId, plan: plan.id },
+                        `checkout-${plan.id}`,
+                        true,
+                      );
                   }}
                   className={`mt-5 w-full rounded-xl px-4 py-2.5 font-semibold disabled:opacity-50 ${isCurrent ? "border bg-white text-slate-700" : "bg-orange-600 text-white hover:bg-orange-700"}`}
                 >
@@ -217,33 +306,87 @@ export default function BillingManager({ organizationId, subscription, locationB
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
           role="presentation"
-          onMouseDown={(e) => { if (e.target === e.currentTarget) closePlanModal(); }}
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closePlanModal();
+          }}
         >
-          <div role="dialog" aria-modal="true" aria-labelledby="plan-confirm-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="plan-confirm-title"
+            className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl"
+          >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-orange-600">Subscription change</p>
                 <h3 id="plan-confirm-title" className="mt-1 text-xl font-bold">
-                  {rank[confirmPlan.id] > rank[current] ? "Upgrade" : "Downgrade"} to {confirmPlan.name}?
+                  {rank[confirmPlan.id] > rank[current] ? "Upgrade" : "Downgrade"} to{" "}
+                  {confirmPlan.name}?
                 </h3>
               </div>
-              <button type="button" onClick={closePlanModal} aria-label="Close dialog" className="rounded-full px-2 text-2xl text-slate-500 hover:bg-slate-100">×</button>
+              <button
+                type="button"
+                onClick={closePlanModal}
+                aria-label="Close dialog"
+                className="rounded-full px-2 text-2xl text-slate-500 hover:bg-slate-100"
+              >
+                ×
+              </button>
             </div>
-            <p className="mt-3 text-sm text-slate-600">This plan applies to all {count} restaurant {count === 1 ? "location" : "locations"} in your organization.</p>
+            <p className="mt-3 text-sm text-slate-600">
+              This plan applies to all {count} restaurant {count === 1 ? "location" : "locations"}{" "}
+              in your organization.
+            </p>
             <div className="mt-5 space-y-3 rounded-xl border bg-slate-50 p-4 text-sm">
-              <div className="flex justify-between gap-3"><span>Current {plans.find(p => p.id === current)?.name || current} monthly fee</span><strong>{usd(currentMonthly)}</strong></div>
-              <div className="flex justify-between gap-3"><span>New {confirmPlan.name} monthly fee</span><strong>{usd(targetMonthly)}</strong></div>
-              <div className="flex justify-between gap-3 border-t pt-3"><span>Monthly difference</span><strong className={upgradeDelta > 0 ? "text-orange-600" : "text-green-700"}>{upgradeDelta > 0 ? "+" : upgradeDelta < 0 ? "−" : ""}{usd(Math.abs(upgradeDelta))}</strong></div>
+              <div className="flex justify-between gap-3">
+                <span>
+                  Current {plans.find((p) => p.id === current)?.name || current} monthly fee
+                </span>
+                <strong>{usd(currentMonthly)}</strong>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span>New {confirmPlan.name} monthly fee</span>
+                <strong>{usd(targetMonthly)}</strong>
+              </div>
+              <div className="flex justify-between gap-3 border-t pt-3">
+                <span>Monthly difference</span>
+                <strong className={upgradeDelta > 0 ? "text-orange-600" : "text-green-700"}>
+                  {upgradeDelta > 0 ? "+" : upgradeDelta < 0 ? "−" : ""}
+                  {usd(Math.abs(upgradeDelta))}
+                </strong>
+              </div>
             </div>
             {rank[confirmPlan.id] > rank[current] ? (
-              <p className="mt-4 text-sm text-slate-600">Your upgrade will be requested immediately. Stripe may calculate a prorated charge for the remainder of the billing period. The exact amount due today is not shown here and depends on Stripe billing; this confirmation is not a payment receipt.</p>
+              <p className="mt-4 text-sm text-slate-600">
+                Your upgrade will be requested immediately. Stripe may calculate a prorated charge
+                for the remainder of the billing period. The exact amount due today is not shown
+                here and depends on Stripe billing; this confirmation is not a payment receipt.
+              </p>
             ) : (
-              <p className="mt-4 text-sm text-slate-600">Your downgrade will be scheduled for the end of your current billing period. No immediate refund is promised.</p>
+              <p className="mt-4 text-sm text-slate-600">
+                Your downgrade will be scheduled for the end of your current billing period. No
+                immediate refund is promised.
+              </p>
             )}
-            <p className="mt-3 text-xs text-slate-500">Prices exclude the 1% OrderXO platform fee, payment processing fees, and applicable taxes.</p>
+            <p className="mt-3 text-xs text-slate-500">
+              Prices exclude the 1% OrderXO platform fee, payment processing fees, and applicable
+              taxes.
+            </p>
             <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button type="button" onClick={closePlanModal} className="rounded-xl border px-4 py-2.5 font-semibold">Keep current plan</button>
-              <button type="button" onClick={confirmPlanChange} className="rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700">Confirm {rank[confirmPlan.id] > rank[current] ? "upgrade" : "downgrade"}</button>
+              <button
+                type="button"
+                onClick={closePlanModal}
+                className="rounded-xl border px-4 py-2.5 font-semibold"
+              >
+                Keep current plan
+              </button>
+              <button
+                type="button"
+                onClick={confirmPlanChange}
+                className="rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700"
+              >
+                Confirm {rank[confirmPlan.id] > rank[current] ? "upgrade" : "downgrade"}
+              </button>
             </div>
           </div>
         </div>

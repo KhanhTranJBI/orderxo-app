@@ -18,8 +18,7 @@ export default async function Dashboard() {
   // can manage organizations they belong to, but cannot create new organizations.
   // A brand-new verified account with no memberships may create its first restaurant.
   const canCreateRestaurant =
-    organizations.length === 0 ||
-    organizations.some((org) => org.role === "owner");
+    organizations.length === 0 || organizations.some((org) => org.role === "owner");
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">

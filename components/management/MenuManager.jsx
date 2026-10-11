@@ -916,12 +916,6 @@ export default function MenuManager({ organizationId }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-7xl">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="text-sm font-semibold text-orange-600"
-        >
-          ← Restaurant workspace
-        </Link>
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
         </p>

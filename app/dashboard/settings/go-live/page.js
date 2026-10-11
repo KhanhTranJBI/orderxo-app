@@ -17,9 +17,6 @@ export default async function GoLivePage({ searchParams }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-3xl space-y-6">
-        <Link href="/dashboard" className="font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <h1 className="text-3xl font-bold">Get ready to go live</h1>
         {!organizationId ? (
           <p>Select a restaurant first.</p>

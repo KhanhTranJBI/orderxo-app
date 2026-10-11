@@ -90,12 +90,6 @@ export default function LocationSettingsManager({ organizationId }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-5xl">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="text-sm font-semibold text-orange-600"
-        >
-          ← Restaurant workspace
-        </Link>
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">

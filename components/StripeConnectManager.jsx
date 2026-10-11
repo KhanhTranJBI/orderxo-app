@@ -2,7 +2,11 @@
 import { useEffect, useState } from "react";
 import { ownerFetch } from "../lib/ownerFetch";
 export default function StripeConnectManager({ organizationId, locations, initialLocationId }) {
-  const [locationId, setLocationId] = useState(locations.some(l => String(l._id || l.id) === String(initialLocationId)) ? String(initialLocationId) : String(locations[0]?._id || ""));
+  const [locationId, setLocationId] = useState(
+    locations.some((l) => String(l._id || l.id) === String(initialLocationId))
+      ? String(initialLocationId)
+      : String(locations[0]?._id || ""),
+  );
   const [status, setStatus] = useState(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,10 +32,23 @@ export default function StripeConnectManager({ organizationId, locations, initia
       .catch((e) => {
         if (active) setError(e.message);
       });
-    ownerFetch(`/api/owner/connect/stripe/sources?organizationId=${encodeURIComponent(organizationId)}&locationId=${encodeURIComponent(locationId)}`)
-      .then(async r => { const d = await r.json(); if (active) { const list = r.ok ? d.sources || [] : []; setSources(list); setSourceId(list[0]?.locationId || ""); } })
-      .catch(() => { if (active) setSources([]); });
-    return () => { active = false; };
+    ownerFetch(
+      `/api/owner/connect/stripe/sources?organizationId=${encodeURIComponent(organizationId)}&locationId=${encodeURIComponent(locationId)}`,
+    )
+      .then(async (r) => {
+        const d = await r.json();
+        if (active) {
+          const list = r.ok ? d.sources || [] : [];
+          setSources(list);
+          setSourceId(list[0]?.locationId || "");
+        }
+      })
+      .catch(() => {
+        if (active) setSources([]);
+      });
+    return () => {
+      active = false;
+    };
   }, [organizationId, locationId, reload]);
   async function connect() {
     setBusy(true);
@@ -56,16 +73,25 @@ export default function StripeConnectManager({ organizationId, locations, initia
     setError("");
     try {
       const r = await ownerFetch("/api/owner/connect/stripe/share", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId, locationId, sourceLocationId: confirmSource.locationId, confirmShare: true }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationId,
+          locationId,
+          sourceLocationId: confirmSource.locationId,
+          confirmShare: true,
+        }),
       });
       const d = await r.json();
       if (!r.ok) throw Error(d.error || "Unable to share Stripe account");
       setConfirmSource(null);
       setSuccess("Stripe account assigned to this location. Check payment readiness below.");
-      setReload(v => v + 1);
-    } catch (e) { setError(e.message); }
-    finally { setBusy(false); }
+      setReload((v) => v + 1);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <section className="rounded-2xl border bg-white p-6 space-y-4">
@@ -86,7 +112,11 @@ export default function StripeConnectManager({ organizationId, locations, initia
           </option>
         ))}
       </select>
-      {success && <p role="status" className="rounded-lg bg-green-50 p-3 text-green-800">{success}</p>}
+      {success && (
+        <p role="status" className="rounded-lg bg-green-50 p-3 text-green-800">
+          {success}
+        </p>
+      )}
       {error && (
         <p className="text-red-700" role="alert">
           {error}
@@ -109,11 +139,28 @@ export default function StripeConnectManager({ organizationId, locations, initia
       {status && !status.connected && sources.length > 0 && (
         <div className="space-y-3 rounded-xl border p-4">
           <h3 className="font-semibold">Use an existing organization Stripe account</h3>
-          <p className="text-sm text-slate-600">Share payment deposits with another location owned by this organization. Orders and reports remain location-specific.</p>
-          <select className="w-full rounded-lg border p-3" value={sourceId} onChange={e => setSourceId(e.target.value)}>
-            {sources.map(s => <option key={s.locationId} value={s.locationId}>{s.name} (account ending {s.accountLast4})</option>)}
+          <p className="text-sm text-slate-600">
+            Share payment deposits with another location owned by this organization. Orders and
+            reports remain location-specific.
+          </p>
+          <select
+            className="w-full rounded-lg border p-3"
+            value={sourceId}
+            onChange={(e) => setSourceId(e.target.value)}
+          >
+            {sources.map((s) => (
+              <option key={s.locationId} value={s.locationId}>
+                {s.name} (account ending {s.accountLast4})
+              </option>
+            ))}
           </select>
-          <button disabled={busy || !sourceId} onClick={() => setConfirmSource(sources.find(s => s.locationId === sourceId))} className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50">Use this account</button>
+          <button
+            disabled={busy || !sourceId}
+            onClick={() => setConfirmSource(sources.find((s) => s.locationId === sourceId))}
+            className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
+          >
+            Use this account
+          </button>
         </div>
       )}
       {status && !status.connected && (
@@ -126,11 +173,34 @@ export default function StripeConnectManager({ organizationId, locations, initia
         </button>
       )}
       {confirmSource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Confirm shared Stripe account">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm shared Stripe account"
+        >
           <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl">
             <h3 className="text-xl font-bold">Share Stripe payment account?</h3>
-            <p className="text-sm text-slate-700">Payments for this location will be deposited into the same Stripe account used by <strong>{confirmSource.name}</strong>. Refunds and payouts will use that account too.</p>
-            <div className="flex justify-end gap-3"><button disabled={busy} className="rounded-lg border px-4 py-2" onClick={() => setConfirmSource(null)}>Cancel</button><button disabled={busy} className="rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50" onClick={share}>{busy ? "Saving…" : "Confirm sharing"}</button></div>
+            <p className="text-sm text-slate-700">
+              Payments for this location will be deposited into the same Stripe account used by{" "}
+              <strong>{confirmSource.name}</strong>. Refunds and payouts will use that account too.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                disabled={busy}
+                className="rounded-lg border px-4 py-2"
+                onClick={() => setConfirmSource(null)}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={busy}
+                className="rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+                onClick={share}
+              >
+                {busy ? "Saving…" : "Confirm sharing"}
+              </button>
+            </div>
           </div>
         </div>
       )}

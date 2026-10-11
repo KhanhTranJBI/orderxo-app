@@ -12,12 +12,6 @@ export default function ManagementPage({ organizationId, section }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-6xl">
-        <Link
-          className="font-semibold text-orange-600"
-          href={`/dashboard/restaurants/${organizationId}`}
-        >
-          ← Restaurant workspace
-        </Link>
         <div className="mt-6 rounded-2xl border bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
             OrderXO Manager

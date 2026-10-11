@@ -339,14 +339,6 @@ export default function HomepageSlidesManager({
     >
       <div className={embedded ? "" : "mx-auto max-w-6xl"}>
         {!embedded && (
-          <Link
-            href={`/dashboard/restaurants/${organizationId}`}
-            className="text-sm font-semibold text-orange-600"
-          >
-            ← Restaurant workspace
-          </Link>
-        )}
-        {!embedded && (
           <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
             OrderXO Manager
           </p>

@@ -10,9 +10,6 @@ export default async function DomainsPage({ searchParams }) {
   if (!organizationId)
     return (
       <main className="mx-auto max-w-3xl p-8">
-        <Link href="/dashboard" className="text-orange-700">
-          ← Dashboard
-        </Link>
         <h1 className="my-5 text-3xl font-bold">Websites & domains</h1>
         <p>Select a restaurant from your dashboard.</p>
       </main>
@@ -30,9 +27,6 @@ export default async function DomainsPage({ searchParams }) {
   if (!organization || locs.status !== 200)
     return (
       <main className="mx-auto max-w-3xl p-8">
-        <Link href="/dashboard" className="text-orange-700">
-          ← Dashboard
-        </Link>
         <p className="mt-6 rounded-lg bg-red-50 p-4 text-red-800">
           Restaurant not found or access denied.
         </p>
@@ -41,9 +35,6 @@ export default async function DomainsPage({ searchParams }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl">
-        <Link href="/dashboard" className="text-sm font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <h1 className="mt-5 text-3xl font-bold">Websites & domains</h1>
         <p className="mt-2 text-slate-600">
           {organization.name} · Manage your OrderXO address and custom domain

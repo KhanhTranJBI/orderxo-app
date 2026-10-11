@@ -178,7 +178,10 @@ export default function StoreSettingsManager({ organizationId }) {
   }, [permission.loading, isAdmin, scope, loc.locations]);
 
   useEffect(() => {
-    if (requestedLocationId && loc.locations.some((l) => String(l._id || l.id) === requestedLocationId)) {
+    if (
+      requestedLocationId &&
+      loc.locations.some((l) => String(l._id || l.id) === requestedLocationId)
+    ) {
       setScope(requestedLocationId);
       if (["locationDetails", "hours", "printing", "notices", "homepage"].includes(requestedTab)) {
         setTab(requestedTab);
@@ -532,13 +535,6 @@ export default function StoreSettingsManager({ organizationId }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-4xl">
-        <Link
-          href={`/dashboard/restaurants/${organizationId}`}
-          className="text-sm font-semibold text-orange-600"
-        >
-          ← Restaurant workspace
-        </Link>
-
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
         </p>
