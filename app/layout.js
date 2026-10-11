@@ -1,5 +1,6 @@
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
+import ToastProvider from "../components/ToastProvider";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -24,7 +25,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${dm.variable}`}>
-      <body>{children}</body>
+      <body>{children}<ToastProvider /></body>
     </html>
   );
 }

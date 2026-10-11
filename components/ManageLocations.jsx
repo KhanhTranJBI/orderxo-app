@@ -2,17 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ownerFetch } from "../lib/ownerFetch";
+import toast from "react-toastify";
 
 export default function ManageLocations({ organizationId, locations, owner }) {
   const router = useRouter();
   const [selected, setSelected] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const activeCount = locations.filter((l) => l.status !== "archived").length;
   async function submit() {
     if (!selected || busy) return;
     setBusy(true);
-    setError("");
     try {
       const r = await ownerFetch("/api/owner/locations/manage", {
         method: "POST",
@@ -26,9 +25,10 @@ export default function ManageLocations({ organizationId, locations, owner }) {
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || "Unable to update location");
       setSelected(null);
+      toast.success(`Location ${selected.action === "archive" ? "archived" : "restored"} successfully.`);
       router.refresh();
     } catch (e) {
-      setError(e.message);
+      toast.error(e.message || "Unable to update location");
     } finally {
       setBusy(false);
     }
@@ -52,7 +52,6 @@ export default function ManageLocations({ organizationId, locations, owner }) {
                     <button
                       className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold"
                       onClick={() => {
-                        setError("");
                         setSelected({ location: l, action: "restore" });
                       }}
                     >
@@ -61,7 +60,6 @@ export default function ManageLocations({ organizationId, locations, owner }) {
                     <button
                       className="rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700"
                       onClick={() => {
-                        setError("");
                         setSelected({ location: l, action: "delete" });
                       }}
                     >
@@ -73,7 +71,6 @@ export default function ManageLocations({ organizationId, locations, owner }) {
                     disabled={activeCount <= 1}
                     className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold disabled:opacity-40"
                     onClick={() => {
-                      setError("");
                       setSelected({ location: l, action: "archive" });
                     }}
                   >
@@ -107,7 +104,6 @@ export default function ManageLocations({ organizationId, locations, owner }) {
                   ? "This location will return as inactive until it passes Go-Live checks. Its additional-location subscription charge will resume immediately and may be prorated."
                   : "Permanent deletion is disabled until all linked records can be verified. Keep this location archived to preserve history."}
             </p>
-            {error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
             <div className="mt-6 flex justify-end gap-3">
               <button
                 disabled={busy}

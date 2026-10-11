@@ -1,6 +1,7 @@
 "use client";
 import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
+import toast from "react-toastify";
 
 const clean = (s) =>
   String(s || "")
@@ -13,23 +14,19 @@ export default function DomainsManager({ organization, locations }) {
   const [value, setValue] = useState(custom);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const organizationId = String(organization._id || organization.id);
   const hostname = `${organization.slug}.orderxo.com`;
   const origin = `https://${custom || hostname}`;
   const copy = async (s) => {
     try {
       await navigator.clipboard.writeText(s);
-      setMessage("Link copied.");
+      toast.success("Link copied to clipboard");
     } catch {
-      setMessage(s);
+      toast.error("Could not copy link. Please select and copy it manually.");
     }
   };
   async function save() {
     setBusy(true);
-    setError("");
-    setMessage("");
     try {
       const response = await ownerFetch("/api/owner/domains", {
         method: "PATCH",
@@ -41,23 +38,15 @@ export default function DomainsManager({ organization, locations }) {
       setCustom(result.domain || "");
       setValue(result.domain || "");
       setEditing(false);
-      setMessage(result.message || "Domain settings saved.");
+      toast.success(result.message || "Domain settings saved.");
     } catch (e) {
-      setError(e.message);
+      toast.error(e.message || "Unable to update custom domain");
     } finally {
       setBusy(false);
     }
   }
   return (
     <div className="mt-8 space-y-5">
-      {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{error}</p>
-      )}
-      {message && (
-        <p className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">
-          {message}
-        </p>
-      )}
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
         <h2 className="text-xl font-semibold">Restaurant website</h2>
         <p className="mt-2 text-sm text-slate-600">
