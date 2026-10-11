@@ -18,9 +18,6 @@ export default async function Page() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10">
       <div className="mx-auto max-w-xl">
-        <Link href="/dashboard" className="font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <div className="mt-6 rounded-2xl border bg-white p-7 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
             OrderXO Owner Portal

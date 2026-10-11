@@ -191,9 +191,6 @@ export default function RestaurantSettings({ organizationId }) {
   if (!organizationId)
     return (
       <main className="mx-auto max-w-4xl p-8">
-        <Link href="/dashboard" className="font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
     );
@@ -202,9 +199,6 @@ export default function RestaurantSettings({ organizationId }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
       <div className="mx-auto max-w-6xl">
-        <Link href="/dashboard" className="text-sm font-semibold text-orange-700">
-          ← Dashboard
-        </Link>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
