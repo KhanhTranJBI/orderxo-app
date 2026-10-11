@@ -190,7 +190,7 @@ export default function RestaurantSettings({ organizationId }) {
 
   if (!organizationId)
     return (
-      <main className="mx-auto max-w-4xl p-8">
+      <main className="mx-auto max-w-6xl p-8">
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
     );

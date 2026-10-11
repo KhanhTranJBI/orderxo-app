@@ -34,7 +34,7 @@ export default async function DomainsPage({ searchParams }) {
     );
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
         <h1 className="mt-5 text-3xl font-bold">Websites & domains</h1>
         <p className="mt-2 text-slate-600">
           {organization.name} · Manage your OrderXO address and custom domain
