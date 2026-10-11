@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../../../lib/backend";
 import AddLocationButton from "../../../../components/AddLocationButton";
+import ManageLocations from "../../../../components/ManageLocations";
 
 export const dynamic = "force-dynamic";
 
@@ -85,18 +86,7 @@ export default async function RestaurantManager({ params }) {
             </div>
             {isAdmin && <AddLocationButton organizationId={id} />}
           </div>
-          {locations.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {locations.map((location) => (
-                <span
-                  key={String(location._id || location.id)}
-                  className="rounded-full border bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700"
-                >
-                  {location.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <ManageLocations organizationId={id} locations={locations} owner={org.role === "owner"} />
         </section>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
