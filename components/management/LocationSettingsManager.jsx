@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -128,7 +130,7 @@ export default function LocationSettingsManager({ organizationId }) {
           <p className="mt-5 rounded-lg bg-green-50 p-3 text-sm text-green-700">{message}</p>
         )}
         {loading || loc.loading ? (
-          <p className="mt-8">Loading…</p>
+          <LoadingSpinner label="Loading location settings…" />
         ) : (
           locationId && (
             <div className="mt-7 space-y-6">

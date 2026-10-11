@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -929,7 +931,7 @@ export default function MenuManager({ organizationId }) {
               Menu for
             </label>
             {loc.loading ? (
-              <div className="h-10 w-full animate-pulse rounded-xl bg-slate-200" />
+              <LoadingSpinner compact label="Loading locations…" />
             ) : (
               <select
                 className="field"
@@ -965,7 +967,7 @@ export default function MenuManager({ organizationId }) {
           </div>
         )}
         {loc.loading ? (
-          <MenuManagerSkeleton />
+          <LoadingSpinner label="Loading menu…" />
         ) : loc.locationId && !loc.error ? (
           <>
             {!canManage && (

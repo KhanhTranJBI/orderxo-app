@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -419,7 +421,7 @@ export default function HomepageSlidesManager({
           </p>
         )}
         {loading || loc.loading ? (
-          <p className="mt-8">Loading slides…</p>
+          <LoadingSpinner label="Loading slides…" />
         ) : !items.length ? (
           <div className="mt-8 rounded-2xl border border-dashed bg-white p-10 text-center">
             <h2 className="font-bold">No homepage slides yet</h2>

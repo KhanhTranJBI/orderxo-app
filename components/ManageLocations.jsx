@@ -25,7 +25,9 @@ export default function ManageLocations({ organizationId, locations, owner }) {
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || "Unable to update location");
       setSelected(null);
-      toast.success(`Location ${selected.action === "archive" ? "archived" : "restored"} successfully.`);
+      toast.success(
+        `Location ${selected.action === "archive" ? "archived" : "restored"} successfully.`,
+      );
       router.refresh();
     } catch (e) {
       toast.error(e.message || "Unable to update location");

@@ -1,4 +1,6 @@
 "use client";
+import LoadingSpinner from "../ui/LoadingSpinner";
+
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useEffect, useState } from "react";
 import { Gift, History, X } from "lucide-react";
@@ -131,11 +133,7 @@ function Cards({ organizationId, locationId }) {
       </div>
       <div className="mt-8">
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-            ))}
-          </div>
+          <LoadingSpinner label="Loading gift cards…" />
         ) : items.length ? (
           <div className="grid gap-4 md:grid-cols-3">
             {items.map((g) => (

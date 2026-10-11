@@ -1,4 +1,5 @@
 "use client";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
@@ -643,7 +644,7 @@ export default function StoreSettingsManager({ organizationId }) {
         </div>
 
         {loading || loc.loading ? (
-          <p className="mt-6">Loading settings…</p>
+          <LoadingSpinner label="Loading store settings…" />
         ) : (
           (scope === "default" || selectedLocationId) && (
             <>
@@ -912,7 +913,7 @@ export default function StoreSettingsManager({ organizationId }) {
                   </div>
 
                   {printingLoading ? (
-                    <p className="mt-5 text-sm text-slate-500">Loading printer settings…</p>
+                    <LoadingSpinner compact label="Loading printer settings…" />
                   ) : (
                     <>
                       {tab === "printing" && (

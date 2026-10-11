@@ -1,4 +1,5 @@
 "use client";
+import LoadingSpinner from "./ui/LoadingSpinner";
 
 import { useEffect, useState } from "react";
 
@@ -83,7 +84,7 @@ export default function InvitationAccept({ token }) {
         </p>
       )}
 
-      {!invite && !error && <p>Loading invitation…</p>}
+      {!invite && !error && <LoadingSpinner compact label="Loading invitation…" />}
 
       {invite && (
         <>

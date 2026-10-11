@@ -25,7 +25,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${playfair.variable} ${dm.variable}`}>
-      <body>{children}<ToastProvider /></body>
+      <body>
+        {children}
+        <ToastProvider />
+      </body>
     </html>
   );
 }

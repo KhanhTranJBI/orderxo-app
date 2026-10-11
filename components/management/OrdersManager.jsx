@@ -18,6 +18,7 @@ import {
   Monitor,
 } from "lucide-react";
 import LocationPageShell from "./LocationPageShell";
+import LoadingSpinner from "../ui/LoadingSpinner";
 const usd = (c) => `$${((Number(c) || 0) / 100).toFixed(2)}`,
   usdD = (n) => `$${Number(n || 0).toFixed(2)}`;
 async function get(path, organizationId, locationId, params = {}) {
@@ -197,7 +198,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     },
     { id: "report", label: "Report", Icon: BarChart3, count: reportCount },
   ];
-  if (locationLoading && !locationId) return <Skeleton />;
+  if (locationLoading && !locationId) return <LoadingSpinner fullPage label="Loading locations…" />;
   return (
     <div className="mt-8">
       {!canManage && (
@@ -298,11 +299,7 @@ function ActiveOrderAlert({ count, onView }) {
   );
 }
 function Loading() {
-  return (
-    <div className="flex justify-center rounded-2xl border bg-white py-16">
-      <Loader2 className="animate-spin text-orange-500" size={34} />
-    </div>
-  );
+  return <LoadingSpinner label="Loading orders…" />;
 }
 function Skeleton() {
   return (
