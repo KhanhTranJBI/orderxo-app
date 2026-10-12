@@ -52,6 +52,13 @@ const emptyOrg = {
     successColor: "#15803d",
     errorColor: "#dc2626",
     warningColor: "#d97706",
+    itemBackgroundColor: "#F3F4F6",
+    itemTextColor: "#374151",
+    selectedItemBackgroundColor: "#FFF7ED",
+    selectedItemBorderColor: "#F97316",
+    selectedItemTextColor: "#374151",
+    selectedItemCheckColor: "#F97316",
+
 
   },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
@@ -156,6 +163,7 @@ const APPEARANCE_GROUPS = [
   { title: "Navigation", description: "Header and navigation links.", fields: [["navigationBackgroundColor", "Background"], ["navigationTextColor", "Text"], ["activeLinkColor", "Active link"]] },
   { title: "Announcement bar", description: "Promotional banner below the navigation.", fields: [["announcementBackgroundColor", "Background"], ["announcementTextColor", "Text"]] },
   { title: "Cards & content", description: "Menus, information cards and panels.", fields: [["cardBackgroundColor", "Card background"], ["cardTextColor", "Card text"], ["borderColor", "Border"]] },
+  { title: "Menu Items & Selection", description: "Modifier choices, unselected options and highlighted selections across your menu.", fields: [["itemBackgroundColor", "Item background"], ["itemTextColor", "Item text"], ["selectedItemBackgroundColor", "Selected background"], ["selectedItemBorderColor", "Selected border"], ["selectedItemTextColor", "Selected text"], ["selectedItemCheckColor", "Selected checkmark"]] },
   { title: "Buttons", description: "Primary actions across the website.", fields: [["buttonBackgroundColor", "Background"], ["buttonTextColor", "Text"], ["buttonHoverColor", "Hover"]] },
   { title: "Forms", description: "Checkout and contact form inputs.", fields: [["inputBackgroundColor", "Background"], ["inputTextColor", "Text"], ["inputBorderColor", "Border"]] },
   { title: "Footer", description: "Website footer and links.", fields: [["footerBackgroundColor", "Background"], ["footerTextColor", "Text"], ["footerLinkColor", "Links"]] },
@@ -194,6 +202,19 @@ function AppearancePreview({ branding, restaurantName }) {
             <div className="flex h-20 items-center justify-center text-3xl" style={{ background: c("secondaryColor") }}>{i ? "🥗" : "🍲"}</div>
             <div className="p-3"><div className="flex justify-between gap-2 text-sm font-semibold"><span>{name}</span><span style={{ color: c("primaryColor") }}>$12.50</span></div><button type="button" className="mt-3 w-full rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: c("buttonBackgroundColor"), color: c("buttonTextColor") }}>Add to order</button></div>
           </div>)}
+        </div>
+        <div className="mt-5 rounded-xl border p-4" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor") }}>
+          <p className="mb-1 text-sm font-bold" style={{ color: c("cardTextColor") }}>Gluten Free Selection</p>
+          <p className="mb-3 text-xs" style={{ color: c("bodyTextColor") }}>Select up to 1 · Modifier selection preview</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[{ name: "Yes", selected: false }, { name: "No", selected: true }].map((option) => (
+              <div key={option.name} className="relative flex flex-col items-center gap-2 rounded-xl border-2 px-2 py-4 text-sm font-semibold" style={{ background: c(option.selected ? "selectedItemBackgroundColor" : "itemBackgroundColor"), color: c(option.selected ? "selectedItemTextColor" : "itemTextColor"), borderColor: option.selected ? c("selectedItemBorderColor") : c("borderColor") }}>
+                {option.selected && <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white" style={{ background: c("selectedItemCheckColor") }}>✓</span>}
+                <span className="h-14 w-14 rounded-full border" style={{ background: c("secondaryColor"), borderColor: c("borderColor") }} />
+                {option.name}
+              </div>
+            ))}
+          </div>
         </div>
         <div className="mt-4 rounded-xl border p-3" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor"), color: c("cardTextColor") }}><p className="text-sm font-semibold">Checkout preview</p><div className="mt-2 rounded-lg border px-3 py-2 text-xs" style={{ background: c("inputBackgroundColor"), color: c("inputTextColor"), borderColor: c("inputBorderColor") }}>Your name</div><p className="mt-2 text-xs" style={{ color: c("successColor") }}>✓ Secure checkout</p></div>
       </div>
