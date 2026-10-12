@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus,
   Trash2,
-  ChevronUp,
-  ChevronDown,
+  GripVertical,
   Monitor,
   Smartphone,
   Eye,
@@ -336,6 +335,11 @@ export default function HomepageBuilder({ organizationId }) {
   const [addOpen, setAddOpen] = useState(false);
   const [branding, setBranding] = useState({});
   const [dirty, setDirty] = useState(false);
+  const [draggingId, setDraggingId] = useState(null);
+  const draggingRef = useRef(null);
+  const touchStartRef = useRef(null);
+  // Keep the raw textarea value while typing, including trailing blank lines.
+  const [multilineDrafts, setMultilineDrafts] = useState({});
   useEffect(() => {
     if (!organizationId) return;
     let active = true;
@@ -358,6 +362,7 @@ export default function HomepageBuilder({ organizationId }) {
         setBranding(d.settings?.branding || {});
         setSelected(page.sections?.[0]?.id || null);
         setDirty(false);
+        setMultilineDrafts({});
       })
       .catch((e) => active && setError(e.message))
       .finally(() => active && setLoading(false));
@@ -375,14 +380,28 @@ export default function HomepageBuilder({ organizationId }) {
       ...old,
       sections: old.sections.map((s) => (s.id === id ? { ...s, [key]: value } : s)),
     }));
-  const move = (index, dir) =>
+  const reorder = (fromId, toId) => {
+    if (!fromId || !toId || fromId === toId) return;
     update((old) => {
       const sections = [...old.sections];
-      const next = index + dir;
-      if (next < 0 || next >= sections.length) return old;
-      [sections[index], sections[next]] = [sections[next], sections[index]];
+      const from = sections.findIndex((s) => s.id === fromId);
+      const to = sections.findIndex((s) => s.id === toId);
+      if (from < 0 || to < 0) return old;
+      sections.splice(to, 0, sections.splice(from, 1)[0]);
       return { ...old, sections };
     });
+  };
+  const finishDrag = () => {
+    draggingRef.current = null;
+    touchStartRef.current = null;
+    setDraggingId(null);
+  };
+  const multilineValue = (key, values) =>
+    multilineDrafts[`${active?.id}:${key}`] ?? (values || []).join("\n");
+  const editMultiline = (key, value) => {
+    setMultilineDrafts((old) => ({ ...old, [`${active.id}:${key}`]: value }));
+    edit(active.id, key, parseLines(value));
+  };
   const add = (type) => {
     const section = makeSection(type);
     update((old) => ({ ...old, sections: [...old.sections, section] }));
@@ -551,12 +570,60 @@ export default function HomepageBuilder({ organizationId }) {
                 </span>
               </div>
               <div className="space-y-2">
-                {draft.sections.map((s, i) => (
+                {draft.sections.map((s) => (
                   <div
                     key={s.id}
-                    className={`rounded-xl border p-2.5 transition ${selected === s.id ? "border-orange-400 bg-orange-50" : "border-slate-200 hover:border-slate-300"}`}
+                    data-section-id={s.id}
+                    onDragOver={(e) => {
+                      if (draggingRef.current) e.preventDefault();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      reorder(draggingRef.current, s.id);
+                      finishDrag();
+                    }}
+                    className={`rounded-xl border p-2.5 transition ${draggingId === s.id ? "opacity-50 border-orange-400" : selected === s.id ? "border-orange-400 bg-orange-50" : "border-slate-200 hover:border-slate-300"}`}
                   >
                     <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        draggable
+                        aria-label={`Drag to reorder ${pretty(s.type)}`}
+                        title="Drag to reorder"
+                        onDragStart={(e) => {
+                          draggingRef.current = s.id;
+                          setDraggingId(s.id);
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/plain", s.id);
+                        }}
+                        onDragEnd={finishDrag}
+                        onTouchStart={(e) => {
+                          touchStartRef.current = {
+                            id: s.id,
+                            x: e.touches[0].clientX,
+                            y: e.touches[0].clientY,
+                          };
+                          draggingRef.current = s.id;
+                        }}
+                        onTouchEnd={(e) => {
+                          const touch = e.changedTouches[0];
+                          const start = touchStartRef.current;
+                          if (
+                            start &&
+                            Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 12
+                          ) {
+                            const target = document
+                              .elementFromPoint(touch.clientX, touch.clientY)
+                              ?.closest("[data-section-id]");
+                            reorder(start.id, target?.getAttribute("data-section-id"));
+                          }
+                          finishDrag();
+                        }}
+                        onTouchCancel={finishDrag}
+                        className="cursor-grab touch-none rounded p-1.5 text-slate-400 hover:bg-white active:cursor-grabbing"
+                      >
+                        <GripVertical size={19} />
+                      </button>
                       <button
                         className="min-w-0 flex-1 text-left"
                         onClick={() => setSelected(s.id)}
@@ -574,22 +641,6 @@ export default function HomepageBuilder({ organizationId }) {
                         className="rounded p-1 hover:bg-white"
                       >
                         {s.enabled ? <Eye size={16} /> : <EyeOff size={16} />}
-                      </button>
-                      <button
-                        aria-label="Move section up"
-                        disabled={i === 0}
-                        onClick={() => move(i, -1)}
-                        className="rounded p-1 disabled:opacity-30"
-                      >
-                        <ChevronUp size={16} />
-                      </button>
-                      <button
-                        aria-label="Move section down"
-                        disabled={i === draft.sections.length - 1}
-                        onClick={() => move(i, 1)}
-                        className="rounded p-1 disabled:opacity-30"
-                      >
-                        <ChevronDown size={16} />
                       </button>
                     </div>
                   </div>
@@ -648,8 +699,8 @@ export default function HomepageBuilder({ organizationId }) {
                     <textarea
                       rows={4}
                       className={`${fieldClass} mt-1`}
-                      value={(active.images || []).join("\n")}
-                      onChange={(e) => edit(active.id, "images", parseLines(e.target.value))}
+                      value={multilineValue("images", active.images)}
+                      onChange={(e) => editMultiline("images", e.target.value)}
                       placeholder="https://example.com/photo.jpg"
                     />
                   </label>
@@ -728,8 +779,8 @@ export default function HomepageBuilder({ organizationId }) {
                     <textarea
                       className={`${fieldClass} mt-1`}
                       rows={5}
-                      value={(active.entries || []).join("\n")}
-                      onChange={(e) => edit(active.id, "entries", parseLines(e.target.value))}
+                      value={multilineValue("entries", active.entries)}
+                      onChange={(e) => editMultiline("entries", e.target.value)}
                       placeholder="Do you offer pickup?|Yes, order online."
                     />
                   </label>
