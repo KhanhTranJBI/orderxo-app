@@ -598,6 +598,7 @@ function CategoryModal({ category, onClose, onSave }) {
   const [name, setName] = useState(category?.name || "");
   const [slug, setSlug] = useState(category?.slug || "");
   const [image, setImage] = useState(category?.image || "");
+  const [description, setDescription] = useState(category?.description || "");
   const [isActive, setIsActive] = useState(category?.isActive !== false);
   const [slugTouched, setSlugTouched] = useState(Boolean(category));
   const [saving, setSaving] = useState(false);
@@ -611,6 +612,7 @@ function CategoryModal({ category, onClose, onSave }) {
         name: name.trim(),
         slug: slugify(slug || name),
         image: image.trim(),
+        description: description.trim(),
         isActive,
       });
       onClose();
@@ -654,6 +656,18 @@ function CategoryModal({ category, onClose, onSave }) {
               }}
               placeholder="poke-bowls"
             />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-sm font-medium text-slate-600">Category subtitle / note (optional)</span>
+            <textarea
+              className="field min-h-28 w-full resize-y whitespace-pre-wrap"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={2000}
+              rows={4}
+              placeholder={"(*) These menu items are served raw.\n(GF) = Gluten-Free"}
+            />
+            <span className="mt-1 block text-xs text-slate-500">Appears beneath the category title on the website. Line breaks are preserved. {description.length}/2000 characters.</span>
           </label>
           <div className="flex items-end gap-4">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-slate-50">
