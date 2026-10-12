@@ -29,6 +29,28 @@ const emptyOrg = {
     primaryColor: "#111827",
     secondaryColor: "#ffffff",
     backgroundColor: "#ffffff",
+    headingTextColor: "#111827",
+    bodyTextColor: "#475569",
+    navigationBackgroundColor: "#ffffff",
+    navigationTextColor: "#475569",
+    activeLinkColor: "#f97316",
+    announcementBackgroundColor: "#f97316",
+    announcementTextColor: "#ffffff",
+    cardBackgroundColor: "#ffffff",
+    cardTextColor: "#111827",
+    borderColor: "#e5e7eb",
+    buttonBackgroundColor: "#f97316",
+    buttonTextColor: "#ffffff",
+    buttonHoverColor: "#ea580c",
+    inputBackgroundColor: "#ffffff",
+    inputTextColor: "#111827",
+    inputBorderColor: "#cbd5e1",
+    footerBackgroundColor: "#111827",
+    footerTextColor: "#ffffff",
+    footerLinkColor: "#fdba74",
+    successColor: "#15803d",
+    errorColor: "#dc2626",
+    warningColor: "#d97706",
   },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
@@ -384,6 +406,309 @@ export default function RestaurantSettings({ organizationId }) {
                       onChange={(e) => setOrgPart("branding", "backgroundColor", e.target.value)}
                     />
                   </Field>
+                  <div className="mt-6 border-t pt-5">
+                    <h3 className="text-lg font-semibold">Advanced website appearance</h3>
+                    <p className="mb-4 text-sm text-slate-500">
+                      Colors apply to all pages and locations. Leave defaults for a clean,
+                      accessible theme.
+                    </p>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <Field label="Heading Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.headingTextColor || "")
+                              ? org.branding.headingTextColor
+                              : "#111827"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "headingTextColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Body Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.bodyTextColor || "")
+                              ? org.branding.bodyTextColor
+                              : "#475569"
+                          }
+                          onChange={(e) => setOrgPart("branding", "bodyTextColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Navigation Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.navigationBackgroundColor || "")
+                              ? org.branding.navigationBackgroundColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "navigationBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Navigation Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.navigationTextColor || "")
+                              ? org.branding.navigationTextColor
+                              : "#475569"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "navigationTextColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Active Link">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.activeLinkColor || "")
+                              ? org.branding.activeLinkColor
+                              : "#f97316"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "activeLinkColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Announcement Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.announcementBackgroundColor || "")
+                              ? org.branding.announcementBackgroundColor
+                              : "#f97316"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "announcementBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Announcement Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.announcementTextColor || "")
+                              ? org.branding.announcementTextColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "announcementTextColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Card Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.cardBackgroundColor || "")
+                              ? org.branding.cardBackgroundColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "cardBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Card Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.cardTextColor || "")
+                              ? org.branding.cardTextColor
+                              : "#111827"
+                          }
+                          onChange={(e) => setOrgPart("branding", "cardTextColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Border">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.borderColor || "")
+                              ? org.branding.borderColor
+                              : "#e5e7eb"
+                          }
+                          onChange={(e) => setOrgPart("branding", "borderColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Button Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.buttonBackgroundColor || "")
+                              ? org.branding.buttonBackgroundColor
+                              : "#f97316"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "buttonBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Button Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.buttonTextColor || "")
+                              ? org.branding.buttonTextColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "buttonTextColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Button Hover">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.buttonHoverColor || "")
+                              ? org.branding.buttonHoverColor
+                              : "#ea580c"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "buttonHoverColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Input Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.inputBackgroundColor || "")
+                              ? org.branding.inputBackgroundColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "inputBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Input Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.inputTextColor || "")
+                              ? org.branding.inputTextColor
+                              : "#111827"
+                          }
+                          onChange={(e) => setOrgPart("branding", "inputTextColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Input Border">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.inputBorderColor || "")
+                              ? org.branding.inputBorderColor
+                              : "#cbd5e1"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "inputBorderColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Footer Background">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.footerBackgroundColor || "")
+                              ? org.branding.footerBackgroundColor
+                              : "#111827"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "footerBackgroundColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Footer Text">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.footerTextColor || "")
+                              ? org.branding.footerTextColor
+                              : "#ffffff"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "footerTextColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Footer Link">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.footerLinkColor || "")
+                              ? org.branding.footerLinkColor
+                              : "#fdba74"
+                          }
+                          onChange={(e) =>
+                            setOrgPart("branding", "footerLinkColor", e.target.value)
+                          }
+                        />
+                      </Field>
+                      <Field label="Success">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.successColor || "")
+                              ? org.branding.successColor
+                              : "#15803d"
+                          }
+                          onChange={(e) => setOrgPart("branding", "successColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Error">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.errorColor || "")
+                              ? org.branding.errorColor
+                              : "#dc2626"
+                          }
+                          onChange={(e) => setOrgPart("branding", "errorColor", e.target.value)}
+                        />
+                      </Field>
+                      <Field label="Warning">
+                        <input
+                          type="color"
+                          className="h-11 w-full rounded border"
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(org.branding.warningColor || "")
+                              ? org.branding.warningColor
+                              : "#d97706"
+                          }
+                          onChange={(e) => setOrgPart("branding", "warningColor", e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
