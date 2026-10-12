@@ -1,6 +1,7 @@
 "use client";
 import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 const plans = [
@@ -17,6 +18,9 @@ export default function BillingManager({
   locationBilling,
   initialAddLocation = false,
 }) {
+  const router = useRouter();
+  const [billingSnapshot, setBillingSnapshot] = useState(null);
+  const billing = billingSnapshot || locationBilling;
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -41,14 +45,14 @@ export default function BillingManager({
   const active = activeStatuses.has(subscription?.status);
   const pending = subscription?.pendingPlan;
   const monthlyPrices = { starter: 7900, growth: 12900, pro: 19900 };
-  const count = Math.max(1, Number(locationBilling?.locationCount) || 1);
+  const count = Math.max(1, Number(billing?.locationCount) || 1);
   const estimatedMonthly = (planId) => {
     const base = monthlyPrices[planId];
     return base + Math.round(base * 0.8) * (count - 1);
   };
   const currentMonthly =
-    locationBilling?.monthlyTotalCents != null
-      ? Number(locationBilling.monthlyTotalCents)
+    billing?.monthlyTotalCents != null
+      ? Number(billing.monthlyTotalCents)
       : estimatedMonthly(current);
   const targetMonthly = confirmPlan ? estimatedMonthly(confirmPlan.id) : 0;
   const upgradeDelta = targetMonthly - currentMonthly;
@@ -89,9 +93,33 @@ export default function BillingManager({
           ? "Location added and billing updated."
           : d.message || "Subscription updated.",
       );
-      if (key === "add-location") setShowLocationModal(false);
+      if (key === "add-location") {
+        // Update the billing summary immediately while Next.js refreshes server data.
+        setBillingSnapshot((previous) => {
+          const source = previous || locationBilling;
+          if (!source) return previous;
+          const nextCount = Math.max(1, Number(source.locationCount || 1)) + 1;
+          return {
+            ...source,
+            locationCount: nextCount,
+            monthlyTotalCents:
+              Number(source.baseMonthlyCents || 0) +
+              (nextCount - 1) * Number(source.additionalMonthlyCents || 0),
+          };
+        });
+        setShowLocationModal(false);
+        setNewLocationName("");
+        // The workspace opens this modal through ?action=add-location.
+        // Remove the one-time intent before refreshing, or it opens again.
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("action") === "add-location") {
+          url.searchParams.delete("action");
+          window.history.replaceState(window.history.state, "", url.toString());
+        }
+      }
       setBusy("");
-      window.setTimeout(() => window.location.reload(), 700);
+      // Re-fetch server component data without a full browser reload.
+      router.refresh();
     } catch (e) {
       setError(e.message);
       toast.error(e.message || "Billing request failed");
@@ -155,7 +183,7 @@ export default function BillingManager({
         </div>
       </section>
 
-      {locationBilling && (
+      {billing && (
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold">Multi-location billing</h2>
           <p className="mt-2 text-sm text-slate-600">
@@ -165,22 +193,19 @@ export default function BillingManager({
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>First location</span>
-              <strong>{usd(locationBilling.baseMonthlyCents)}</strong>
+              <strong>{usd(billing.baseMonthlyCents)}</strong>
             </div>
             <div className="flex justify-between">
               <span>
-                {Math.max(0, locationBilling.locationCount - 1)} additional locations (20% off each)
+                {Math.max(0, billing.locationCount - 1)} additional locations (20% off each)
               </span>
               <strong>
-                {usd(
-                  Math.max(0, locationBilling.locationCount - 1) *
-                    locationBilling.additionalMonthlyCents,
-                )}
+                {usd(Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents)}
               </strong>
             </div>
             <div className="flex justify-between border-t pt-3 text-base">
               <strong>Estimated monthly subscription</strong>
-              <strong>{usd(locationBilling.monthlyTotalCents)}</strong>
+              <strong>{usd(billing.monthlyTotalCents)}</strong>
             </div>
           </div>
           <p className="mt-3 text-xs text-slate-500">
@@ -197,7 +222,7 @@ export default function BillingManager({
           </button>
         </section>
       )}
-      {showLocationModal && locationBilling && (
+      {showLocationModal && billing && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           role="presentation"
@@ -216,7 +241,7 @@ export default function BillingManager({
             </h3>
             <p className="mt-2 text-sm text-slate-600">
               Your subscription will increase by{" "}
-              <strong>{usd(locationBilling.additionalMonthlyCents)}/month</strong> plus applicable
+              <strong>{usd(billing.additionalMonthlyCents)}/month</strong> plus applicable
               prorations. Stripe will invoice the change immediately.
             </p>
             <label htmlFor="new-location-name" className="mt-4 block text-sm font-medium">
@@ -244,7 +269,7 @@ export default function BillingManager({
                 disabled={!newLocationName.trim()}
                 className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
               >
-                Confirm and bill
+                Confirm and Bill
               </button>
             </div>
           </div>
