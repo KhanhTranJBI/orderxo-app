@@ -49,6 +49,7 @@ const emptyOrg = {
     footerBackgroundColor: "#111827",
     footerTextColor: "#ffffff",
     footerLinkColor: "#fdba74",
+    footerLinkHoverColor: "#F97316",
     successColor: "#15803d",
     errorColor: "#dc2626",
     warningColor: "#d97706",
@@ -166,7 +167,7 @@ const APPEARANCE_GROUPS = [
   { title: "Menu Items & Selection", description: "Modifier choices, unselected options and highlighted selections across your menu.", fields: [["itemBackgroundColor", "Item background"], ["itemTextColor", "Item text"], ["selectedItemBackgroundColor", "Selected background"], ["selectedItemBorderColor", "Selected border"], ["selectedItemTextColor", "Selected text"], ["selectedItemCheckColor", "Selected checkmark"]] },
   { title: "Buttons", description: "Primary actions across the website.", fields: [["buttonBackgroundColor", "Background"], ["buttonTextColor", "Text"], ["buttonHoverColor", "Hover"]] },
   { title: "Forms", description: "Checkout and contact form inputs.", fields: [["inputBackgroundColor", "Background"], ["inputTextColor", "Text"], ["inputBorderColor", "Border"]] },
-  { title: "Footer", description: "Website footer and links.", fields: [["footerBackgroundColor", "Background"], ["footerTextColor", "Text"], ["footerLinkColor", "Links"]] },
+  { title: "Footer", description: "Website footer and links.", fields: [["footerBackgroundColor", "Background"], ["footerTextColor", "Text"], ["footerLinkColor", "Links"], ["footerLinkHoverColor", "Link & social icon hover"]] },
   { title: "Status colors", description: "Success, error and warning messages.", fields: [["successColor", "Success"], ["errorColor", "Error"], ["warningColor", "Warning"]] },
 ];
 
@@ -218,7 +219,7 @@ function AppearancePreview({ branding, restaurantName }) {
         </div>
         <div className="mt-4 rounded-xl border p-3" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor"), color: c("cardTextColor") }}><p className="text-sm font-semibold">Checkout preview</p><div className="mt-2 rounded-lg border px-3 py-2 text-xs" style={{ background: c("inputBackgroundColor"), color: c("inputTextColor"), borderColor: c("inputBorderColor") }}>Your name</div><p className="mt-2 text-xs" style={{ color: c("successColor") }}>✓ Secure checkout</p></div>
       </div>
-      <div className="flex justify-between gap-3 px-5 py-4 text-xs" style={{ background: c("footerBackgroundColor"), color: c("footerTextColor") }}><span>© {restaurantName || "Your Restaurant"}</span><span style={{ color: c("footerLinkColor") }}>Privacy · Contact</span></div>
+      <div className="flex justify-between gap-3 px-5 py-4 text-xs" style={{ background: c("footerBackgroundColor"), color: c("footerTextColor") }}><span>© {restaurantName || "Your Restaurant"}</span><span className="group flex gap-3"><span className="cursor-pointer transition-colors" style={{ color: c("footerLinkColor") }} onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }} onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}>Privacy · Contact</span><span className="cursor-pointer transition-colors" style={{ color: c("footerLinkColor") }} onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }} onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }} aria-label="Social icon preview">◎</span></span></div>
     </div>
   );
 }
