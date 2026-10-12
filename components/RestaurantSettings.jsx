@@ -131,6 +131,9 @@ export default function RestaurantSettings({ organizationId }) {
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [entitlements, setEntitlements] = useState({ loyalty: false, giftCards: false });
+  const [plan, setPlan] = useState(null);
+  const [upgradeFeature, setUpgradeFeature] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -147,6 +150,8 @@ export default function RestaurantSettings({ organizationId }) {
           `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`,
         );
         setOrg(mergeOrg(orgData.settings));
+        setEntitlements(orgData.entitlements || { loyalty: false, giftCards: false });
+        setPlan(orgData.plan || null);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -154,6 +159,9 @@ export default function RestaurantSettings({ organizationId }) {
       }
     })();
   }, [organizationId]);
+
+  const billingUrl = `/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`;
+  const showUpgrade = (feature) => setUpgradeFeature(feature);
 
   const setOrgPart = (part, key, value) =>
     setOrg((old) => ({ ...old, [part]: { ...old[part], [key]: value } }));
@@ -174,8 +182,8 @@ export default function RestaurantSettings({ organizationId }) {
           businessStartYear: org.businessStartYear,
           branding: org.branding,
           website: org.website,
-          loyalty: org.loyalty,
-          giftCards: org.giftCards,
+          loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
+          giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
           emailSettings: org.emailSettings,
           ordering: org.ordering,
           notifications: org.notifications,
@@ -346,12 +354,23 @@ export default function RestaurantSettings({ organizationId }) {
                   Configure how customers earn and redeem restaurant-specific points.
                 </p>
               </div>
+              {!entitlements.loyalty && (
+                <p className="text-sm text-orange-700">
+                  Available on Growth and Pro. Select the switch to see upgrade options.
+                </p>
+              )}
               <Toggle
                 label="Enable loyalty program"
-                checked={org.loyalty.enabled}
-                onChange={(v) => setOrgPart("loyalty", "enabled", v)}
+                checked={entitlements.loyalty && org.loyalty.enabled}
+                onChange={(v) => {
+                  if (!entitlements.loyalty) return showUpgrade("Loyalty rewards");
+                  setOrgPart("loyalty", "enabled", v);
+                }}
               />
-              <div className="grid gap-5 md:grid-cols-3">
+              <fieldset
+                disabled={!entitlements.loyalty}
+                className="grid gap-5 md:grid-cols-3 disabled:opacity-50"
+              >
                 <Field label="Points per dollar">
                   <input
                     type="number"
@@ -391,7 +410,7 @@ export default function RestaurantSettings({ organizationId }) {
                     }
                   />
                 </Field>
-              </div>
+              </fieldset>
               <div className="rounded-xl bg-orange-50 p-4 text-sm text-orange-900">
                 Example: {org.loyalty.rewardThreshold} points = $
                 {((org.loyalty.rewardValueCents || 0) / 100).toFixed(2)} reward.
@@ -407,12 +426,23 @@ export default function RestaurantSettings({ organizationId }) {
                   Configure restaurant gift cards and their email subjects.
                 </p>
               </div>
+              {!entitlements.giftCards && (
+                <p className="text-sm text-orange-700">
+                  Available on Growth and Pro. Select the switch to see upgrade options.
+                </p>
+              )}
               <Toggle
                 label="Enable gift cards"
-                checked={org.giftCards.enabled}
-                onChange={(v) => setOrgPart("giftCards", "enabled", v)}
+                checked={entitlements.giftCards && org.giftCards.enabled}
+                onChange={(v) => {
+                  if (!entitlements.giftCards) return showUpgrade("Gift Cards");
+                  setOrgPart("giftCards", "enabled", v);
+                }}
               />
-              <div className="grid gap-5">
+              <fieldset
+                disabled={!entitlements.giftCards}
+                className="grid gap-5 disabled:opacity-50"
+              >
                 <Field label="Gift card prefix" hint="Example: YOYO-GC-">
                   <input
                     className={input}
@@ -438,7 +468,7 @@ export default function RestaurantSettings({ organizationId }) {
                     }
                   />
                 </Field>
-              </div>
+              </fieldset>
             </div>
           )}
 
@@ -715,6 +745,60 @@ export default function RestaurantSettings({ organizationId }) {
           </div>
         </section>
       </div>
+      {upgradeFeature && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setUpgradeFeature(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="upgrade-feature-title"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-orange-600">
+                  Upgrade required
+                </p>
+                <h2 id="upgrade-feature-title" className="mt-2 text-xl font-bold">
+                  Unlock {upgradeFeature}
+                </h2>
+              </div>
+              <button
+                type="button"
+                aria-label="Close upgrade dialog"
+                onClick={() => setUpgradeFeature(null)}
+                className="rounded-lg px-2 py-1 text-xl text-slate-500 hover:bg-slate-100"
+              >
+                ×
+              </button>
+            </div>
+            <p className="text-sm leading-6 text-slate-600">
+              Your current {plan ? `${String(plan).toUpperCase()} ` : ""}subscription does not
+              include {upgradeFeature}. Upgrade to Growth or Pro to enable this feature for your
+              restaurant and its locations.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setUpgradeFeature(null)}
+                className="rounded-xl border border-slate-300 px-4 py-2.5 font-semibold text-slate-700"
+              >
+                Not now
+              </button>
+              <Link
+                href={billingUrl}
+                className="rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700"
+              >
+                View plans & upgrade →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
