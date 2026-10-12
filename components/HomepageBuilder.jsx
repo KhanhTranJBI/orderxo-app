@@ -173,13 +173,13 @@ function PreviewSection({ section: s, branding, compact }) {
     const slide = slides[0];
     return (
       <section
-        className={`relative isolate overflow-hidden ${compact ? "min-h-56" : "min-h-80"} flex items-center justify-center text-center text-white`}
-        style={{ backgroundColor: accent }}
+        className={`relative isolate overflow-hidden ${compact ? "min-h-56" : "min-h-80"} flex items-center justify-center text-center`}
+        style={{ backgroundColor: s.backgroundColor || accent, color: s.textColor || "#ffffff" }}
       >
         {slide.imageUrl && <div className="absolute inset-0 -z-20">{image(slide.imageUrl)}</div>}
         <div
           className="absolute inset-0 -z-10 bg-slate-950"
-          style={{ opacity: slide.imageUrl ? Number(s.overlay ?? 45) / 100 : 0.2 }}
+          style={{ opacity: slide.imageUrl ? Number(s.overlay ?? 45) / 100 : 0 }}
         />
         <div className="max-w-2xl px-6 py-14">
           <p className="mb-3 text-xs font-bold uppercase tracking-[.25em] opacity-80">
@@ -709,13 +709,13 @@ export default function HomepageBuilder({ organizationId }) {
                 {active.type === "slideshow" && (
                   <div className="space-y-3">
                     <p className="text-sm text-slate-600">
-                      Manage restaurant default slides or customize slides for each location.
-                      This is the same slide manager used in Store Settings.
+                      Manage restaurant default slides or customize slides for each location. This
+                      is the same slide manager used in Store Settings.
                     </p>
                     <HomepageSlidesManager organizationId={organizationId} embedded />
                     <p className="text-xs text-slate-500">
-                      Publishing the homepage controls section visibility and position.
-                      Slide changes are saved independently through the slide manager.
+                      Publishing the homepage controls section visibility and position. Slide
+                      changes are saved independently through the slide manager.
                     </p>
                   </div>
                 )}

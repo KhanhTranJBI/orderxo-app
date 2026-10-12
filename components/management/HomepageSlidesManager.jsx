@@ -188,7 +188,10 @@ function SlideModal({ slide, onClose, onSaved, organizationId, locationId }) {
           </label>
         </div>
         <div className="sticky bottom-0 mt-5 flex justify-end gap-3 border-t bg-white py-4">
-          <button onClick={onClose} className="rounded-lg border px-4 py-2 font-semibold">
+          <button
+            onClick={onClose}
+            className="inline-flex w-full items-center justify-center rounded-lg border px-4 py-2 text-center text-sm font-semibold sm:w-auto"
+          >
             Cancel
           </button>
           <button
@@ -380,10 +383,10 @@ export default function HomepageSlidesManager({
           </div>
         ) : null}
         {locationId && (
-          <div className="mt-5 rounded-2xl border bg-white p-5">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-              <div>
-                <h2 className="font-bold">
+          <div className="mt-5 min-w-0 rounded-2xl border bg-white p-4 sm:p-5">
+            <div className="flex min-w-0 flex-col gap-4">
+              <div className="min-w-0">
+                <h2 className="font-bold leading-snug">
                   {useDefault
                     ? "Using Restaurant Default Slides"
                     : "Custom slides for this location"}
@@ -396,7 +399,11 @@ export default function HomepageSlidesManager({
               </div>
               {canManage &&
                 (useDefault ? (
-                  <button disabled={switching} onClick={customize} className="primary shrink-0">
+                  <button
+                    disabled={switching}
+                    onClick={customize}
+                    className="primary inline-flex w-full max-w-full items-center justify-center whitespace-normal break-words px-3 py-2 text-center text-sm leading-snug sm:w-auto"
+                  >
                     {switching ? "Preparing…" : "Customize for this location"}
                   </button>
                 ) : (
@@ -434,7 +441,7 @@ export default function HomepageSlidesManager({
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={drag}>
             <SortableContext items={items.map((x) => x._id)} strategy={verticalListSortingStrategy}>
-              <div className="mt-8 space-y-3">
+              <div className="mt-5 min-w-0 space-y-3">
                 {items.map((s) => (
                   <SlideRow
                     key={s._id}
