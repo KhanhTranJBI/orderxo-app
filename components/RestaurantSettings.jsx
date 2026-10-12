@@ -133,6 +133,7 @@ export default function RestaurantSettings({ organizationId }) {
   const [saving, setSaving] = useState(false);
   const [entitlements, setEntitlements] = useState({ loyalty: false, giftCards: false });
   const [plan, setPlan] = useState(null);
+  const [entitlementError, setEntitlementError] = useState("");
   const [upgradeFeature, setUpgradeFeature] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -146,12 +147,48 @@ export default function RestaurantSettings({ organizationId }) {
       try {
         setLoading(true);
         setError("");
+        setEntitlementError("");
         const orgData = await jsonFetch(
           `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`,
         );
         setOrg(mergeOrg(orgData.settings));
-        setEntitlements(orgData.entitlements || { loyalty: false, giftCards: false });
-        setPlan(orgData.plan || null);
+        // Admin API exposes permissions inside settings.features, not top-level entitlements.
+        // Also consult the subscription endpoint for compatibility with older settings APIs.
+        const settingsFeatures =
+          orgData.settings?.features || orgData.features || orgData.entitlements;
+        const settingsSubscription = orgData.settings?.subscription || orgData.subscription;
+        let resolvedFeatures = settingsFeatures;
+        let resolvedSubscription = settingsSubscription;
+        try {
+          const billingData = await jsonFetch(
+            `/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`,
+          );
+          resolvedSubscription = billingData.subscription || resolvedSubscription;
+          resolvedFeatures = billingData.features || resolvedFeatures;
+        } catch (billingError) {
+          if (!resolvedFeatures) {
+            setEntitlementError(
+              "Unable to verify subscription features. Please refresh or try again.",
+            );
+          }
+        }
+        if (
+          resolvedFeatures &&
+          typeof resolvedFeatures.loyalty === "boolean" &&
+          typeof resolvedFeatures.giftCards === "boolean"
+        ) {
+          setEntitlements({
+            loyalty: resolvedFeatures.loyalty,
+            giftCards: resolvedFeatures.giftCards,
+          });
+          setEntitlementError("");
+        } else {
+          setEntitlements({ loyalty: false, giftCards: false });
+          setEntitlementError(
+            "Unable to verify subscription features. Please refresh or try again.",
+          );
+        }
+        setPlan(resolvedSubscription?.plan || orgData.plan || null);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -221,6 +258,21 @@ export default function RestaurantSettings({ organizationId }) {
           </div>
         </div>
 
+        {entitlementError && (
+          <div
+            role="alert"
+            className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+          >
+            {entitlementError}
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="ml-3 font-semibold underline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <div className="mt-7 overflow-x-auto border-b">
           <div className="flex min-w-max gap-1">
             {TABS.map((name) => (
@@ -354,7 +406,7 @@ export default function RestaurantSettings({ organizationId }) {
                   Configure how customers earn and redeem restaurant-specific points.
                 </p>
               </div>
-              {!entitlements.loyalty && (
+              {!entitlements.loyalty && !entitlementError && (
                 <p className="text-sm text-orange-700">
                   Available on Growth and Pro. Select the switch to see upgrade options.
                 </p>
@@ -363,6 +415,7 @@ export default function RestaurantSettings({ organizationId }) {
                 label="Enable loyalty program"
                 checked={entitlements.loyalty && org.loyalty.enabled}
                 onChange={(v) => {
+                  if (entitlementError) return setError(entitlementError);
                   if (!entitlements.loyalty) return showUpgrade("Loyalty rewards");
                   setOrgPart("loyalty", "enabled", v);
                 }}
@@ -426,7 +479,7 @@ export default function RestaurantSettings({ organizationId }) {
                   Configure restaurant gift cards and their email subjects.
                 </p>
               </div>
-              {!entitlements.giftCards && (
+              {!entitlements.giftCards && !entitlementError && (
                 <p className="text-sm text-orange-700">
                   Available on Growth and Pro. Select the switch to see upgrade options.
                 </p>
@@ -435,6 +488,7 @@ export default function RestaurantSettings({ organizationId }) {
                 label="Enable gift cards"
                 checked={entitlements.giftCards && org.giftCards.enabled}
                 onChange={(v) => {
+                  if (entitlementError) return setError(entitlementError);
                   if (!entitlements.giftCards) return showUpgrade("Gift Cards");
                   setOrgPart("giftCards", "enabled", v);
                 }}
