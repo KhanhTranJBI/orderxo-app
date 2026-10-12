@@ -59,8 +59,6 @@ const emptyOrg = {
     selectedItemBorderColor: "#F97316",
     selectedItemTextColor: "#374151",
     selectedItemCheckColor: "#F97316",
-
-
   },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
@@ -159,16 +157,99 @@ function Toggle({ checked, onChange, label }) {
 }
 
 const APPEARANCE_GROUPS = [
-  { title: "Brand colors", description: "Your restaurant's signature colors.", fields: [["primaryColor", "Primary"], ["secondaryColor", "Secondary"], ["backgroundColor", "Page background"]] },
-  { title: "Typography", description: "Keep headings and body copy readable.", fields: [["headingTextColor", "Heading text"], ["bodyTextColor", "Body text"]] },
-  { title: "Navigation", description: "Header and navigation links.", fields: [["navigationBackgroundColor", "Background"], ["navigationTextColor", "Text"], ["activeLinkColor", "Active link"]] },
-  { title: "Announcement bar", description: "Promotional banner below the navigation.", fields: [["announcementBackgroundColor", "Background"], ["announcementTextColor", "Text"]] },
-  { title: "Cards & content", description: "Menus, information cards and panels.", fields: [["cardBackgroundColor", "Card background"], ["cardTextColor", "Card text"], ["borderColor", "Border"]] },
-  { title: "Menu Items & Selection", description: "Modifier choices, unselected options and highlighted selections across your menu.", fields: [["itemBackgroundColor", "Item background"], ["itemTextColor", "Item text"], ["selectedItemBackgroundColor", "Selected background"], ["selectedItemBorderColor", "Selected border"], ["selectedItemTextColor", "Selected text"], ["selectedItemCheckColor", "Selected checkmark"]] },
-  { title: "Buttons", description: "Primary actions across the website.", fields: [["buttonBackgroundColor", "Background"], ["buttonTextColor", "Text"], ["buttonHoverColor", "Hover"]] },
-  { title: "Forms", description: "Checkout and contact form inputs.", fields: [["inputBackgroundColor", "Background"], ["inputTextColor", "Text"], ["inputBorderColor", "Border"]] },
-  { title: "Footer", description: "Website footer and links.", fields: [["footerBackgroundColor", "Background"], ["footerTextColor", "Text"], ["footerLinkColor", "Links"], ["footerLinkHoverColor", "Link & social icon hover"]] },
-  { title: "Status colors", description: "Success, error and warning messages.", fields: [["successColor", "Success"], ["errorColor", "Error"], ["warningColor", "Warning"]] },
+  {
+    title: "Brand colors",
+    description: "Your restaurant's signature colors.",
+    fields: [
+      ["primaryColor", "Primary"],
+      ["secondaryColor", "Secondary"],
+      ["backgroundColor", "Page background"],
+    ],
+  },
+  {
+    title: "Typography",
+    description: "Keep headings and body copy readable.",
+    fields: [
+      ["headingTextColor", "Heading text"],
+      ["bodyTextColor", "Body text"],
+    ],
+  },
+  {
+    title: "Navigation",
+    description: "Header and navigation links.",
+    fields: [
+      ["navigationBackgroundColor", "Background"],
+      ["navigationTextColor", "Text"],
+      ["activeLinkColor", "Active link"],
+    ],
+  },
+  {
+    title: "Announcement bar",
+    description: "Promotional banner below the navigation.",
+    fields: [
+      ["announcementBackgroundColor", "Background"],
+      ["announcementTextColor", "Text"],
+    ],
+  },
+  {
+    title: "Cards & content",
+    description: "Menus, information cards and panels.",
+    fields: [
+      ["cardBackgroundColor", "Card background"],
+      ["cardTextColor", "Card text"],
+      ["borderColor", "Border"],
+    ],
+  },
+  {
+    title: "Menu Items & Selection",
+    description:
+      "Modifier choices, unselected options and highlighted selections across your menu.",
+    fields: [
+      ["itemBackgroundColor", "Item background"],
+      ["itemTextColor", "Item text"],
+      ["selectedItemBackgroundColor", "Selected background"],
+      ["selectedItemBorderColor", "Selected border"],
+      ["selectedItemTextColor", "Selected text"],
+      ["selectedItemCheckColor", "Selected checkmark"],
+    ],
+  },
+  {
+    title: "Buttons",
+    description: "Primary actions across the website.",
+    fields: [
+      ["buttonBackgroundColor", "Background"],
+      ["buttonTextColor", "Text"],
+      ["buttonHoverColor", "Hover"],
+    ],
+  },
+  {
+    title: "Forms",
+    description: "Checkout and contact form inputs.",
+    fields: [
+      ["inputBackgroundColor", "Background"],
+      ["inputTextColor", "Text"],
+      ["inputBorderColor", "Border"],
+    ],
+  },
+  {
+    title: "Footer",
+    description: "Website footer and links.",
+    fields: [
+      ["footerBackgroundColor", "Background"],
+      ["footerTextColor", "Text"],
+      ["footerLinkColor", "Links"],
+      ["footerLinkHoverColor", "Link & social icon hover"],
+    ],
+  },
+  {
+    title: "Status colors",
+    description: "Success, error and warning messages.",
+    fields: [
+      ["successColor", "Success"],
+      ["errorColor", "Error"],
+      ["warningColor", "Warning"],
+    ],
+  },
 ];
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
@@ -176,10 +257,25 @@ function AppearanceColor({ label, value, fallback, onChange }) {
   const color = HEX_COLOR.test(value || "") ? value : fallback;
   return (
     <label className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 hover:border-slate-300">
-      <input aria-label={`${label} color picker`} type="color" value={color} onChange={(e) => onChange(e.target.value)} className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white p-1" />
+      <input
+        aria-label={`${label} color picker`}
+        type="color"
+        value={color}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 w-12 shrink-0 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"
+      />
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-slate-800">{label}</span>
-        <input aria-label={`${label} hex color`} value={value || ""} placeholder={fallback} onChange={(e) => onChange(e.target.value)} onBlur={(e) => { if (!HEX_COLOR.test(e.target.value)) onChange(color); }} className="mt-1 w-full min-w-0 bg-transparent font-mono text-xs uppercase text-slate-500 outline-none focus:text-slate-900" />
+        <input
+          aria-label={`${label} hex color`}
+          value={value || ""}
+          placeholder={fallback}
+          onChange={(e) => onChange(e.target.value)}
+          onBlur={(e) => {
+            if (!HEX_COLOR.test(e.target.value)) onChange(color);
+          }}
+          className="mt-1 w-full min-w-0 bg-transparent font-mono text-xs uppercase text-slate-500 outline-none focus:text-slate-900"
+        />
       </span>
     </label>
   );
@@ -187,39 +283,166 @@ function AppearanceColor({ label, value, fallback, onChange }) {
 
 function AppearancePreview({ branding, restaurantName }) {
   const b = branding;
-  const c = (key) => HEX_COLOR.test(b[key] || "") ? b[key] : emptyOrg.branding[key];
+  const c = (key) => (HEX_COLOR.test(b[key] || "") ? b[key] : emptyOrg.branding[key]);
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4" style={{ background: c("navigationBackgroundColor"), color: c("navigationTextColor") }}>
+      <div
+        className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+        style={{ background: c("navigationBackgroundColor"), color: c("navigationTextColor") }}
+      >
         <span className="font-bold">{restaurantName || "Your Restaurant"}</span>
-        <div className="flex gap-4 text-xs sm:text-sm"><span>Home</span><span style={{ color: c("activeLinkColor"), fontWeight: 700 }}>Menu</span><span>Contact</span></div>
-      </div>
-      <div className="px-4 py-2 text-center text-xs font-medium" style={{ background: c("announcementBackgroundColor"), color: c("announcementTextColor") }}>Fresh food, made for you — order online!</div>
-      <div className="p-5 sm:p-7" style={{ background: c("backgroundColor") }}>
-        <h3 className="text-xl font-bold" style={{ color: c("headingTextColor") }}>Explore our menu</h3>
-        <p className="mt-1 text-sm" style={{ color: c("bodyTextColor") }}>Made fresh at your selected location.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          {["Signature bowl", "Fresh favorites"].map((name, i) => <div key={name} className="overflow-hidden rounded-xl border" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor"), color: c("cardTextColor") }}>
-            <div className="flex h-20 items-center justify-center text-3xl" style={{ background: c("secondaryColor") }}>{i ? "🥗" : "🍲"}</div>
-            <div className="p-3"><div className="flex justify-between gap-2 text-sm font-semibold"><span>{name}</span><span style={{ color: c("primaryColor") }}>$12.50</span></div><button type="button" className="mt-3 w-full rounded-lg px-3 py-2 text-sm font-semibold" style={{ background: c("buttonBackgroundColor"), color: c("buttonTextColor") }}>Add to order</button></div>
-          </div>)}
+        <div className="flex gap-4 text-xs sm:text-sm">
+          <span>Home</span>
+          <span style={{ color: c("activeLinkColor"), fontWeight: 700 }}>Menu</span>
+          <span>Contact</span>
         </div>
-        <div className="mt-5 rounded-xl border p-4" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor") }}>
-          <p className="mb-1 text-sm font-bold" style={{ color: c("cardTextColor") }}>Gluten Free Selection</p>
-          <p className="mb-3 text-xs" style={{ color: c("bodyTextColor") }}>Select up to 1 · Modifier selection preview</p>
+      </div>
+      <div
+        className="px-4 py-2 text-center text-xs font-medium"
+        style={{ background: c("announcementBackgroundColor"), color: c("announcementTextColor") }}
+      >
+        Fresh food, made for you — order online!
+      </div>
+      <div className="p-5 sm:p-7" style={{ background: c("backgroundColor") }}>
+        <h3 className="text-xl font-bold" style={{ color: c("headingTextColor") }}>
+          Explore our menu
+        </h3>
+        <p className="mt-1 text-sm" style={{ color: c("bodyTextColor") }}>
+          Made fresh at your selected location.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {["Signature bowl", "Fresh favorites"].map((name, i) => (
+            <div
+              key={name}
+              className="overflow-hidden rounded-xl border"
+              style={{
+                background: c("cardBackgroundColor"),
+                borderColor: c("borderColor"),
+                color: c("cardTextColor"),
+              }}
+            >
+              <div
+                className="flex h-20 items-center justify-center text-3xl"
+                style={{ background: c("secondaryColor") }}
+              >
+                {i ? "🥗" : "🍲"}
+              </div>
+              <div className="p-3">
+                <div className="flex justify-between gap-2 text-sm font-semibold">
+                  <span>{name}</span>
+                  <span style={{ color: c("primaryColor") }}>$12.50</span>
+                </div>
+                <button
+                  type="button"
+                  className="mt-3 w-full rounded-lg px-3 py-2 text-sm font-semibold"
+                  style={{ background: c("buttonBackgroundColor"), color: c("buttonTextColor") }}
+                >
+                  Add to order
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          className="mt-5 rounded-xl border p-4"
+          style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor") }}
+        >
+          <p className="mb-1 text-sm font-bold" style={{ color: c("cardTextColor") }}>
+            Gluten Free Selection
+          </p>
+          <p className="mb-3 text-xs" style={{ color: c("bodyTextColor") }}>
+            Select up to 1 · Modifier selection preview
+          </p>
           <div className="grid grid-cols-2 gap-3">
-            {[{ name: "Yes", selected: false }, { name: "No", selected: true }].map((option) => (
-              <div key={option.name} className="relative flex flex-col items-center gap-2 rounded-xl border-2 px-2 py-4 text-sm font-semibold" style={{ background: c(option.selected ? "selectedItemBackgroundColor" : "itemBackgroundColor"), color: c(option.selected ? "selectedItemTextColor" : "itemTextColor"), borderColor: option.selected ? c("selectedItemBorderColor") : c("borderColor") }}>
-                {option.selected && <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white" style={{ background: c("selectedItemCheckColor") }}>✓</span>}
-                <span className="h-14 w-14 rounded-full border" style={{ background: c("secondaryColor"), borderColor: c("borderColor") }} />
+            {[
+              { name: "Yes", selected: false },
+              { name: "No", selected: true },
+            ].map((option) => (
+              <div
+                key={option.name}
+                className="relative flex flex-col items-center gap-2 rounded-xl border-2 px-2 py-4 text-sm font-semibold"
+                style={{
+                  background: c(
+                    option.selected ? "selectedItemBackgroundColor" : "itemBackgroundColor",
+                  ),
+                  color: c(option.selected ? "selectedItemTextColor" : "itemTextColor"),
+                  borderColor: option.selected ? c("selectedItemBorderColor") : c("borderColor"),
+                }}
+              >
+                {option.selected && (
+                  <span
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-white"
+                    style={{ background: c("selectedItemCheckColor") }}
+                  >
+                    ✓
+                  </span>
+                )}
+                <span
+                  className="h-14 w-14 rounded-full border"
+                  style={{ background: c("secondaryColor"), borderColor: c("borderColor") }}
+                />
                 {option.name}
               </div>
             ))}
           </div>
         </div>
-        <div className="mt-4 rounded-xl border p-3" style={{ background: c("cardBackgroundColor"), borderColor: c("borderColor"), color: c("cardTextColor") }}><p className="text-sm font-semibold">Checkout preview</p><div className="mt-2 rounded-lg border px-3 py-2 text-xs" style={{ background: c("inputBackgroundColor"), color: c("inputTextColor"), borderColor: c("inputBorderColor") }}>Your name</div><p className="mt-2 text-xs" style={{ color: c("successColor") }}>✓ Secure checkout</p></div>
+        <div
+          className="mt-4 rounded-xl border p-3"
+          style={{
+            background: c("cardBackgroundColor"),
+            borderColor: c("borderColor"),
+            color: c("cardTextColor"),
+          }}
+        >
+          <p className="text-sm font-semibold">Checkout preview</p>
+          <div
+            className="mt-2 rounded-lg border px-3 py-2 text-xs"
+            style={{
+              background: c("inputBackgroundColor"),
+              color: c("inputTextColor"),
+              borderColor: c("inputBorderColor"),
+            }}
+          >
+            Your name
+          </div>
+          <p className="mt-2 text-xs" style={{ color: c("successColor") }}>
+            ✓ Secure checkout
+          </p>
+        </div>
       </div>
-      <div className="flex justify-between gap-3 px-5 py-4 text-xs" style={{ background: c("footerBackgroundColor"), color: c("footerTextColor") }}><span>© {restaurantName || "Your Restaurant"}</span><span className="group flex gap-3"><span className="cursor-pointer transition-colors" style={{ color: c("footerLinkColor") }} onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }} onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}>Privacy · Contact</span><span className="cursor-pointer transition-colors" style={{ color: c("footerLinkColor") }} onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }} onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }} aria-label="Social icon preview">◎</span></span></div>
+      <div
+        className="flex justify-between gap-3 px-5 py-4 text-xs"
+        style={{ background: c("footerBackgroundColor"), color: c("footerTextColor") }}
+      >
+        <span>© {restaurantName || "Your Restaurant"}</span>
+        <span className="group flex gap-3">
+          <span
+            className="cursor-pointer transition-colors"
+            style={{ color: c("footerLinkColor") }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = c("footerLinkHoverColor");
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = c("footerLinkColor");
+            }}
+          >
+            Privacy · Contact
+          </span>
+          <span
+            className="cursor-pointer transition-colors"
+            style={{ color: c("footerLinkColor") }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = c("footerLinkHoverColor");
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = c("footerLinkColor");
+            }}
+            aria-label="Social icon preview"
+          >
+            ◎
+          </span>
+        </span>
+      </div>
     </div>
   );
 }
@@ -449,7 +672,6 @@ export default function RestaurantSettings({ organizationId }) {
                     placeholder="https://.../favicon.png (falls back to logo)"
                   />
                 </Field>
-
               </div>
             </div>
           )}
@@ -457,23 +679,47 @@ export default function RestaurantSettings({ organizationId }) {
           {tab === "Appearance" && (
             <div className="space-y-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div><h2 className="text-2xl font-bold text-slate-900">Website Appearance</h2><p className="mt-1 text-sm text-slate-500">Customize the look of your ordering website. Changes apply to all restaurant locations.</p></div>
-                <span className="rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">All locations</span>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">Website Appearance</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Customize the look of your ordering website. Changes apply to all restaurant
+                    locations.
+                  </p>
+                </div>
+                <span className="rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
+                  All locations
+                </span>
               </div>
               <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
                 <div className="min-w-0 space-y-7">
                   {APPEARANCE_GROUPS.map((group) => (
-                    <div key={group.title} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+                    <div
+                      key={group.title}
+                      className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5"
+                    >
                       <h3 className="text-base font-bold text-slate-900">{group.title}</h3>
                       <p className="mb-4 mt-1 text-sm text-slate-500">{group.description}</p>
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {group.fields.map(([key, label]) => <AppearanceColor key={key} label={label} value={org.branding[key]} fallback={emptyOrg.branding[key]} onChange={(value) => setOrgPart("branding", key, value)} />)}
+                        {group.fields.map(([key, label]) => (
+                          <AppearanceColor
+                            key={key}
+                            label={label}
+                            value={org.branding[key]}
+                            fallback={emptyOrg.branding[key]}
+                            onChange={(value) => setOrgPart("branding", key, value)}
+                          />
+                        ))}
                       </div>
                     </div>
                   ))}
                 </div>
                 <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
-                  <div className="mb-3"><h3 className="font-bold text-slate-900">Live website preview</h3><p className="text-sm text-slate-500">Updates as you edit. Save changes to publish.</p></div>
+                  <div className="mb-3">
+                    <h3 className="font-bold text-slate-900">Live website preview</h3>
+                    <p className="text-sm text-slate-500">
+                      Updates as you edit. Save changes to publish.
+                    </p>
+                  </div>
                   <AppearancePreview branding={org.branding} restaurantName={org.name} />
                 </aside>
               </div>

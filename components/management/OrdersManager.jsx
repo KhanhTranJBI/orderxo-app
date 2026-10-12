@@ -1056,7 +1056,7 @@ function ReportTable({ report }) {
   );
 }
 
-function OrderHistoryDetails({ order, onClose }) {
+export function OrderHistoryDetails({ order, onClose }) {
   const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0);
   const status = String(order.status || "pending").toLowerCase();
   const timeline = [

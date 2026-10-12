@@ -658,7 +658,9 @@ function CategoryModal({ category, onClose, onSave }) {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-600">Category subtitle / note (optional)</span>
+            <span className="mb-1 block text-sm font-medium text-slate-600">
+              Category subtitle / note (optional)
+            </span>
             <textarea
               className="field min-h-28 w-full resize-y whitespace-pre-wrap"
               value={description}
@@ -667,7 +669,10 @@ function CategoryModal({ category, onClose, onSave }) {
               rows={4}
               placeholder={"(*) These menu items are served raw.\n(GF) = Gluten-Free"}
             />
-            <span className="mt-1 block text-xs text-slate-500">Appears beneath the category title on the website. Line breaks are preserved. {description.length}/2000 characters.</span>
+            <span className="mt-1 block text-xs text-slate-500">
+              Appears beneath the category title on the website. Line breaks are preserved.{" "}
+              {description.length}/2000 characters.
+            </span>
           </label>
           <div className="flex items-end gap-4">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-slate-50">
