@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import HomepageSlidesManager from "./management/HomepageSlidesManager";
 import {
   Plus,
   Trash2,
@@ -707,97 +708,16 @@ export default function HomepageBuilder({ organizationId }) {
                 )}
                 {active.type === "slideshow" && (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <strong className="text-sm">Slides</strong>
-                      <button
-                        className="text-xs font-bold text-orange-600"
-                        onClick={() =>
-                          edit(active.id, "slides", [
-                            ...(active.slides || []),
-                            { title: "New slide", subtitle: "", imageUrl: "" },
-                          ])
-                        }
-                      >
-                        + Add slide
-                      </button>
-                    </div>
-                    {(active.slides || []).map((slide, i) => (
-                      <div key={i} className="space-y-2 rounded-xl bg-slate-50 p-3">
-                        <div className="flex justify-between text-xs font-bold">
-                          <span>Slide {i + 1}</span>
-                          <button
-                            className="text-red-600"
-                            onClick={() =>
-                              edit(
-                                active.id,
-                                "slides",
-                                active.slides.filter((_, j) => i !== j),
-                              )
-                            }
-                          >
-                            Remove
-                          </button>
-                        </div>
-                        {["title", "subtitle", "imageUrl"].map((key) => (
-                          <input
-                            key={key}
-                            className={fieldClass}
-                            placeholder={key === "imageUrl" ? "HTTPS image URL" : key}
-                            value={slide[key] || ""}
-                            onChange={(e) =>
-                              edit(
-                                active.id,
-                                "slides",
-                                active.slides.map((v, j) =>
-                                  i === j ? { ...v, [key]: e.target.value } : v,
-                                ),
-                              )
-                            }
-                          />
-                        ))}
-                      </div>
-                    ))}
+                    <p className="text-sm text-slate-600">
+                      Manage restaurant default slides or customize slides for each location.
+                      This is the same slide manager used in Store Settings.
+                    </p>
+                    <HomepageSlidesManager organizationId={organizationId} embedded />
                     <p className="text-xs text-slate-500">
-                      The preview displays the first slide. Slides rotate on the storefront only
-                      when supported by its renderer.
+                      Publishing the homepage controls section visibility and position.
+                      Slide changes are saved independently through the slide manager.
                     </p>
                   </div>
-                )}
-                {active.type === "googleReviews" && (
-                  <>
-                    {textField("Google reviews URL", "reviewUrl", false, "https://g.page/...")}
-                    {textField("Google Place ID (optional)", "googlePlaceId")}
-                    <p className="text-xs text-amber-700">
-                      Preview cards are illustrative only. Real reviews require a Google Reviews
-                      integration on the public storefront.
-                    </p>
-                  </>
-                )}
-                {active.type === "faq" && (
-                  <label className="block text-xs font-semibold text-slate-600">
-                    Questions and answers (one per line, separated by |)
-                    <textarea
-                      className={`${fieldClass} mt-1`}
-                      rows={5}
-                      value={multilineValue("entries", active.entries)}
-                      onChange={(e) => editMultiline("entries", e.target.value)}
-                      placeholder="Do you offer pickup?|Yes, order online."
-                    />
-                  </label>
-                )}
-                {[
-                  "hero",
-                  "slideshow",
-                  "cta",
-                  "promotions",
-                  "featuredMenu",
-                  "newItems",
-                  "about",
-                ].includes(active.type) && (
-                  <>
-                    {textField("Button label", "buttonText")}
-                    {textField("Button URL", "buttonUrl", false, "/menu")}
-                  </>
                 )}
                 {["hero", "slideshow"].includes(active.type) && (
                   <label className="block text-xs font-semibold text-slate-600">
