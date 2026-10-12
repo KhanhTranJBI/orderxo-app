@@ -35,6 +35,7 @@ export default async function Billing({ searchParams }) {
             organizationId={id}
             subscription={result.data.subscription || {}}
             locationBilling={result.data.locationBilling || null}
+            initialAddLocation={searchParams?.action === "add-location"}
           />
         ) : (
           <p className="rounded-lg bg-red-50 p-4 text-red-800">

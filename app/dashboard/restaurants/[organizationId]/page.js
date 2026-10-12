@@ -78,10 +78,11 @@ export default async function RestaurantManager({ params }) {
             <div>
               <h2 className="text-lg font-bold">Locations</h2>
               <p className="mt-1 text-sm text-slate-500">
-                {locations.length} {locations.length === 1 ? "location" : "locations"}
+                {locations.filter((location) => location.status !== "archived").length} active
+                locations
               </p>
             </div>
-            {isAdmin && <AddLocationButton organizationId={id} />}
+            {org.role === "owner" && <AddLocationButton organizationId={id} />}
           </div>
           <ManageLocations organizationId={id} locations={locations} owner={org.role === "owner"} />
         </section>

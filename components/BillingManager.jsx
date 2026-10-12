@@ -1,6 +1,7 @@
 "use client";
 import { ownerFetch } from "../lib/ownerFetch";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 const plans = [
   { id: "starter", name: "Starter", rank: 0 },
@@ -10,14 +11,19 @@ const plans = [
 const rank = Object.fromEntries(plans.map((p) => [p.id, p.rank]));
 const activeStatuses = new Set(["active", "trialing"]);
 
-export default function BillingManager({ organizationId, subscription, locationBilling }) {
+export default function BillingManager({
+  organizationId,
+  subscription,
+  locationBilling,
+  initialAddLocation = false,
+}) {
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [confirmPlan, setConfirmPlan] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
-  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(initialAddLocation);
   const usd = (cents) =>
     (Number(cents || 0) / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
   async function addLocation() {
@@ -25,7 +31,6 @@ export default function BillingManager({ organizationId, subscription, locationB
       setError("Enter a location name.");
       return;
     }
-    setShowLocationModal(false);
     await post(
       "/api/owner/locations",
       { organizationId, name: newLocationName.trim() },
@@ -79,10 +84,17 @@ export default function BillingManager({ organizationId, subscription, locationB
         return;
       }
       setNotice(d.message || "Subscription updated.");
+      toast.success(
+        key === "add-location"
+          ? "Location added and billing updated."
+          : d.message || "Subscription updated.",
+      );
+      if (key === "add-location") setShowLocationModal(false);
       setBusy("");
       window.setTimeout(() => window.location.reload(), 700);
     } catch (e) {
       setError(e.message);
+      toast.error(e.message || "Billing request failed");
       setBusy("");
     }
   }
