@@ -76,16 +76,25 @@ export default function ManageUsersManager({ organizationId }) {
     return sortOrder === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
   }
 
+  const formatDateTime = (value) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
+  };
+
   const columns = [
     ["Name", "name"],
     ["Email", "email"],
     ["Phone", "phone"],
     ["Role", "role"],
-    ["Loyalty", "loyaltyPoints"],
+    ["Loyalty Points", "loyaltyPoints"],
+    ["Reserved", "reservedPoints"],
     ["Available", "availablePoints"],
-    ["Email opt-in", null],
-    ["Source", "emailSubscriberSource"],
-    ["Joined", "createdAt"],
+    ["Email Opt-In", null],
+    ["Opt-In Source", null],
+    ["Opt-In Date", null],
+    ["Opt-Out Date", null],
+    ["Created At", "createdAt"],
   ];
 
   return (
@@ -179,24 +188,31 @@ export default function ManageUsersManager({ organizationId }) {
                         {user.role || "customer"}
                       </td>
                       <td className="px-3 py-3">{user.loyaltyPoints || 0}</td>
+                      <td className="px-3 py-3 text-slate-600">{user.reservedPoints ?? 0}</td>
                       <td className="px-3 py-3 font-medium">
                         {user.availablePoints ??
                           Math.max(0, (user.loyaltyPoints || 0) - (user.reservedPoints || 0))}
                       </td>
                       <td className="px-3 py-3 text-center">
-                        {user.emailMarketingOptIn ? "✓" : "—"}
+                        <input type="checkbox" checked={Boolean(user.emailMarketingOptIn)} readOnly aria-label={user.emailMarketingOptIn ? "Opted in" : "Not opted in"} className="pointer-events-none accent-orange-600" />
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 capitalize">
-                        {user.emailSubscriberSource || "-"}
+                        {user.emailSubscriberSource || "—"}
                       </td>
                       <td className="whitespace-nowrap px-3 py-3 text-slate-500">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
+                        {formatDateTime(user.emailSubscriberSubscribedAt)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-slate-500">
+                        {formatDateTime(user.emailSubscriberUnsubscribedAt)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3 text-slate-500">
+                        {formatDateTime(user.createdAt)}
                       </td>
                     </tr>
                   ))}
                   {!users.length && (
                     <tr>
-                      <td colSpan={9} className="px-4 py-12 text-center text-slate-500">
+                      <td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500">
                         No users found.
                       </td>
                     </tr>
