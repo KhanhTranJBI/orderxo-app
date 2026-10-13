@@ -211,6 +211,7 @@ export default function HomepageSlidesManager({
   organizationId,
   embedded = false,
   scopeOverride = null,
+  onSlidesChange,
 }) {
   const loc = useRestaurantLocation(organizationId);
   const permission = useRestaurantPermissions(organizationId);
@@ -246,13 +247,14 @@ export default function HomepageSlidesManager({
     try {
       const d = await api("admin/hero-slides", organizationId, "GET", undefined, locationId);
       setItems(d.slides || []);
+      onSlidesChange?.(d.slides || []);
       setUseDefault(locationId ? d.useDefault !== false : false);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [organizationId, locationId]);
+  }, [organizationId, locationId, onSlidesChange]);
   useEffect(() => {
     load();
   }, [load]);
@@ -269,6 +271,7 @@ export default function HomepageSlidesManager({
         locationId,
       );
       setItems(d.slides || []);
+      onSlidesChange?.(d.slides || []);
       setUseDefault(false);
     } catch (e) {
       setError(e.message);
@@ -289,6 +292,7 @@ export default function HomepageSlidesManager({
         locationId,
       );
       setItems(d.slides || []);
+      onSlidesChange?.(d.slides || []);
       setUseDefault(true);
     } catch (e) {
       setError(e.message);

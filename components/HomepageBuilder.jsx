@@ -119,8 +119,7 @@ const makeSection = (type) => ({
   overlay: 45,
   entries: [],
 });
-const defaultSectionColor = (type, key) =>
-  key === "backgroundColor" ? "#FFFFFF" : type === "featuredMenu" ? "#111827" : "#111827";
+const defaultSectionColor = (type, key) => (key === "backgroundColor" ? "#FFFFFF" : "#111827");
 const defaultPage = () => ({ template: "modern", sections: DEFAULT_TYPES.map(makeSection) });
 const parseLines = (value) =>
   value
@@ -133,7 +132,109 @@ const cardClass = "rounded-2xl border border-slate-200 bg-white shadow-sm";
 const fieldClass =
   "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100";
 
-function PreviewSection({ section: s, branding, compact }) {
+function SlideshowPreview({ slides, section, branding, compact }) {
+  const activeSlides = (slides || []).filter((slide) => slide?.isActive !== false && slide?.image);
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    setIndex(0);
+  }, [slides]);
+  useEffect(() => {
+    if (activeSlides.length < 2) return;
+    const timer = setInterval(() => setIndex((i) => (i + 1) % activeSlides.length), 5000);
+    return () => clearInterval(timer);
+  }, [activeSlides.length]);
+  const slide = activeSlides[index];
+  const startX = useRef(null);
+  const move = (direction) =>
+    setIndex((i) => (i + direction + activeSlides.length) % activeSlides.length);
+  if (!slide)
+    return (
+      <section className="flex min-h-56 items-center justify-center bg-slate-100 px-6 text-center text-sm text-slate-500">
+        No active slides. Add slides in the slide manager to preview them here.
+      </section>
+    );
+  return (
+    <section
+      className={`relative isolate w-full overflow-hidden select-none touch-pan-y ${compact ? "h-64" : "h-[430px]"}`}
+      onTouchStart={(e) => {
+        startX.current = e.touches[0].clientX;
+      }}
+      onTouchEnd={(e) => {
+        if (startX.current == null) return;
+        const d = e.changedTouches[0].clientX - startX.current;
+        if (Math.abs(d) > 45 && activeSlides.length > 1) move(d < 0 ? 1 : -1);
+        startX.current = null;
+      }}
+      onMouseDown={(e) => {
+        startX.current = e.clientX;
+      }}
+      onMouseUp={(e) => {
+        if (startX.current == null) return;
+        const d = e.clientX - startX.current;
+        if (Math.abs(d) > 45 && activeSlides.length > 1) move(d < 0 ? 1 : -1);
+        startX.current = null;
+      }}
+    >
+      <div
+        className="flex h-full transition-transform duration-700 ease-in-out"
+        style={{ transform: `translateX(-${index * 100}%)` }}
+      >
+        {activeSlides.map((item, i) => (
+          <div
+            key={item._id || `${item.image}-${i}`}
+            className="relative h-full w-full shrink-0"
+            style={{
+              backgroundImage: `url(${JSON.stringify(item.image).slice(1, -1)})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/10"
+              style={{ opacity: Number(section.overlay ?? 45) / 70 }}
+            />
+            <div
+              className={`absolute left-0 top-1/2 z-10 w-full -translate-y-1/2 px-6 text-left text-white ${compact ? "max-w-xs" : "max-w-2xl md:pl-[10%]"}`}
+            >
+              <h3
+                className={`${compact ? "text-2xl" : "text-4xl"} font-bold drop-shadow-lg`}
+                style={{ color: "#ffffff" }}
+              >
+                {item.title}
+              </h3>
+              {item.subtitle && (
+                <p className="mt-3 text-sm drop-shadow" style={{ color: "#ffffff" }}>
+                  {item.subtitle}
+                </p>
+              )}
+              <span
+                className="mt-5 inline-block rounded-lg px-5 py-2.5 text-sm font-bold text-white"
+                style={{ backgroundColor: branding?.primaryColor || "#ea580c", color: "#ffffff" }}
+              >
+                {item.cta || "Order online"}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {activeSlides.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
+          {activeSlides.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              aria-label={`Preview slide ${i + 1}`}
+              onClick={() => setIndex(i)}
+              className={`h-2.5 w-2.5 rounded-full ${i === index ? "bg-orange-500" : "bg-white/60"}`}
+            />
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PreviewSection({ section: s, branding, compact, previewSlides }) {
   const accent = branding?.primaryColor || "#ea580c";
   const title = s.title || SECTION_TYPES[s.type]?.title;
   const img = s.imageUrl || s.images?.[0] || s.slides?.[0]?.imageUrl;
@@ -167,7 +268,11 @@ function PreviewSection({ section: s, branding, compact }) {
     backgroundColor: s.backgroundColor || undefined,
     color: s.textColor || undefined,
   };
-  if (s.type === "hero" || s.type === "slideshow") {
+  if (s.type === "slideshow")
+    return (
+      <SlideshowPreview slides={previewSlides} section={s} branding={branding} compact={compact} />
+    );
+  if (s.type === "hero") {
     const slides =
       s.type === "slideshow" && s.slides?.length
         ? s.slides
@@ -337,6 +442,7 @@ export default function HomepageBuilder({ organizationId }) {
   const [selected, setSelected] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
   const [branding, setBranding] = useState({});
+  const [previewSlides, setPreviewSlides] = useState([]);
   const [dirty, setDirty] = useState(false);
   const [draggingId, setDraggingId] = useState(null);
   const draggingRef = useRef(null);
@@ -691,8 +797,8 @@ export default function HomepageBuilder({ organizationId }) {
                     </button>
                   </div>
                 </div>
-                {textField("Heading", "title")}
-                {textField("Description", "subtitle", true)}
+                {active.type !== "slideshow" && textField("Heading", "title")}
+                {active.type !== "slideshow" && textField("Description", "subtitle", true)}
                 {["hero", "about"].includes(active.type) &&
                   textField("Main image URL", "imageUrl", false, "https://... or /images/...")}
                 {["gallery", "featuredMenu", "newItems"].includes(active.type) && (
@@ -714,7 +820,11 @@ export default function HomepageBuilder({ organizationId }) {
                       Manage restaurant default slides or customize slides for each location. This
                       is the same slide manager used in Store Settings.
                     </p>
-                    <HomepageSlidesManager organizationId={organizationId} embedded />
+                    <HomepageSlidesManager
+                      organizationId={organizationId}
+                      embedded
+                      onSlidesChange={setPreviewSlides}
+                    />
                     <p className="text-xs text-slate-500">
                       Publishing the homepage controls section visibility and position. Slide
                       changes are saved independently through the slide manager.
@@ -819,7 +929,13 @@ export default function HomepageBuilder({ organizationId }) {
                   draft.sections
                     .filter((s) => s.enabled)
                     .map((s) => (
-                      <PreviewSection key={s.id} section={s} branding={branding} compact={mobile} />
+                      <PreviewSection
+                        key={s.id}
+                        section={s}
+                        branding={branding}
+                        compact={mobile}
+                        previewSlides={previewSlides}
+                      />
                     ))
                 ) : (
                   <p className="p-12 text-center text-slate-400">
