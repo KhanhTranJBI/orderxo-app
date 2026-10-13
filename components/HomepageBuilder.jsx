@@ -120,7 +120,7 @@ const makeSection = (type) => ({
   entries: [],
 });
 const defaultSectionColor = (type, key) =>
-  key === "backgroundColor" ? "#FFFFFF" : type === "featuredMenu" ? "#10B981" : "#111827";
+  key === "backgroundColor" ? "#FFFFFF" : type === "featuredMenu" ? "#111827" : "#111827";
 const defaultPage = () => ({ template: "modern", sections: DEFAULT_TYPES.map(makeSection) });
 const parseLines = (value) =>
   value
@@ -742,7 +742,11 @@ export default function HomepageBuilder({ organizationId }) {
                         <input
                           type="color"
                           aria-label={`${key === "backgroundColor" ? "Background" : "Text"} color picker`}
-                          value={/^#[0-9a-fA-F]{6}$/.test(active[key] || "") ? active[key] : defaultSectionColor(active.type, key)}
+                          value={
+                            /^#[0-9a-fA-F]{6}$/.test(active[key] || "")
+                              ? active[key]
+                              : defaultSectionColor(active.type, key)
+                          }
                           onChange={(e) => edit(active.id, key, e.target.value.toUpperCase())}
                           className="h-9 w-10 shrink-0 cursor-pointer rounded border"
                         />
@@ -759,7 +763,9 @@ export default function HomepageBuilder({ organizationId }) {
                         <button
                           className="text-xs text-slate-500 underline"
                           type="button"
-                          onClick={() => edit(active.id, key, defaultSectionColor(active.type, key))}
+                          onClick={() =>
+                            edit(active.id, key, defaultSectionColor(active.type, key))
+                          }
                         >
                           Reset
                         </button>
