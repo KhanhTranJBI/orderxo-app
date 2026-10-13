@@ -739,9 +739,20 @@ export default function HomepageBuilder({ organizationId }) {
                       <div className="mt-1 flex gap-2">
                         <input
                           type="color"
-                          value={active[key] || (key === "backgroundColor" ? "#ffffff" : "#111827")}
-                          onChange={(e) => edit(active.id, key, e.target.value)}
-                          className="h-9 w-10 rounded border"
+                          aria-label={`${key === "backgroundColor" ? "Background" : "Text"} color picker`}
+                          value={/^#[0-9a-fA-F]{6}$/.test(active[key] || "") ? active[key] : (key === "backgroundColor" ? "#ffffff" : "#111827")}
+                          onChange={(e) => edit(active.id, key, e.target.value.toUpperCase())}
+                          className="h-9 w-10 shrink-0 cursor-pointer rounded border"
+                        />
+                        <input
+                          type="text"
+                          aria-label={`${key === "backgroundColor" ? "Background" : "Text"} HEX color`}
+                          value={active[key] || ""}
+                          placeholder={key === "backgroundColor" ? "#FFFFFF" : "#111827"}
+                          maxLength={7}
+                          spellCheck={false}
+                          onChange={(e) => edit(active.id, key, e.target.value.toUpperCase())}
+                          className="min-w-0 w-24 rounded border border-slate-200 bg-white px-2 font-mono text-xs uppercase text-slate-900"
                         />
                         <button
                           className="text-xs text-slate-500 underline"
