@@ -119,6 +119,8 @@ const makeSection = (type) => ({
   overlay: 45,
   entries: [],
 });
+const defaultSectionColor = (type, key) =>
+  key === "backgroundColor" ? "#FFFFFF" : type === "featuredMenu" ? "#10B981" : "#111827";
 const defaultPage = () => ({ template: "modern", sections: DEFAULT_TYPES.map(makeSection) });
 const parseLines = (value) =>
   value
@@ -740,7 +742,7 @@ export default function HomepageBuilder({ organizationId }) {
                         <input
                           type="color"
                           aria-label={`${key === "backgroundColor" ? "Background" : "Text"} color picker`}
-                          value={/^#[0-9a-fA-F]{6}$/.test(active[key] || "") ? active[key] : (key === "backgroundColor" ? "#ffffff" : "#111827")}
+                          value={/^#[0-9a-fA-F]{6}$/.test(active[key] || "") ? active[key] : defaultSectionColor(active.type, key)}
                           onChange={(e) => edit(active.id, key, e.target.value.toUpperCase())}
                           className="h-9 w-10 shrink-0 cursor-pointer rounded border"
                         />
@@ -748,7 +750,7 @@ export default function HomepageBuilder({ organizationId }) {
                           type="text"
                           aria-label={`${key === "backgroundColor" ? "Background" : "Text"} HEX color`}
                           value={active[key] || ""}
-                          placeholder={key === "backgroundColor" ? "#FFFFFF" : "#111827"}
+                          placeholder={defaultSectionColor(active.type, key)}
                           maxLength={7}
                           spellCheck={false}
                           onChange={(e) => edit(active.id, key, e.target.value.toUpperCase())}
@@ -756,7 +758,8 @@ export default function HomepageBuilder({ organizationId }) {
                         />
                         <button
                           className="text-xs text-slate-500 underline"
-                          onClick={() => edit(active.id, key, "")}
+                          type="button"
+                          onClick={() => edit(active.id, key, defaultSectionColor(active.type, key))}
                         >
                           Reset
                         </button>
