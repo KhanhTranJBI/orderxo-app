@@ -11,7 +11,10 @@ export async function GET() {
       signal: AbortSignal.timeout(15000),
     });
     const data = await response.json();
-    return NextResponse.json(data, { status: response.status, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(data, {
+      status: response.status,
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch {
     return NextResponse.json({ error: "Support service unavailable" }, { status: 502 });
   }
