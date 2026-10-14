@@ -44,6 +44,10 @@ export default function BillingManager({
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
   const pending = subscription?.pendingPlan;
+  const isTrialing = subscription?.status === "trialing";
+  const trialEnd = subscription?.trialEnd;
+  const trialDaysRemaining = subscription?.trialDaysRemaining;
+
   const monthlyPrices = { starter: 7900, growth: 12900, pro: 19900 };
   const count = Math.max(1, Number(billing?.locationCount) || 1);
   const estimatedMonthly = (planId) => {
@@ -160,6 +164,34 @@ export default function BillingManager({
                 {subscription?.status || "incomplete"}
               </span>
             </p>
+            {isTrialing && (
+              <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+                <p className="font-semibold">Free trial — $0.00 subscription fee during trial</p>
+                {trialEnd ? (
+                  <>
+                    <p className="mt-1">
+                      Trial ends: <strong>{formatDate(trialEnd)}</strong>
+                    </p>
+                    <p>
+                      {trialDaysRemaining != null
+                        ? `${trialDaysRemaining} day${trialDaysRemaining === 1 ? "" : "s"} remaining`
+                        : "Remaining days unavailable"}
+                    </p>
+                    <p>
+                      Regular subscription billing resumes after the trial, subject to Stripe
+                      billing settings.
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-1">
+                    Trial end date unavailable. Check Stripe Billing for the confirmed date.
+                  </p>
+                )}
+                <p className="mt-1 text-xs">
+                  Platform fees and payment processing fees are separate.
+                </p>
+              </div>
+            )}
             {pending && (
               <p className="mt-2 text-sm font-medium text-amber-700">
                 Scheduled change: {plans.find((p) => p.id === pending)?.name || pending} on{" "}
@@ -193,21 +225,35 @@ export default function BillingManager({
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>First location</span>
-              <strong>{usd(billing.baseMonthlyCents)}</strong>
+              <strong>{usd(isTrialing ? 0 : billing.baseMonthlyCents)}</strong>
             </div>
             <div className="flex justify-between">
               <span>
                 {Math.max(0, billing.locationCount - 1)} additional locations (20% off each)
               </span>
               <strong>
-                {usd(Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents)}
+                {usd(
+                  isTrialing
+                    ? 0
+                    : Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents,
+                )}
               </strong>
             </div>
             <div className="flex justify-between border-t pt-3 text-base">
-              <strong>Estimated monthly subscription</strong>
-              <strong>{usd(billing.monthlyTotalCents)}</strong>
+              <strong>
+                {isTrialing ? "Subscription during free trial" : "Estimated monthly subscription"}
+              </strong>
+              <strong className={isTrialing ? "text-green-700" : ""}>
+                {usd(isTrialing ? 0 : billing.monthlyTotalCents)}
+              </strong>
             </div>
           </div>
+          {isTrialing && (
+            <div className="mt-3 flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+              <span>Regular monthly subscription after trial</span>
+              <strong>{usd(billing.monthlyTotalCents)}</strong>
+            </div>
+          )}
           <p className="mt-3 text-xs text-slate-500">
             Plus the 1% OrderXO platform fee on eligible food sales. Stripe payment processing fees
             are separate. Changes during a billing period may include prorations.
@@ -240,9 +286,14 @@ export default function BillingManager({
               Add restaurant location
             </h3>
             <p className="mt-2 text-sm text-slate-600">
-              Your subscription will increase by{" "}
+              {isTrialing
+                ? "Regular monthly subscription pricing will increase by "
+                : "Your subscription will increase by "}
               <strong>{usd(billing.additionalMonthlyCents)}/month</strong> plus applicable
-              prorations. Stripe will invoice the change immediately.
+              prorations.{" "}
+              {isTrialing
+                ? "During a free trial, confirm any immediate charges with Stripe before proceeding."
+                : "Stripe may invoice the change immediately."}
             </p>
             <label htmlFor="new-location-name" className="mt-4 block text-sm font-medium">
               Location name
