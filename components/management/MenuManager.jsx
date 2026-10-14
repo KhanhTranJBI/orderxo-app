@@ -796,7 +796,7 @@ export default function MenuManager({ organizationId }) {
     [deleting, setDeleting] = useState(false),
     [error, setError] = useState(""),
     [menuScope, setMenuScope] = useState("default"),
-    [overrideItem, setOverrideItem] = useState(null),
+    [overrideItem, setOverrideItem] = useState(null);
   const load = useCallback(async () => {
     if (!loc.locationId) return;
     try {
