@@ -797,7 +797,6 @@ export default function MenuManager({ organizationId }) {
     [error, setError] = useState(""),
     [menuScope, setMenuScope] = useState("default"),
     [overrideItem, setOverrideItem] = useState(null),
-    [importingDefault, setImportingDefault] = useState(false);
   const load = useCallback(async () => {
     if (!loc.locationId) return;
     try {
@@ -1023,41 +1022,7 @@ export default function MenuManager({ organizationId }) {
                 override only the fields that differ for this location.
               </div>
             )}
-            {canManage && menuScope === "default" && items.length === 0 && (
-              <div className="mt-4 rounded-xl border bg-white p-4">
-                <p className="font-semibold">Restaurant Default menu is empty.</p>
-                <p className="mt-1 text-sm text-slate-500">
-                  If your existing menu is stored under {loc.location?.name || "this location"},
-                  import it once to create the master menu.
-                </p>
-                <button
-                  className="primary mt-3"
-                  disabled={importingDefault}
-                  onClick={async () => {
-                    try {
-                      setImportingDefault(true);
-                      await api(
-                        "menu/default/import",
-                        organizationId,
-                        loc.locationId,
-                        "POST",
-                        {},
-                        "location",
-                      );
-                      await load();
-                    } catch (e) {
-                      setError(e.message);
-                    } finally {
-                      setImportingDefault(false);
-                    }
-                  }}
-                >
-                  {importingDefault
-                    ? "Importing…"
-                    : "Import current location as Restaurant Default"}
-                </button>
-              </div>
-            )}
+
             {error && <p className="mt-4 text-red-600">{error}</p>}
             {tab === "items" ? (
               <>
