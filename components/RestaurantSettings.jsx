@@ -447,12 +447,34 @@ function AppearancePreview({ branding, restaurantName }) {
   );
 }
 
+function PlanLocked({ title, required, href }) {
+  return (
+    <div className="rounded-2xl border border-orange-200 bg-orange-50 p-8 text-center">
+      <h2 className="text-xl font-bold text-slate-900">🔒 {title}</h2>
+      <p className="mt-2 text-slate-600">
+        Available on {required}. Your existing content is preserved.
+      </p>
+      <a
+        className="mt-5 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white"
+        href={href}
+      >
+        View plans & upgrade
+      </a>
+    </div>
+  );
+}
+
 export default function RestaurantSettings({ organizationId }) {
   const [tab, setTab] = useState("General");
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [entitlements, setEntitlements] = useState({ loyalty: false, giftCards: false });
+  const [entitlements, setEntitlements] = useState({
+    loyalty: false,
+    giftCards: false,
+    appearanceCustomization: false,
+    homepageBuilder: false,
+  });
   const [plan, setPlan] = useState(null);
   const [entitlementError, setEntitlementError] = useState("");
   const [upgradeFeature, setUpgradeFeature] = useState(null);
@@ -501,6 +523,8 @@ export default function RestaurantSettings({ organizationId }) {
           setEntitlements({
             loyalty: resolvedFeatures.loyalty,
             giftCards: resolvedFeatures.giftCards,
+            appearanceCustomization: resolvedFeatures.appearanceCustomization === true,
+            homepageBuilder: resolvedFeatures.homepageBuilder === true,
           });
           setEntitlementError("");
         } else {
@@ -538,7 +562,9 @@ export default function RestaurantSettings({ organizationId }) {
         body: JSON.stringify({
           organizationId,
           businessStartYear: org.businessStartYear,
-          branding: org.branding,
+          branding: entitlements.appearanceCustomization
+            ? org.branding
+            : { logoUrl: org.branding.logoUrl, faviconUrl: org.branding.faviconUrl },
           website: org.website,
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
@@ -676,7 +702,10 @@ export default function RestaurantSettings({ organizationId }) {
             </div>
           )}
 
-          {tab === "Appearance" && (
+          {tab === "Appearance" && !entitlements.appearanceCustomization && !entitlementError && (
+            <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />
+          )}
+          {tab === "Appearance" && entitlements.appearanceCustomization && !entitlementError && (
             <div className="space-y-8">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
@@ -733,7 +762,12 @@ export default function RestaurantSettings({ organizationId }) {
             />
           )}
 
-          {tab === "Homepage" && <HomepageBuilder organizationId={organizationId} />}
+          {tab === "Homepage" &&
+            (entitlements.homepageBuilder && !entitlementError ? (
+              <HomepageBuilder organizationId={organizationId} />
+            ) : (
+              <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />
+            ))}
 
           {tab === "Loyalty" && (
             <div className="space-y-6">

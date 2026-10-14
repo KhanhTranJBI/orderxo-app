@@ -24,6 +24,17 @@ export default async function Dashboard() {
   const canCreateRestaurant =
     !staffMode && (organizations.length === 0 || organizations.some((org) => org.role === "owner"));
 
+  const planResults = await Promise.all(
+    organizations.map(async (org) => {
+      const id = String(org._id || org.id || "");
+      const r = await backendRequest(
+        `/api/subscriptions/current?organizationId=${encodeURIComponent(id)}`,
+        { authenticated: true },
+      );
+      return [id, r.status === 200 ? r.data.subscription?.plan || null : null];
+    }),
+  );
+  const planByOrg = Object.fromEntries(planResults);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
@@ -67,6 +78,7 @@ export default async function Dashboard() {
             {organizations.map((org) => {
               const id = String(org._id || org.id || "");
               const isOwner = org.role === "owner";
+              const proTeam = planByOrg[id] === "pro";
               const isAdmin = isOwner || org.role === "admin";
               const roleLabel = isOwner
                 ? "Owner"
@@ -136,12 +148,22 @@ export default async function Dashboard() {
                     )}
                     {isAdmin && (
                       <>
-                        <Link
-                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
-                        >
-                          Admins & Managers
-                        </Link>
+                        {!proTeam && (
+                          <Link
+                            className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-800"
+                            href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                          >
+                            🔒 Admins & Managers · Pro
+                          </Link>
+                        )}
+                        {proTeam && (
+                          <Link
+                            className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                            href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
+                          >
+                            Admins & Managers
+                          </Link>
+                        )}
                         <Link
                           className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                           href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
