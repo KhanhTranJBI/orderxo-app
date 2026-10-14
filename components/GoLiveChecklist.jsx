@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ownerFetch } from "../lib/ownerFetch";
 
-export default function GoLiveChecklist({ organizationId, locations }) {
+export default function GoLiveChecklist({ organizationId, locations, staffMode = false }) {
   const [locationId, setLocationId] = useState(String(locations[0]?._id || ""));
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -28,6 +28,7 @@ export default function GoLiveChecklist({ organizationId, locations }) {
     refresh(locationId);
   }, [locationId, organizationId]);
   async function activate() {
+    if (staffMode) return;
     setBusy(true);
     setError("");
     try {
@@ -111,14 +112,15 @@ export default function GoLiveChecklist({ organizationId, locations }) {
                   <h3 className="font-semibold">{step.label}</h3>
                   <p className="text-sm text-slate-600">{step.description}</p>
                 </div>
-                {!step.completed && (
-                  <Link
-                    className="shrink-0 text-sm font-semibold text-orange-700 hover:underline"
-                    href={step.href}
-                  >
-                    Configure →
-                  </Link>
-                )}
+                {!step.completed &&
+                  !(staffMode && ["stripe", "subscription", "website"].includes(step.id)) && (
+                    <Link
+                      className="shrink-0 text-sm font-semibold text-orange-700 hover:underline"
+                      href={step.href}
+                    >
+                      Configure →
+                    </Link>
+                  )}
               </div>
             ))}
           </div>
@@ -126,7 +128,7 @@ export default function GoLiveChecklist({ organizationId, locations }) {
             <button onClick={() => refresh()} className="rounded-xl border px-4 py-3 font-semibold">
               Refresh progress
             </button>
-            {!data.live && (
+            {!data.live && !staffMode && (
               <button
                 onClick={activate}
                 disabled={!data.ready || busy}
@@ -136,6 +138,13 @@ export default function GoLiveChecklist({ organizationId, locations }) {
               </button>
             )}
           </div>
+          {staffMode && !data.live && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {data.ready
+                ? "Ready for owner review. Ask the restaurant owner or authorized admin to activate online ordering."
+                : "Complete permitted setup tasks. Stripe, billing, domain ownership and final activation must be handled by the owner or authorized admin."}
+            </p>
+          )}
           <p className="text-xs text-slate-500">
             Kiosk is optional. Your restaurant may still pause ordering using its store hours.
             Activation does not bypass Stripe or subscription checks.

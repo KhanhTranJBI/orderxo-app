@@ -132,8 +132,8 @@ export default function StoreSettingsManager({ organizationId }) {
   const isAdmin = permission.isAdmin;
   // Staff with store.manage may edit restaurant-wide defaults, but does not
   // acquire owner/admin privileges elsewhere. Backend enforces this separately.
-  const canEditRestaurantDefault = isAdmin ||
-    (permission.organization?.role === "staff" && canManage);
+  const canEditRestaurantDefault =
+    isAdmin || (permission.organization?.role === "staff" && canManage);
 
   const [tab, setTab] = useState("hours");
 
@@ -177,7 +177,12 @@ export default function StoreSettingsManager({ organizationId }) {
   }, [permission.loading, canReadStore, canReadHomepage]);
 
   useEffect(() => {
-    if (!permission.loading && !canEditRestaurantDefault && scope === "default" && loc.locations[0]) {
+    if (
+      !permission.loading &&
+      !canEditRestaurantDefault &&
+      scope === "default" &&
+      loc.locations[0]
+    ) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
     }
   }, [permission.loading, canEditRestaurantDefault, scope, loc.locations]);

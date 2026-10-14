@@ -53,16 +53,6 @@ export default async function RestaurantManager({ params }) {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
-        {staffMode && (
-          <div
-            className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
-            role="status"
-          >
-            <strong>OrderXO Staff Mode</strong> — You are using the restaurant's existing Manager
-            Dashboard. Your session permissions determine which editors and actions are available.
-          </div>
-        )}
-
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
@@ -77,13 +67,22 @@ export default async function RestaurantManager({ params }) {
             {org.status || "pending"}
           </span>
         </div>
-        {isAdmin && (
+        {(isAdmin || staffMode) && (
           <Link
             href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
             className="mt-6 block rounded-xl border border-orange-200 bg-orange-50 p-5 font-semibold text-orange-800"
           >
             View restaurant setup checklist and go-live readiness →
           </Link>
+        )}
+        {staffMode && (
+          <div
+            className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
+            role="status"
+          >
+            <strong>OrderXO Staff Mode</strong> — You are using the restaurant's existing Manager
+            Dashboard. Your session permissions determine which editors and actions are available.
+          </div>
         )}
         <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">

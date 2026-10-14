@@ -104,7 +104,7 @@ export default async function Dashboard() {
                       )}
                     </div>
                   )}
-                  {isAdmin && (
+                  {(isAdmin || staffMode) && (
                     <Link
                       href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
                       className="mt-4 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100"
@@ -113,7 +113,9 @@ export default async function Dashboard() {
                         Restaurant setup & go-live checklist →
                       </span>
                       <p className="mt-1 text-sm text-orange-800">
-                        Check required steps, connect Stripe, and activate online ordering.
+                        {staffMode
+                          ? "Review progress and finish permitted setup tasks. Activation requires owner approval."
+                          : "Check required steps, connect Stripe, and activate online ordering."}
                       </p>
                     </Link>
                   )}
