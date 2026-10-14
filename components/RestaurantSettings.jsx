@@ -10,8 +10,8 @@ import { useEffect, useState } from "react";
 
 const TABS = [
   "General",
-  "Appearance",
   "Social & Links",
+  "Appearance",
   "Homepage",
   "Loyalty",
   "Gift Cards",
@@ -515,25 +515,22 @@ export default function RestaurantSettings({ organizationId }) {
             );
           }
         }
-        if (
-          resolvedFeatures &&
-          typeof resolvedFeatures.loyalty === "boolean" &&
-          typeof resolvedFeatures.giftCards === "boolean"
-        ) {
+        const activePlan = String(resolvedSubscription?.plan || resolvedSubscription?.tier || orgData.plan || "").toLowerCase();
+        const isGrowth = ["growth", "grow", "pro"].includes(activePlan);
+        const isPro = activePlan === "pro";
+        const feature = (key, fallback) => typeof resolvedFeatures?.[key] === "boolean" ? resolvedFeatures[key] : fallback;
+        if (activePlan || resolvedFeatures) {
           setEntitlements({
-            loyalty: resolvedFeatures.loyalty,
-            giftCards: resolvedFeatures.giftCards,
-            appearanceCustomization: resolvedFeatures.appearanceCustomization === true,
-            homepageBuilder: resolvedFeatures.homepageBuilder === true,
+            loyalty: feature("loyalty", isGrowth),
+            giftCards: feature("giftCards", isGrowth),
+            appearanceCustomization: feature("appearanceCustomization", isGrowth),
+            homepageBuilder: feature("homepageBuilder", isPro),
           });
           setEntitlementError("");
         } else {
-          setEntitlements({ loyalty: false, giftCards: false });
-          setEntitlementError(
-            "Unable to verify subscription features. Please refresh or try again.",
-          );
+          setEntitlementError("Unable to verify subscription features. Please refresh or try again.");
         }
-        setPlan(resolvedSubscription?.plan || orgData.plan || null);
+        setPlan(activePlan || null);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -702,11 +699,10 @@ export default function RestaurantSettings({ organizationId }) {
             </div>
           )}
 
-          {tab === "Appearance" && !entitlements.appearanceCustomization && !entitlementError && (
-            <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />
-          )}
-          {tab === "Appearance" && entitlements.appearanceCustomization && !entitlementError && (
+          {tab === "Appearance" && (
             <div className="space-y-8">
+              {!entitlements.appearanceCustomization && <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />}
+              <fieldset disabled={!entitlements.appearanceCustomization || !!entitlementError} className="space-y-8 disabled:opacity-75">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">Website Appearance</h2>
@@ -752,6 +748,7 @@ export default function RestaurantSettings({ organizationId }) {
                   <AppearancePreview branding={org.branding} restaurantName={org.name} />
                 </aside>
               </div>
+              </fieldset>
             </div>
           )}
 
@@ -762,12 +759,12 @@ export default function RestaurantSettings({ organizationId }) {
             />
           )}
 
-          {tab === "Homepage" &&
-            (entitlements.homepageBuilder && !entitlementError ? (
-              <HomepageBuilder organizationId={organizationId} />
-            ) : (
-              <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />
-            ))}
+          {tab === "Homepage" && (
+            <div className="space-y-5">
+              {!entitlements.homepageBuilder && <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />}
+              <HomepageBuilder organizationId={organizationId} readOnly={!entitlements.homepageBuilder || !!entitlementError} />
+            </div>
+          )}
 
           {tab === "Loyalty" && (
             <div className="space-y-6">
@@ -1161,7 +1158,7 @@ export default function RestaurantSettings({ organizationId }) {
 
           <div className="mt-8 border-t pt-6">
             <button
-              disabled={saving}
+              disabled={saving || !!entitlementError || (tab === "Appearance" && !entitlements.appearanceCustomization) || tab === "Homepage"}
               onClick={saveOrganization}
               className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
             >

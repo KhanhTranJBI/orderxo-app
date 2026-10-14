@@ -431,7 +431,7 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
   );
 }
 
-export default function HomepageBuilder({ organizationId }) {
+export default function HomepageBuilder({ organizationId, readOnly = false }) {
   const [draft, setDraft] = useState(defaultPage);
   const [published, setPublished] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -598,7 +598,8 @@ export default function HomepageBuilder({ organizationId }) {
     </label>
   );
   return (
-    <div className="space-y-5 text-slate-900">
+    <div className="space-y-5 text-slate-900" onClickCapture={readOnly ? (e) => { if (e.target.closest("button, input, select, textarea, [role=button]")) { e.preventDefault(); e.stopPropagation(); } } : undefined} onChangeCapture={readOnly ? (e) => { e.preventDefault(); e.stopPropagation(); } : undefined}>
+      {readOnly && <p className="rounded-xl border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">Preview only — upgrade to Pro to edit, save or publish your homepage.</p>}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -616,14 +617,14 @@ export default function HomepageBuilder({ organizationId }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            disabled={busy || loading}
+            disabled={busy || loading || readOnly}
             className="rounded-xl border px-4 py-2.5 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
             onClick={() => save(false)}
           >
             {busy ? "Saving…" : "Save draft"}
           </button>
           <button
-            disabled={busy || loading}
+            disabled={busy || loading || readOnly}
             className="rounded-xl bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
             onClick={() => save(true)}
           >
