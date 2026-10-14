@@ -549,6 +549,10 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
       setError(issues[0]);
       return;
     }
+    if (publish && !canPublish) {
+      setError("Publishing requires setup:publish permission.");
+      return;
+    }
     if (publish && !draft.sections.some((s) => s.enabled)) {
       setError("Enable at least one section before publishing.");
       return;

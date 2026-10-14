@@ -464,7 +464,11 @@ function PlanLocked({ title, required, href }) {
   );
 }
 
-export default function RestaurantSettings({ organizationId, staffMode = false }) {
+export default function RestaurantSettings({
+  organizationId,
+  staffMode = false,
+  staffPermissions = [],
+}) {
   const [tab, setTab] = useState("General");
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
@@ -782,7 +786,7 @@ export default function RestaurantSettings({ organizationId, staffMode = false }
               {staffMode && (
                 <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
                   OrderXO Staff Access — You may edit and save homepage drafts with setup:website
-                  permission. Publishing requires separate approval.
+                  permission. Publishing requires setup:publish permission.
                 </p>
               )}
               {!staffMode && !entitlements.homepageBuilder && (
@@ -791,7 +795,7 @@ export default function RestaurantSettings({ organizationId, staffMode = false }
               <HomepageBuilder
                 organizationId={organizationId}
                 readOnly={!staffMode && (!entitlements.homepageBuilder || !!entitlementError)}
-                canPublish={!staffMode}
+                canPublish={!staffMode || staffPermissions.includes("setup:publish")}
               />
             </div>
           )}
