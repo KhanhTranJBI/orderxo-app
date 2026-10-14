@@ -130,6 +130,10 @@ export default function StoreSettingsManager({ organizationId }) {
   const canManage = permission.can("store.manage");
   const canReadHomepage = permission.can("homepage.read");
   const isAdmin = permission.isAdmin;
+  // Staff with store.manage may edit restaurant-wide defaults, but does not
+  // acquire owner/admin privileges elsewhere. Backend enforces this separately.
+  const canEditRestaurantDefault = isAdmin ||
+    (permission.organization?.role === "staff" && canManage);
 
   const [tab, setTab] = useState("hours");
 
@@ -173,10 +177,10 @@ export default function StoreSettingsManager({ organizationId }) {
   }, [permission.loading, canReadStore, canReadHomepage]);
 
   useEffect(() => {
-    if (!permission.loading && !isAdmin && scope === "default" && loc.locations[0]) {
+    if (!permission.loading && !canEditRestaurantDefault && scope === "default" && loc.locations[0]) {
       setScope(String(loc.locations[0]._id || loc.locations[0].id));
     }
-  }, [permission.loading, isAdmin, scope, loc.locations]);
+  }, [permission.loading, canEditRestaurantDefault, scope, loc.locations]);
 
   useEffect(() => {
     if (
@@ -551,7 +555,7 @@ export default function StoreSettingsManager({ organizationId }) {
           <label className="mb-2 block text-sm font-semibold text-slate-700">Settings for</label>
 
           <select className="field" value={scope} onChange={(e) => setScope(e.target.value)}>
-            {isAdmin && <option value="default">Restaurant Default</option>}
+            {canEditRestaurantDefault && <option value="default">Restaurant Default</option>}
 
             {loc.locations.map((l) => (
               <option key={l._id || l.id} value={String(l._id || l.id)}>
