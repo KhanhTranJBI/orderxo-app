@@ -148,22 +148,12 @@ export default async function Dashboard() {
                     )}
                     {isAdmin && (
                       <>
-                        {!proTeam && (
-                          <Link
-                            className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-800"
-                            href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-                          >
-                            🔒 Admins & Managers · Pro
-                          </Link>
-                        )}
-                        {proTeam && (
-                          <Link
-                            className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                            href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
-                          >
-                            Admins & Managers
-                          </Link>
-                        )}
+                        <Link
+                          className={`rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50 ${!proTeam ? "border-orange-200 bg-orange-50 text-orange-800" : ""}`}
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
+                        >
+                          {proTeam ? "Admins & Managers" : "🔒 Admins & Managers · Pro"}
+                        </Link>
                         <Link
                           className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                           href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}

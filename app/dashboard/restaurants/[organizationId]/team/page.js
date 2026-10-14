@@ -46,7 +46,10 @@ export default function Team() {
     [form, setForm] = useState(blank),
     [msg, setMsg] = useState(""),
     [editing, setEditing] = useState(null),
-    [saving, setSaving] = useState(false);
+    [saving, setSaving] = useState(false),
+    [canManageTeam, setCanManageTeam] = useState(false),
+    [planLoading, setPlanLoading] = useState(true),
+    [planError, setPlanError] = useState("");
   const load = async () => {
     const [a, b] = await Promise.all([
       fetch(`/api/owner/team?organizationId=${organizationId}`),
@@ -62,7 +65,17 @@ export default function Team() {
     setLocations(bd.locations || []);
   };
   useEffect(() => {
-    load();
+    load().catch(() => setMsg("Unable to load team members."));
+    setPlanLoading(true);
+    fetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, {cache:"no-store"})
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Unable to verify your subscription.");
+        const d = await r.json();
+        setCanManageTeam(String(d.subscription?.plan || "").toLowerCase() === "pro");
+        setPlanError("");
+      })
+      .catch((e) => { setCanManageTeam(false); setPlanError(e.message); })
+      .finally(() => setPlanLoading(false));
   }, [organizationId]);
   const toggle = (setter, key, id) =>
     setter((f) => ({
@@ -70,6 +83,7 @@ export default function Team() {
       [key]: f[key].includes(id) ? f[key].filter((x) => x !== id) : [...f[key], id],
     }));
   const invite = async () => {
+    if (!canManageTeam || planLoading) return;
     setMsg("");
     const r = await fetch("/api/owner/team/invite", {
       method: "POST",
@@ -84,7 +98,7 @@ export default function Team() {
   };
   const isProtectedOwner = (m) => m?.role === "owner";
   const openEdit = (m) => {
-    if (isProtectedOwner(m)) return;
+    if (!canManageTeam || planLoading || isProtectedOwner(m)) return;
     setEditing({
       _id: m._id,
       name: m.userId?.name || "",
@@ -97,6 +111,7 @@ export default function Team() {
     });
   };
   const saveEdit = async () => {
+    if (!canManageTeam || planLoading) return;
     setSaving(true);
     setMsg("");
     const r = await fetch("/api/owner/team/member", {
@@ -131,6 +146,17 @@ export default function Team() {
         <p className="mt-1 text-slate-500">
           Admins can access every location. Managers only access assigned locations and permissions.
         </p>
+        {!planLoading && !canManageTeam && (
+          <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-6 text-center text-orange-950">
+            <h2 className="text-xl font-bold">🔒 Admins & Managers · Pro</h2>
+            <p className="mt-2 text-sm text-orange-900">
+              {planError || "Team management is available on Pro. You can review existing members and invitations, but cannot invite, edit or save changes on your current plan. Your data is preserved."}
+            </p>
+            <Link className="mt-4 inline-block rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700" href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}>
+              View plans & upgrade
+            </Link>
+          </div>
+        )}
         {msg && (
           <p className="mt-4 rounded-xl bg-orange-50 px-4 py-3 text-sm text-orange-800">{msg}</p>
         )}
@@ -161,6 +187,7 @@ export default function Team() {
                     ) : (
                       <button
                         type="button"
+                        disabled={!canManageTeam || planLoading}
                         onClick={() => openEdit(m)}
                         className="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                       >
@@ -185,6 +212,7 @@ export default function Team() {
           </section>
           <section className="rounded-2xl border bg-white p-5">
             <h2 className="text-lg font-bold">Invite team member</h2>
+            <fieldset disabled={!canManageTeam || planLoading} className="disabled:opacity-60">
             <input
               className="field mt-4"
               placeholder="Email address"
@@ -239,10 +267,11 @@ export default function Team() {
             <button className="primary mt-5 w-full" onClick={invite}>
               Send invitation
             </button>
+            </fieldset>
           </section>
         </div>
       </div>
-      {editing && (
+      {editing && canManageTeam && !planLoading && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onMouseDown={() => setEditing(null)}
