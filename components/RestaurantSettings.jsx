@@ -464,7 +464,7 @@ function PlanLocked({ title, required, href }) {
   );
 }
 
-export default function RestaurantSettings({ organizationId }) {
+export default function RestaurantSettings({ organizationId, staffMode = false }) {
   const [tab, setTab] = useState("General");
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
@@ -515,10 +515,13 @@ export default function RestaurantSettings({ organizationId }) {
             );
           }
         }
-        const activePlan = String(resolvedSubscription?.plan || resolvedSubscription?.tier || orgData.plan || "").toLowerCase();
+        const activePlan = String(
+          resolvedSubscription?.plan || resolvedSubscription?.tier || orgData.plan || "",
+        ).toLowerCase();
         const isGrowth = ["growth", "grow", "pro"].includes(activePlan);
         const isPro = activePlan === "pro";
-        const feature = (key, fallback) => typeof resolvedFeatures?.[key] === "boolean" ? resolvedFeatures[key] : fallback;
+        const feature = (key, fallback) =>
+          typeof resolvedFeatures?.[key] === "boolean" ? resolvedFeatures[key] : fallback;
         if (activePlan || resolvedFeatures) {
           setEntitlements({
             loyalty: feature("loyalty", isGrowth),
@@ -528,7 +531,9 @@ export default function RestaurantSettings({ organizationId }) {
           });
           setEntitlementError("");
         } else {
-          setEntitlementError("Unable to verify subscription features. Please refresh or try again.");
+          setEntitlementError(
+            "Unable to verify subscription features. Please refresh or try again.",
+          );
         }
         setPlan(activePlan || null);
       } catch (e) {
@@ -701,53 +706,66 @@ export default function RestaurantSettings({ organizationId }) {
 
           {tab === "Appearance" && (
             <div className="space-y-8">
-              {!entitlements.appearanceCustomization && <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />}
-              <fieldset disabled={!entitlements.appearanceCustomization || !!entitlementError} className="space-y-8 disabled:opacity-75">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900">Website Appearance</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Customize the look of your ordering website. Changes apply to all restaurant
-                    locations.
-                  </p>
-                </div>
-                <span className="rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
-                  All locations
-                </span>
-              </div>
-              <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
-                <div className="min-w-0 space-y-7">
-                  {APPEARANCE_GROUPS.map((group) => (
-                    <div
-                      key={group.title}
-                      className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5"
-                    >
-                      <h3 className="text-base font-bold text-slate-900">{group.title}</h3>
-                      <p className="mb-4 mt-1 text-sm text-slate-500">{group.description}</p>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {group.fields.map(([key, label]) => (
-                          <AppearanceColor
-                            key={key}
-                            label={label}
-                            value={org.branding[key]}
-                            fallback={emptyOrg.branding[key]}
-                            onChange={(value) => setOrgPart("branding", key, value)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
-                  <div className="mb-3">
-                    <h3 className="font-bold text-slate-900">Live website preview</h3>
-                    <p className="text-sm text-slate-500">
-                      Updates as you edit. Save changes to publish.
+              {staffMode && (
+                <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                  OrderXO Staff Access — You may update this restaurant's appearance with your
+                  assigned setup permissions. Changes are audited.
+                </p>
+              )}
+              {!staffMode && !entitlements.appearanceCustomization && (
+                <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />
+              )}
+              <fieldset
+                disabled={
+                  !staffMode && (!entitlements.appearanceCustomization || !!entitlementError)
+                }
+                className="space-y-8 disabled:opacity-75"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">Website Appearance</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Customize the look of your ordering website. Changes apply to all restaurant
+                      locations.
                     </p>
                   </div>
-                  <AppearancePreview branding={org.branding} restaurantName={org.name} />
-                </aside>
-              </div>
+                  <span className="rounded-full bg-orange-50 px-3 py-1.5 text-xs font-semibold text-orange-700">
+                    All locations
+                  </span>
+                </div>
+                <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+                  <div className="min-w-0 space-y-7">
+                    {APPEARANCE_GROUPS.map((group) => (
+                      <div
+                        key={group.title}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-5"
+                      >
+                        <h3 className="text-base font-bold text-slate-900">{group.title}</h3>
+                        <p className="mb-4 mt-1 text-sm text-slate-500">{group.description}</p>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {group.fields.map(([key, label]) => (
+                            <AppearanceColor
+                              key={key}
+                              label={label}
+                              value={org.branding[key]}
+                              fallback={emptyOrg.branding[key]}
+                              onChange={(value) => setOrgPart("branding", key, value)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <aside className="min-w-0 xl:sticky xl:top-6 xl:self-start">
+                    <div className="mb-3">
+                      <h3 className="font-bold text-slate-900">Live website preview</h3>
+                      <p className="text-sm text-slate-500">
+                        Updates as you edit. Save changes to publish.
+                      </p>
+                    </div>
+                    <AppearancePreview branding={org.branding} restaurantName={org.name} />
+                  </aside>
+                </div>
               </fieldset>
             </div>
           )}
@@ -761,8 +779,20 @@ export default function RestaurantSettings({ organizationId }) {
 
           {tab === "Homepage" && (
             <div className="space-y-5">
-              {!entitlements.homepageBuilder && <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />}
-              <HomepageBuilder organizationId={organizationId} readOnly={!entitlements.homepageBuilder || !!entitlementError} />
+              {staffMode && (
+                <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                  OrderXO Staff Access — You may edit and save homepage drafts with setup:website
+                  permission. Publishing requires separate approval.
+                </p>
+              )}
+              {!staffMode && !entitlements.homepageBuilder && (
+                <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />
+              )}
+              <HomepageBuilder
+                organizationId={organizationId}
+                readOnly={!staffMode && (!entitlements.homepageBuilder || !!entitlementError)}
+                canPublish={!staffMode}
+              />
             </div>
           )}
 
@@ -1158,7 +1188,12 @@ export default function RestaurantSettings({ organizationId }) {
 
           <div className="mt-8 border-t pt-6">
             <button
-              disabled={saving || !!entitlementError || (tab === "Appearance" && !entitlements.appearanceCustomization) || tab === "Homepage"}
+              disabled={
+                saving ||
+                (!staffMode && !!entitlementError) ||
+                (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization) ||
+                tab === "Homepage"
+              }
               onClick={saveOrganization}
               className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
             >

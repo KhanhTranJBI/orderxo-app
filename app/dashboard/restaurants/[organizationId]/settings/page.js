@@ -23,7 +23,7 @@ export default function RestaurantSettingsPage({ params }) {
           </div>
         </div>
       )}
-      <RestaurantSettings organizationId={params.organizationId} />
+      <RestaurantSettings organizationId={params.organizationId} staffMode={staffMode} />
     </>
   );
 }

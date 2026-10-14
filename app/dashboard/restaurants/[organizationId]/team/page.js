@@ -67,14 +67,19 @@ export default function Team() {
   useEffect(() => {
     load().catch(() => setMsg("Unable to load team members."));
     setPlanLoading(true);
-    fetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, {cache:"no-store"})
+    fetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, {
+      cache: "no-store",
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error("Unable to verify your subscription.");
         const d = await r.json();
         setCanManageTeam(String(d.subscription?.plan || "").toLowerCase() === "pro");
         setPlanError("");
       })
-      .catch((e) => { setCanManageTeam(false); setPlanError(e.message); })
+      .catch((e) => {
+        setCanManageTeam(false);
+        setPlanError(e.message);
+      })
       .finally(() => setPlanLoading(false));
   }, [organizationId]);
   const toggle = (setter, key, id) =>
@@ -150,9 +155,13 @@ export default function Team() {
           <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-6 text-center text-orange-950">
             <h2 className="text-xl font-bold">🔒 Admins & Managers · Pro</h2>
             <p className="mt-2 text-sm text-orange-900">
-              {planError || "Team management is available on Pro. You can review existing members and invitations, but cannot invite, edit or save changes on your current plan. Your data is preserved."}
+              {planError ||
+                "Team management is available on Pro. You can review existing members and invitations, but cannot invite, edit or save changes on your current plan. Your data is preserved."}
             </p>
-            <Link className="mt-4 inline-block rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700" href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}>
+            <Link
+              className="mt-4 inline-block rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+              href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}
+            >
               View plans & upgrade
             </Link>
           </div>
@@ -213,60 +222,60 @@ export default function Team() {
           <section className="rounded-2xl border bg-white p-5">
             <h2 className="text-lg font-bold">Invite team member</h2>
             <fieldset disabled={!canManageTeam || planLoading} className="disabled:opacity-60">
-            <input
-              className="field mt-4"
-              placeholder="Email address"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-            <label className="mt-4 block text-sm font-semibold">Role</label>
-            <select
-              className="field mt-1"
-              value={form.role}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  role: e.target.value,
-                  locationIds: e.target.value === "admin" ? [] : form.locationIds,
-                })
-              }
-            >
-              <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
-            </select>
-            {form.role === "manager" && (
-              <>
-                <p className="mt-4 text-sm font-semibold">Locations</p>
-                <div className="mt-2 space-y-2">
-                  {locations.map((l) => (
-                    <label key={l._id || l.id} className="flex gap-2">
-                      <input
-                        type="checkbox"
-                        checked={form.locationIds.includes(l._id || l.id)}
-                        onChange={() => toggle(setForm, "locationIds", l._id || l.id)}
-                      />
-                      {l.name}
-                    </label>
-                  ))}
-                </div>
-                <p className="mt-4 text-sm font-semibold">Permissions</p>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {PERMS.map(([p, label]) => (
-                    <label key={p} className="flex gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={form.permissions.includes(p)}
-                        onChange={() => toggle(setForm, "permissions", p)}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              </>
-            )}
-            <button className="primary mt-5 w-full" onClick={invite}>
-              Send invitation
-            </button>
+              <input
+                className="field mt-4"
+                placeholder="Email address"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+              <label className="mt-4 block text-sm font-semibold">Role</label>
+              <select
+                className="field mt-1"
+                value={form.role}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    role: e.target.value,
+                    locationIds: e.target.value === "admin" ? [] : form.locationIds,
+                  })
+                }
+              >
+                <option value="manager">Manager</option>
+                <option value="admin">Admin</option>
+              </select>
+              {form.role === "manager" && (
+                <>
+                  <p className="mt-4 text-sm font-semibold">Locations</p>
+                  <div className="mt-2 space-y-2">
+                    {locations.map((l) => (
+                      <label key={l._id || l.id} className="flex gap-2">
+                        <input
+                          type="checkbox"
+                          checked={form.locationIds.includes(l._id || l.id)}
+                          onChange={() => toggle(setForm, "locationIds", l._id || l.id)}
+                        />
+                        {l.name}
+                      </label>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm font-semibold">Permissions</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {PERMS.map(([p, label]) => (
+                      <label key={p} className="flex gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.permissions.includes(p)}
+                          onChange={() => toggle(setForm, "permissions", p)}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+              <button className="primary mt-5 w-full" onClick={invite}>
+                Send invitation
+              </button>
             </fieldset>
           </section>
         </div>
