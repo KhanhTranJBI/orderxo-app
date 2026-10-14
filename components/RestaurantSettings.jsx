@@ -62,6 +62,7 @@ const emptyOrg = {
   },
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
+  smartUpsell: { enabled: false, showInItemModal: true, showInCart: true, showInCheckout: false },
   ordering: {
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
@@ -104,6 +105,7 @@ function mergeOrg(value = {}) {
     branding: { ...emptyOrg.branding, ...(value.branding || {}) },
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
+    smartUpsell: { ...emptyOrg.smartUpsell, ...(value.smartUpsell || {}) },
     ordering: {
       ...emptyOrg.ordering,
       ...(value.ordering || {}),
@@ -476,6 +478,7 @@ export default function RestaurantSettings({
   const [entitlements, setEntitlements] = useState({
     loyalty: false,
     giftCards: false,
+    smartUpsell: false,
     appearanceCustomization: false,
     homepageBuilder: false,
   });
@@ -530,6 +533,7 @@ export default function RestaurantSettings({
           setEntitlements({
             loyalty: feature("loyalty", isGrowth),
             giftCards: feature("giftCards", isGrowth),
+            smartUpsell: feature("smartUpsell", isGrowth),
             appearanceCustomization: feature("appearanceCustomization", isGrowth),
             homepageBuilder: feature("homepageBuilder", isPro),
           });
@@ -576,6 +580,7 @@ export default function RestaurantSettings({
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
           emailSettings: org.emailSettings,
           ordering: org.ordering,
+          smartUpsell: org.smartUpsell,
           notifications: org.notifications,
         }),
       });
@@ -1027,6 +1032,72 @@ export default function RestaurantSettings({
                 <p className="mt-1 text-sm text-slate-500">
                   Restaurant-wide ordering defaults shared by every location.
                 </p>
+              </div>
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+                {!staffMode && !entitlements.smartUpsell && (
+                  <div className="mb-4 rounded-lg border border-orange-300 bg-white p-3 text-sm text-orange-900">
+                    <strong>Smart Upsell · Growth+</strong> — Preview available. Upgrade to Growth
+                    or Pro to enable recommendations for customers.
+                    <a className="ml-2 underline" href={billingUrl}>
+                      View plans &amp; upgrade
+                    </a>
+                  </div>
+                )}
+                {staffMode && !entitlements.smartUpsell && (
+                  <p className="mb-3 text-sm text-orange-900">
+                    Staff can prepare upsell settings for onboarding, but recommendations are only
+                    shown publicly on Growth or Pro.
+                  </p>
+                )}
+                <label className="flex items-center gap-3 font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={org.smartUpsell?.enabled === true}
+                    disabled={!staffMode && !entitlements.smartUpsell}
+                    onChange={(e) =>
+                      setOrg((prev) => ({
+                        ...prev,
+                        smartUpsell: { ...prev.smartUpsell, enabled: e.target.checked },
+                      }))
+                    }
+                  />
+                  Enable Smart Upsell
+                </label>
+                <p className="mt-2 text-sm text-slate-600">
+                  Recommend complementary items without interrupting customers after Add to Cart.
+                  Configure recommendations per item in Menu Manager.
+                </p>
+                <div className="mt-4 space-y-3 border-t border-orange-200 pt-4">
+                  <p className="text-sm font-semibold text-slate-800">
+                    Where to show recommendations
+                  </p>
+                  {[
+                    ["showInItemModal", "Item Modal", "Up to 2 suggestions below modifiers"],
+                    ["showInCart", "Shopping Cart", "Up to 3 suggestions inside cart"],
+                    ["showInCheckout", "Checkout", "Coming soon; currently disabled"],
+                  ].map(([field, label, help]) => (
+                    <label key={field} className="flex items-start gap-3 text-sm">
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        disabled={
+                          field === "showInCheckout" || (!staffMode && !entitlements.smartUpsell)
+                        }
+                        checked={org.smartUpsell?.[field] ?? field !== "showInCheckout"}
+                        onChange={(e) =>
+                          setOrg((prev) => ({
+                            ...prev,
+                            smartUpsell: { ...prev.smartUpsell, [field]: e.target.checked },
+                          }))
+                        }
+                      />
+                      <span>
+                        <span className="font-medium">{label}</span>
+                        <span className="block text-slate-500">{help}</span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="max-w-xl">
                 <Field

@@ -243,7 +243,16 @@ function ModifierEditor({ group, onClose, onSave }) {
   );
 }
 
-function ItemModal({ item, categoryId, categories, groups, onClose, onSave, onSaveGroup }) {
+function ItemModal({
+  item,
+  categoryId,
+  categories,
+  groups,
+  allItems = [],
+  onClose,
+  onSave,
+  onSaveGroup,
+}) {
   const [f, setF] = useState(() => ({
     name: item?.name || "",
     price: String((item?.priceCents || 0) / 100),
@@ -251,6 +260,7 @@ function ItemModal({ item, categoryId, categories, groups, onClose, onSave, onSa
     image: item?.image || "",
     bestSeller: !!item?.bestSeller,
     newItem: !!item?.newItem,
+    upsellItemIds: (item?.upsellItemIds || []).map(String),
     isActive: item?.isActive !== false,
     categoryId: String(
       item?.category?._id || item?.category || categoryId || categories[0]?._id || "",
@@ -440,6 +450,41 @@ function ItemModal({ item, categoryId, categories, groups, onClose, onSave, onSa
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+        <div className="mt-6 rounded-xl border p-4">
+          <h3 className="font-semibold">Smart Upsell recommendations</h3>
+          <p className="text-sm text-slate-500 mb-3">
+            Choose up to 4 active items from this restaurant.
+          </p>
+          <div className="grid gap-2 md:grid-cols-2 max-h-48 overflow-y-auto">
+            {(allItems || [])
+              .filter(
+                (candidate) =>
+                  candidate.isActive !== false && String(candidate._id) !== String(item?._id || ""),
+              )
+              .map((candidate) => {
+                const id = String(candidate._id);
+                const selected = f.upsellItemIds.includes(id);
+                return (
+                  <label key={id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={!selected && f.upsellItemIds.length >= 4}
+                      onChange={(e) =>
+                        setF((prev) => ({
+                          ...prev,
+                          upsellItemIds: e.target.checked
+                            ? [...prev.upsellItemIds, id]
+                            : prev.upsellItemIds.filter((x) => x !== id),
+                        }))
+                      }
+                    />
+                    {candidate.name} · {money(candidate.priceCents)}
+                  </label>
+                );
+              })}
           </div>
         </div>
         <div className="sticky bottom-0 bg-white py-4 flex justify-end gap-2">
@@ -1351,6 +1396,7 @@ export default function MenuManager({ organizationId }) {
             categoryId={editing?.categoryId || newFor}
             categories={categories}
             groups={groups}
+            allItems={menuScope === "default" ? items : []}
             onClose={() => {
               setEditing(null);
               setNewFor(null);
