@@ -28,7 +28,7 @@ export default async function RestaurantManager({ params }) {
   if (!org) redirect("/dashboard");
   const staffMode = org.role === "staff";
   const isAdmin = org.role === "admin" || org.role === "owner";
-  const permissions = new Set(staffMode ? ["locations.read"] : org.permissions || []);
+  const permissions = new Set(org.permissions || []);
   const aliases = {
     "orders.manage": ["orders.manage", "orders.update"],
     "menu.manage": ["menu.manage", "menu.update", "menu.create", "menu.delete"],
@@ -76,18 +76,12 @@ export default async function RestaurantManager({ params }) {
           </Link>
         )}
         {staffMode && (
-          <a
-            href="/support"
-            className="mt-4 inline-block rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white"
+          <div
+            className="mt-6 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
+            role="status"
           >
-            Open secure Setup Editor
-          </a>
-        )}
-        {staffMode && (
-          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-            OrderXO Staff Mode: owner dashboard preview. Editing through owner APIs is disabled
-            until each endpoint has scoped authorization. Use the secure Setup Editor for permitted
-            changes.
+            <strong>OrderXO Staff Mode</strong> — You are using the restaurant's existing Manager
+            Dashboard. Your session permissions determine which editors and actions are available.
           </div>
         )}
         <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
@@ -101,18 +95,7 @@ export default async function RestaurantManager({ params }) {
             </div>
             {org.role === "owner" && <AddLocationButton organizationId={id} />}
           </div>
-          {!staffMode && (
-            <ManageLocations
-              organizationId={id}
-              locations={locations}
-              owner={org.role === "owner"}
-            />
-          )}
-          {staffMode && (
-            <p className="mt-3 text-sm text-slate-600">
-              Location administration is restricted for staff.
-            </p>
-          )}
+          <ManageLocations organizationId={id} locations={locations} owner={org.role === "owner"} />
         </section>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

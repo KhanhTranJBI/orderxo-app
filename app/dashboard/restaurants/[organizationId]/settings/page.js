@@ -6,6 +6,7 @@ import RestaurantSettings from "../../../../../components/RestaurantSettings";
 export const dynamic = "force-dynamic";
 
 export default function RestaurantSettingsPage({ params }) {
-  if (!cookies().get(cookieName)?.value) redirect("/login");
+  if (!cookies().get(cookieName)?.value && !cookies().get("orderxo_support_session")?.value)
+    redirect("/login");
   return <RestaurantSettings organizationId={params.organizationId} />;
 }
