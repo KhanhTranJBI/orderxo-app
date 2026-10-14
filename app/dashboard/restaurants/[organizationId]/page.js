@@ -18,15 +18,17 @@ const tools = [
 ];
 
 export default async function RestaurantManager({ params }) {
-  if (!cookies().get(cookieName)?.value) redirect("/login");
+  if (!cookies().get(cookieName)?.value && !cookies().get("orderxo_support_session")?.value)
+    redirect("/login");
   const id = params.organizationId;
   const result = await backendRequest("/api/organizations", { authenticated: true });
   if (result.status === 401) redirect("/login");
   const organizations = Array.isArray(result.data?.organizations) ? result.data.organizations : [];
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
+  const staffMode = org.role === "staff";
   const isAdmin = org.role === "admin" || org.role === "owner";
-  const permissions = new Set(org.permissions || []);
+  const permissions = new Set(staffMode ? ["locations.read"] : org.permissions || []);
   const aliases = {
     "orders.manage": ["orders.manage", "orders.update"],
     "menu.manage": ["menu.manage", "menu.update", "menu.create", "menu.delete"],
@@ -73,6 +75,21 @@ export default async function RestaurantManager({ params }) {
             View restaurant setup checklist and go-live readiness →
           </Link>
         )}
+        {staffMode && (
+          <a
+            href="/support"
+            className="mt-4 inline-block rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white"
+          >
+            Open secure Setup Editor
+          </a>
+        )}
+        {staffMode && (
+          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            OrderXO Staff Mode: owner dashboard preview. Editing through owner APIs is disabled
+            until each endpoint has scoped authorization. Use the secure Setup Editor for permitted
+            changes.
+          </div>
+        )}
         <section className="mt-8 rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -84,7 +101,18 @@ export default async function RestaurantManager({ params }) {
             </div>
             {org.role === "owner" && <AddLocationButton organizationId={id} />}
           </div>
-          <ManageLocations organizationId={id} locations={locations} owner={org.role === "owner"} />
+          {!staffMode && (
+            <ManageLocations
+              organizationId={id}
+              locations={locations}
+              owner={org.role === "owner"}
+            />
+          )}
+          {staffMode && (
+            <p className="mt-3 text-sm text-slate-600">
+              Location administration is restricted for staff.
+            </p>
+          )}
         </section>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

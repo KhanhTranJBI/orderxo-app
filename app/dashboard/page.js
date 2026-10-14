@@ -7,7 +7,8 @@ import LogoutButton from "../../components/LogoutButton";
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  if (!cookies().get(cookieName)?.value) redirect("/login");
+  if (!cookies().get(cookieName)?.value && !cookies().get("orderxo_support_session")?.value)
+    redirect("/login");
   const result = await backendRequest("/api/organizations", { authenticated: true });
   if (result.status === 401) redirect("/login");
   const organizations =
@@ -17,8 +18,11 @@ export default async function Dashboard() {
   // Restaurant creation is an account-level owner capability. Invited admins/managers
   // can manage organizations they belong to, but cannot create new organizations.
   // A brand-new verified account with no memberships may create its first restaurant.
+  const staffMode = Boolean(
+    cookies().get("orderxo_support_session")?.value && !cookies().get(cookieName)?.value,
+  );
   const canCreateRestaurant =
-    organizations.length === 0 || organizations.some((org) => org.role === "owner");
+    !staffMode && (organizations.length === 0 || organizations.some((org) => org.role === "owner"));
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
@@ -26,13 +30,13 @@ export default async function Dashboard() {
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
-              OrderXO Owner Portal
+              {staffMode ? "OrderXO Staff Mode" : "OrderXO Owner Portal"}
             </p>
             <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
           <div className="flex items-center gap-3">
-            <LogoutButton />
+            {!staffMode && <LogoutButton />}
             {canCreateRestaurant && (
               <Link
                 href="/restaurants/new"
