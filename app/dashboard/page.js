@@ -124,6 +124,14 @@ export default async function Dashboard() {
                     >
                       Manage restaurant
                     </Link>
+                    {staffMode && (
+                      <Link
+                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                        href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
+                      >
+                        Restaurant settings
+                      </Link>
+                    )}
                     {isAdmin && (
                       <>
                         <Link
