@@ -1190,20 +1190,21 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          <div className="mt-8 border-t pt-6">
-            <button
-              disabled={
-                saving ||
-                (!staffMode && !!entitlementError) ||
-                (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization) ||
-                tab === "Homepage"
-              }
-              onClick={saveOrganization}
-              className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-          </div>
+          {tab !== "Homepage" && (
+            <div className="mt-8 border-t pt-6">
+              <button
+                disabled={
+                  saving ||
+                  (!staffMode && !!entitlementError) ||
+                  (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization)
+                }
+                onClick={saveOrganization}
+                className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          )}
         </section>
       </div>
       {upgradeFeature && (
