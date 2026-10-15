@@ -47,6 +47,8 @@ export default function BillingManager({
   const isTrialing = subscription?.status === "trialing";
   const trialEnd = subscription?.trialEnd;
   const trialDaysRemaining = subscription?.trialDaysRemaining;
+  const trialOfferDays = !active && Number(subscription?.trialOffer?.days || 0);
+  const hasTrialOffer = trialOfferDays > 0;
 
   const monthlyPrices = { starter: 7900, growth: 12900, pro: 19900 };
   const count = Math.max(1, Number(billing?.locationCount) || 1);
@@ -164,6 +166,35 @@ export default function BillingManager({
                 {subscription?.status || "incomplete"}
               </span>
             </p>
+            {hasTrialOffer && (
+              <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+                <p className="font-bold text-base">Your {trialOfferDays}-day free trial is ready</p>
+                <p className="mt-1">
+                  Continue with Stripe to add your payment method and activate your free trial.
+                  Your trial begins when Stripe creates your subscription, not when you accepted the invitation.
+                </p>
+                <p className="mt-2">
+                  Subscription fee during trial: <strong>$0.00</strong>. After the trial,
+                  your estimated subscription is <strong>{usd(currentMonthly)}/month</strong>
+                  unless canceled or changed. OrderXO platform fees and Stripe processing fees are separate.
+                </p>
+                <button
+                  type="button"
+                  disabled={!!busy}
+                  onClick={() => post(
+                    "/api/owner/billing/checkout",
+                    { organizationId, plan: current },
+                    `checkout-${current}`,
+                    true,
+                  )}
+                  className="mt-3 rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {busy === `checkout-${current}`
+                    ? "Opening Stripe…"
+                    : `Continue with Stripe — Start ${trialOfferDays}-day free trial`}
+                </button>
+              </div>
+            )}
             {isTrialing && (
               <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
                 <p className="font-semibold">Free trial — $0.00 subscription fee during trial</p>
@@ -248,6 +279,11 @@ export default function BillingManager({
               </strong>
             </div>
           </div>
+          {hasTrialOffer && (
+            <p className="mt-3 text-sm font-medium text-emerald-700">
+              {trialOfferDays}-day free trial available — $0 subscription fee during the trial after Stripe activation.
+            </p>
+          )}
           {isTrialing && (
             <div className="mt-3 flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
               <span>Regular monthly subscription after trial</span>
@@ -331,7 +367,9 @@ export default function BillingManager({
         <p className="mt-1 text-sm text-slate-500">
           {active
             ? "Upgrades apply now with Stripe proration. Downgrades take effect at the end of the current billing period."
-            : "Choose a plan to start your Stripe subscription."}
+            : hasTrialOffer
+              ? `Your invitation includes a ${trialOfferDays}-day free trial. Continue with Stripe to activate it.`
+              : "Choose a plan to start your Stripe subscription."}
         </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           {plans.map((plan) => {
@@ -339,7 +377,9 @@ export default function BillingManager({
             const isPending = pending === plan.id;
             const upgrade = rank[plan.id] > rank[current];
             const label = !active
-              ? "Continue with Stripe"
+              ? hasTrialOffer
+                ? `Start ${trialOfferDays}-day free trial`
+                : "Continue with Stripe"
               : isCurrent
                 ? "Current plan"
                 : isPending
