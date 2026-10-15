@@ -116,7 +116,11 @@ export default function GoLiveChecklist({ organizationId, locations, staffMode =
                   !(staffMode && ["stripe", "subscription", "website"].includes(step.id)) && (
                     <Link
                       className="shrink-0 text-sm font-semibold text-orange-700 hover:underline"
-                      href={step.href}
+                      href={
+                        step.id === "menu" || /^menu and prices$/i.test(step.label || "")
+                          ? `/dashboard/restaurants/${encodeURIComponent(organizationId)}/menu`
+                          : step.href
+                      }
                     >
                       Configure →
                     </Link>
