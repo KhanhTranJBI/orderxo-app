@@ -428,32 +428,41 @@ export default function BillingManager({
             <div className="mt-5 space-y-3 rounded-xl border bg-slate-50 p-4 text-sm">
               <div className="flex justify-between gap-3">
                 <span>
-                  Current {plans.find((p) => p.id === current)?.name || current} monthly fee
+                  Current {plans.find((p) => p.id === current)?.name || current} regular monthly fee
                 </span>
                 <strong>{usd(currentMonthly)}</strong>
               </div>
               <div className="flex justify-between gap-3">
-                <span>New {confirmPlan.name} monthly fee</span>
+                <span>New {confirmPlan.name} regular monthly fee</span>
                 <strong>{usd(targetMonthly)}</strong>
               </div>
               <div className="flex justify-between gap-3 border-t pt-3">
-                <span>Monthly difference</span>
+                <span>{isTrialing ? "Monthly difference after trial" : "Monthly difference"}</span>
                 <strong className={upgradeDelta > 0 ? "text-orange-600" : "text-green-700"}>
                   {upgradeDelta > 0 ? "+" : upgradeDelta < 0 ? "−" : ""}
                   {usd(Math.abs(upgradeDelta))}
                 </strong>
               </div>
             </div>
+            {isTrialing && (
+              <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+                <p className="font-semibold">Free trial: $0.00 subscription fee during trial</p>
+                <p className="mt-1">Trial ends: {trialEnd ? formatDate(trialEnd) : "Date unavailable — verify in Stripe"}</p>
+                {trialDaysRemaining != null && <p>{trialDaysRemaining} days remaining</p>}
+                <p className="mt-1">Regular monthly fees below apply after your free trial. The 1% platform fee continues during the trial.</p>
+              </div>
+            )}
             {rank[confirmPlan.id] > rank[current] ? (
               <p className="mt-4 text-sm text-slate-600">
-                Your upgrade will be requested immediately. Stripe may calculate a prorated charge
-                for the remainder of the billing period. The exact amount due today is not shown
-                here and depends on Stripe billing; this confirmation is not a payment receipt.
+                {isTrialing
+                  ? "Pro features become available immediately. Your Stripe trial end date stays unchanged and subscription proration is disabled for this change."
+                  : "Your upgrade will be requested immediately. Stripe may calculate a prorated charge for the remainder of the billing period. The exact amount due today depends on Stripe billing; this confirmation is not a payment receipt."}
               </p>
             ) : (
               <p className="mt-4 text-sm text-slate-600">
-                Your downgrade will be scheduled for the end of your current billing period. No
-                immediate refund is promised.
+                {isTrialing
+                  ? "Your downgrade will be scheduled for the end of your free trial. You keep your current plan features until then."
+                  : "Your downgrade will be scheduled for the end of your current billing period. No immediate refund is promised."}
               </p>
             )}
             <p className="mt-3 text-xs text-slate-500">
