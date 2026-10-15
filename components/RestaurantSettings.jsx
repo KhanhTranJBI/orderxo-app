@@ -475,6 +475,9 @@ export default function RestaurantSettings({
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testType, setTestType] = useState("orderReceipt");
+  const [testSending, setTestSending] = useState(false);
+  const [testFeedback, setTestFeedback] = useState("");
   const [entitlements, setEntitlements] = useState({
     loyalty: false,
     giftCards: false,
@@ -562,6 +565,22 @@ export default function RestaurantSettings({
       ...old,
       emailSettings: { ...old.emailSettings, [part]: { ...old.emailSettings[part], [key]: value } },
     }));
+  async function sendTestEmail() {
+    setTestSending(true);
+    setTestFeedback("");
+    try {
+      const result = await jsonFetch("/api/owner/organizations/test-email", {
+        method: "POST",
+        body: JSON.stringify({ organizationId, type: testType }),
+      });
+      setTestFeedback(result.message || "Test email submitted.");
+    } catch (e) {
+      setTestFeedback(e.message || "Unable to send test email.");
+    } finally {
+      setTestSending(false);
+    }
+  }
+
   async function saveOrganization() {
     setSaving(true);
     setError("");
@@ -942,6 +961,27 @@ export default function RestaurantSettings({
                   underlying HTML templates.
                 </p>
               </div>
+              {!staffMode && (
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-3">
+                  <h3 className="font-bold text-slate-900">Send test email</h3>
+                  <p className="text-sm text-slate-600">Preview a sample Mailgun template with your saved restaurant branding. Tests are sent only to your account email. Save changes first to preview updated settings.</p>
+                  <div className="flex flex-wrap gap-3 items-center">
+                    <select className={input + " max-w-sm"} value={testType} onChange={(e) => setTestType(e.target.value)}>
+                      {[
+                        ["orderReceipt", "Order receipt"], ["abandonedCart", "Abandoned cart"],
+                        ["giftCardBuyerReceipt", "Gift card buyer receipt"], ["giftCardRecipientReceipt", "Gift card recipient"],
+                        ["orderConfirmed", "Order confirmed"], ["orderReady", "Order ready"],
+                        ["orderCompleted", "Order completed"], ["orderCancelled", "Order cancelled"],
+                      ].map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                    </select>
+                    <button type="button" disabled={testSending} onClick={sendTestEmail} className="rounded-lg bg-orange-600 px-5 py-3 text-white font-semibold disabled:opacity-50">
+                      {testSending ? "Sending…" : "Send test email"}
+                    </button>
+                  </div>
+                  {testFeedback && <p role="status" className="text-sm text-slate-700">{testFeedback}</p>}
+                  <p className="text-xs text-slate-500">Sample orders and gift card codes are not real. Sending does not create orders or charges.</p>
+                </div>
+              )}
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="From name">
                   <input
