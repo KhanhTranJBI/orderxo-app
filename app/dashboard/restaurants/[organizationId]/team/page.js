@@ -49,23 +49,42 @@ export default function Team() {
     [saving, setSaving] = useState(false),
     [canManageTeam, setCanManageTeam] = useState(false),
     [planLoading, setPlanLoading] = useState(true),
-    [planError, setPlanError] = useState("");
+    [planError, setPlanError] = useState(""),
+    [teamLoading, setTeamLoading] = useState(true);
   const load = async () => {
-    const [a, b] = await Promise.all([
-      fetch(`/api/owner/team?organizationId=${organizationId}`),
-      fetch(`/api/owner/locations?organizationId=${organizationId}`),
-    ]);
-    if (a.status === 401) {
-      location.href = "/login?message=session_expired";
-      return;
+    setTeamLoading(true);
+    try {
+      const [a, b] = await Promise.all([
+        fetch(`/api/owner/team?organizationId=${encodeURIComponent(organizationId)}`, {
+          cache: "no-store",
+        }),
+        fetch(`/api/owner/locations?organizationId=${encodeURIComponent(organizationId)}`, {
+          cache: "no-store",
+        }),
+      ]);
+      if (a.status === 401) {
+        window.location.href = "/login?message=session_expired";
+        return;
+      }
+      const ad = await a.json();
+      if (!a.ok) throw new Error(ad.error || `Unable to load team (HTTP ${a.status}).`);
+      if (!Array.isArray(ad.members) || !Array.isArray(ad.invitations)) {
+        throw new Error("Unexpected team response from server.");
+      }
+      setTeam({ members: ad.members, invitations: ad.invitations });
+      if (b.ok) {
+        const bd = await b.json();
+        setLocations(bd.locations || []);
+      }
+      setMsg("");
+    } catch (error) {
+      setMsg(error.message || "Unable to load team members.");
+    } finally {
+      setTeamLoading(false);
     }
-    const ad = await a.json(),
-      bd = await b.json();
-    setTeam(ad);
-    setLocations(bd.locations || []);
   };
   useEffect(() => {
-    load().catch(() => setMsg("Unable to load team members."));
+    load();
     setPlanLoading(true);
     fetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, {
       cache: "no-store",
@@ -172,6 +191,16 @@ export default function Team() {
         <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_420px]">
           <section className="rounded-2xl border bg-white p-5">
             <h2 className="text-lg font-bold">Team</h2>
+            {teamLoading && <p className="mt-4 text-sm text-slate-500">Loading team members…</p>}
+            {!teamLoading &&
+              !msg &&
+              (team.members || []).length === 0 &&
+              (team.invitations || []).length === 0 && (
+                <p className="mt-4 text-sm text-slate-500">
+                  No team records found. Check that the restaurant owner has an OrganizationMember
+                  record.
+                </p>
+              )}
             <div className="mt-4 divide-y">
               {(team.members || []).map((m) => (
                 <div key={m._id} className="flex items-center justify-between gap-4 py-4">
