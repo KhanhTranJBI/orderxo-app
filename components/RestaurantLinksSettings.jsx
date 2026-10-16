@@ -4,7 +4,8 @@ const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const socialFields = [
   ["facebook", "Facebook"],
   ["instagram", "Instagram"],
-  ["googleReview", "Google"],
+  ["google", "Google Business Profile"],
+  ["googleReview", "Google Review Link"],
   ["yelp", "Yelp"],
   ["tiktok", "TikTok"],
   ["youtube", "YouTube"],
@@ -115,6 +116,16 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
               placeholder="https://..."
               onChange={(e) => change("social", { ...social, [key]: e.target.value })}
             />
+            {key === "googleReview" && (
+              <span className="block text-xs font-normal text-slate-500">
+                Paste the direct Write a Review link from Google Business Profile. Used in Order Completed emails.
+              </span>
+            )}
+            {key === "google" && (
+              <span className="block text-xs font-normal text-slate-500">
+                Your public Google Business Profile link, separate from the review link.
+              </span>
+            )}
           </label>
         ))}
       </div>
