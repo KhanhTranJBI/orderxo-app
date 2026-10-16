@@ -53,6 +53,47 @@ export default function OrdersManager({ organizationId }) {
 }
 function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const [alertOrderIds, setAlertOrderIds] = useState([]);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioContextRef = useRef(null);
+  const soundEnabledRef = useRef(false);
+  const playNewOrderSound = useCallback(() => {
+    const ctx = audioContextRef.current;
+    if (!soundEnabledRef.current || !ctx || ctx.state !== "running") return;
+    // Three short tones: no external audio asset or network request required.
+    [0, 0.32, 0.64].forEach((delay) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(880, ctx.currentTime + delay);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.23);
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start(ctx.currentTime + delay);
+      oscillator.stop(ctx.currentTime + delay + 0.24);
+    });
+  }, []);
+  const enableSound = async () => {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error("Audio is not supported by this browser");
+      if (!audioContextRef.current) audioContextRef.current = new AudioContextClass();
+      await audioContextRef.current.resume();
+      if (audioContextRef.current.state !== "running") throw new Error("Audio is blocked");
+      soundEnabledRef.current = true;
+      setSoundEnabled(true);
+      playNewOrderSound(); // Confirm the speaker works immediately.
+    } catch (error) {
+      console.error("Could not enable new order sound", error);
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+    }
+  };
+  useEffect(() => () => {
+    soundEnabledRef.current = false;
+    audioContextRef.current?.close().catch(() => {});
+  }, []);
   const seenOrdersRef = useRef(new Set());
   const initializedLocationRef = useRef(null);
   const [tab, setTab] = useState("active-orders"),
@@ -103,12 +144,13 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       const fresh = ids.filter((id) => !seenOrdersRef.current.has(id));
       ids.forEach((id) => seenOrdersRef.current.add(id));
       if (fresh.length) {
+        playNewOrderSound();
         setAlertOrderIds((previous) => [...new Set([...previous, ...fresh])]);
       }
       // Clear alerts once another staff member confirms or completes an order.
       setAlertOrderIds((previous) => previous.filter((id) => ids.includes(id)));
     },
-    [locationId],
+    [locationId, playNewOrderSound],
   );
   const load = useCallback(async () => {
     if (!locationId) return;
@@ -159,7 +201,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     } catch (e) {
       console.error("Unable to refresh active orders", e);
     }
-  }, [organizationId, locationId]);
+  }, [organizationId, locationId, observeActiveOrders]);
   const fetchActiveCarts = useCallback(async () => {
     if (!locationId) return;
     try {
@@ -221,6 +263,16 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             </button>
           ))}
         </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={enableSound}
+          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${soundEnabled ? "border-green-300 bg-green-50 text-green-700" : "border-orange-300 bg-orange-50 text-orange-700"}`}
+        >
+          <BellRing size={18} /> {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
+        </button>
+        <span className="text-xs text-slate-500">Keep this dashboard open. Your browser requires a click to enable sound.</span>
       </div>
       {error && (
         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
