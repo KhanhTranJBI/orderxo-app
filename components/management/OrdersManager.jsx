@@ -519,6 +519,21 @@ function OrderPriceSummary({ order }) {
     {order.amountPaidCents != null && <div className="flex justify-between py-1 text-slate-600"><span>Amount paid</span><span>{usd(order.amountPaidCents)}</span></div>}
   </div>;
 }
+const ACTIVE_ORDER_STATUS_STYLES = {
+  paid: {
+    card: "border-blue-200 border-l-[6px] border-l-blue-500 bg-blue-50/50",
+    badge: "bg-blue-100 text-blue-800",
+  },
+  preparing: {
+    card: "border-orange-200 border-l-[6px] border-l-orange-500 bg-orange-50/50",
+    badge: "bg-orange-100 text-orange-800",
+  },
+  ready: {
+    card: "border-green-200 border-l-[6px] border-l-green-500 bg-green-50/50",
+    badge: "bg-green-100 text-green-800",
+  },
+};
+
 function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -632,7 +647,7 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
           {section.orders.length === 0 ? <p className="text-sm text-slate-500">No orders in this section.</p> : null}
           <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
           {section.orders.map((order) => (
-        <div key={order._id} className="min-w-0 rounded-2xl border bg-white p-4 shadow-sm">
+        <div key={order._id} className={`min-w-0 rounded-2xl border p-4 shadow-sm ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.card || "border-slate-200 bg-white"}`}>
           <div className="flex flex-wrap justify-between gap-4">
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -651,7 +666,7 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
             </div>
             <div className="text-right">
               <div className="text-lg font-bold">{usd(order.totalAmountCents)}</div>
-              <span className="inline-block rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold capitalize text-orange-700">
+              <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold capitalize ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.badge || "bg-slate-100 text-slate-700"}`}>
                 {order.status}
               </span>
             </div>
