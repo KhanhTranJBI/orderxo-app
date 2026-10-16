@@ -4,7 +4,7 @@ const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const socialFields = [
   ["facebook", "Facebook"],
   ["instagram", "Instagram"],
-  ["googleReview", "Google Reviews"],
+  ["googleReview", "Google"],
   ["yelp", "Yelp"],
   ["tiktok", "TikTok"],
   ["youtube", "YouTube"],
