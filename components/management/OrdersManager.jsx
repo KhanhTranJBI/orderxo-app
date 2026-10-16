@@ -260,7 +260,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             onChanged={load}
           />
         ) : tab === "orders-history" ? (
-          <HistoryTable orders={history} pagination={pagination} page={page} setPage={setPage} />
+          <HistoryTable orders={history} pagination={pagination} page={page} setPage={setPage} canManage={canManage} organizationId={organizationId} locationId={locationId} onChanged={load} />
         ) : (
           <ReportTable report={report} />
         )}
@@ -439,6 +439,14 @@ function ActiveCarts({ carts }) {
     </div>
   );
 }
+function OrderTypeBadge({ orderType }) {
+  const dineIn = orderType === "dine_in";
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${dineIn ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
+      {dineIn ? "DINE IN" : "TO GO"}
+    </span>
+  );
+}
 function OrderChannel({ channel }) {
   const kiosk = channel === "terminal" || channel === "kiosk";
   const Icon = kiosk ? Monitor : CreditCard;
@@ -557,6 +565,7 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
                   #{order.orderNumber || String(order._id).slice(-6)}
                 </strong>
                 <OrderChannel channel={order.paymentChannel} />
+                <OrderTypeBadge orderType={order.orderType} />
               </div>
               <div className="text-sm text-slate-600">
                 {order.customer?.name || "Guest"} · {order.customer?.email || "No email"}
@@ -796,7 +805,7 @@ const HistoryPill = ({ children, tone = "green" }) => {
     </span>
   );
 };
-function HistoryTable({ orders, pagination, page, setPage }) {
+function HistoryTable({ orders, pagination, page, setPage, canManage, organizationId, locationId, onChanged }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     if (!selectedOrder) return;
@@ -934,7 +943,7 @@ function HistoryTable({ orders, pagination, page, setPage }) {
         </div>
       )}
       {selectedOrder && (
-        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} canManage={canManage} organizationId={organizationId} locationId={locationId} onRefunded={async () => { setSelectedOrder(null); await onChanged(); }} />
       )}
       {pagination?.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-end gap-3">
@@ -1056,7 +1065,8 @@ function ReportTable({ report }) {
   );
 }
 
-export function OrderHistoryDetails({ order, onClose }) {
+export function OrderHistoryDetails({ order, onClose, canManage = false, organizationId, locationId, onRefunded }) {
+  const [refundOpen, setRefundOpen] = useState(false);
   const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0);
   const status = String(order.status || "pending").toLowerCase();
   const timeline = [
@@ -1247,8 +1257,79 @@ export function OrderHistoryDetails({ order, onClose }) {
               </div>
             )}
           </div>
+          {canManage && order.status === "completed" && (
+            <div className="mt-6 border-t pt-5">
+              <button type="button" onClick={() => setRefundOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-orange-300 px-4 py-2 font-semibold text-orange-700 hover:bg-orange-50">
+                <RotateCcw size={16} /> Refund item or missing add-on
+              </button>
+              <p className="mt-2 text-xs text-slate-500">Refunds are subject to the restaurant's refund policy and payment-provider limits.</p>
+            </div>
+          )}
+          {refundOpen && (
+            <CompletedOrderRefund order={order} organizationId={organizationId} locationId={locationId} onClose={() => setRefundOpen(false)} onRefunded={onRefunded} />
+          )}
         </div>
       </section>
+    </div>
+  );
+}
+
+
+function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRefunded }) {
+  const [mode, setMode] = useState("item");
+  const [selected, setSelected] = useState({});
+  const [amount, setAmount] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const items = order.items || [];
+  const itemCents = items.reduce((sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0), 0);
+  const alreadyRefunded = Number(order.refundedAmountCents || 0);
+  const remaining = Math.max(0, Number(order.totalAmountCents || 0) - alreadyRefunded - Number(order.onlineServiceFeeCents || 0));
+  const cents = mode === "item" ? itemCents : Math.round(Number(amount) * 100);
+  const submit = async () => {
+    if (!Number.isSafeInteger(cents) || cents <= 0 || cents > remaining) { setError("Refund amount must be greater than zero and within the remaining refundable balance."); return; }
+    if (!reason.trim()) { setError("Please enter a reason for the refund."); return; }
+    setBusy(true); setError("");
+    try {
+      const query = new URLSearchParams({ organizationId, locationId });
+      const response = await ownerFetch(`/api/owner/manage/admin/orders/refund?${query}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, locationId, orderId: order._id, amountCents: cents, reason: reason.trim() }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Refund failed");
+      await onRefunded?.();
+      onClose();
+    } catch (e) { setError(e.message || "Refund failed"); } finally { setBusy(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 p-4" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
+      <div role="dialog" aria-modal="true" aria-label="Refund completed order" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="text-xl font-bold">Refund order #{order.orderNumber}</h3>
+        <p className="mt-2 text-sm text-slate-600">Remaining refundable (estimated): {usd(remaining)}. The backend validates the final amount.</p>
+        <div className="mt-4 flex gap-5 text-sm">
+          <label><input type="radio" checked={mode === "item"} onChange={() => setMode("item")} /> Select items</label>
+          <label><input type="radio" checked={mode === "amount"} onChange={() => setMode("amount")} /> Custom amount / missing add-on</label>
+        </div>
+        {mode === "item" ? (
+          <div className="mt-4 max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
+            {items.map((item, i) => (
+              <label key={i} className="flex items-center justify-between gap-3 text-sm">
+                <span><input type="checkbox" checked={!!selected[i]} onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))} /> {item.quantity || 1}× {item.name}</span>
+                <span>{usd(item.totalPriceCents)}</span>
+              </label>
+            ))}
+            <p className="font-semibold">Selected subtotal: {usd(itemCents)}</p>
+          </div>
+        ) : (
+          <label className="mt-4 block text-sm font-medium">Refund amount ($)<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label>
+        )}
+        <label className="mt-4 block text-sm font-medium">Reason<input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Missing item, missing add-on, etc." className="mt-1 w-full rounded-lg border p-3" /></label>
+        <p className="mt-3 text-xs text-amber-700">Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous item refunds need backend reconciliation.</p>
+        {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        <div className="mt-5 flex justify-end gap-3"><button disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2">Back</button><button disabled={busy} onClick={submit} className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy ? "Processing..." : `Refund ${usd(cents)}`}</button></div>
+      </div>
     </div>
   );
 }
