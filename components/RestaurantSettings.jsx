@@ -560,11 +560,6 @@ export default function RestaurantSettings({
 
   const setOrgPart = (part, key, value) =>
     setOrg((old) => ({ ...old, [part]: { ...old[part], [key]: value } }));
-  const setEmailNested = (part, key, value) =>
-    setOrg((old) => ({
-      ...old,
-      emailSettings: { ...old.emailSettings, [part]: { ...old.emailSettings[part], [key]: value } },
-    }));
   async function sendTestEmail() {
     setTestSending(true);
     setTestFeedback("");
@@ -597,7 +592,6 @@ export default function RestaurantSettings({
           website: org.website,
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
-          emailSettings: org.emailSettings,
           ordering: org.ordering,
           smartUpsell: org.smartUpsell,
           notifications: org.notifications,
@@ -932,22 +926,6 @@ export default function RestaurantSettings({
                     }
                   />
                 </Field>
-                <Field label="Buyer receipt subject">
-                  <input
-                    className={input}
-                    value={org.giftCards.buyerReceiptSubject || ""}
-                    onChange={(e) => setOrgPart("giftCards", "buyerReceiptSubject", e.target.value)}
-                  />
-                </Field>
-                <Field label="Recipient email subject">
-                  <input
-                    className={input}
-                    value={org.giftCards.recipientReceiptSubject || ""}
-                    onChange={(e) =>
-                      setOrgPart("giftCards", "recipientReceiptSubject", e.target.value)
-                    }
-                  />
-                </Field>
               </fieldset>
             </div>
           )}
@@ -957,8 +935,7 @@ export default function RestaurantSettings({
               <div>
                 <h2 className="text-xl font-bold">Email</h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Customize restaurant identity, subjects and short messages. OrderXO controls the
-                  underlying HTML templates.
+                  Preview transactional emails using your restaurant branding. OrderXO manages email delivery and templates.
                 </p>
               </div>
               {!staffMode && (
@@ -982,86 +959,7 @@ export default function RestaurantSettings({
                   <p className="text-xs text-slate-500">Sample orders and gift card codes are not real. Sending does not create orders or charges.</p>
                 </div>
               )}
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field label="From name">
-                  <input
-                    className={input}
-                    value={org.emailSettings.fromName || ""}
-                    onChange={(e) => setOrgPart("emailSettings", "fromName", e.target.value)}
-                  />
-                </Field>
-                <Field label="Reply-to email">
-                  <input
-                    type="email"
-                    className={input}
-                    value={org.emailSettings.replyTo || ""}
-                    onChange={(e) => setOrgPart("emailSettings", "replyTo", e.target.value)}
-                  />
-                </Field>
-                <Field
-                  label="Sending domain"
-                  hint={
-                    org.emailSettings.domainVerified
-                      ? "Verified"
-                      : "Changing this requires domain verification."
-                  }
-                >
-                  <input
-                    className={input}
-                    value={org.emailSettings.sendingDomain || ""}
-                    onChange={(e) => setOrgPart("emailSettings", "sendingDomain", e.target.value)}
-                  />
-                </Field>
-                <Field label="From email">
-                  <input
-                    type="email"
-                    className={input}
-                    value={org.emailSettings.fromEmail || ""}
-                    onChange={(e) => setOrgPart("emailSettings", "fromEmail", e.target.value)}
-                  />
-                </Field>
-              </div>
-              <div>
-                <h3 className="mb-4 font-bold">Email subjects</h3>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {Object.entries({
-                    orderReceipt: "Order receipt",
-                    abandonedCart: "Abandoned cart",
-                    orderConfirmed: "Order confirmed",
-                    orderReady: "Order ready",
-                    orderCompleted: "Order completed",
-                    orderCancelled: "Order cancelled",
-                  }).map(([key, label]) => (
-                    <Field key={key} label={label}>
-                      <input
-                        className={input}
-                        value={org.emailSettings.subjects[key] || ""}
-                        onChange={(e) => setEmailNested("subjects", key, e.target.value)}
-                      />
-                    </Field>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-4 font-bold">Custom messages</h3>
-                <div className="grid gap-4">
-                  {Object.entries({
-                    orderConfirmed: "Order confirmed",
-                    orderReady: "Order ready",
-                    orderCompleted: "Order completed",
-                    orderCancelled: "Order cancelled",
-                  }).map(([key, label]) => (
-                    <Field key={key} label={`${label} message`}>
-                      <textarea
-                        rows="3"
-                        className={input}
-                        value={org.emailSettings.messages[key] || ""}
-                        onChange={(e) => setEmailNested("messages", key, e.target.value)}
-                      />
-                    </Field>
-                  ))}
-                </div>
-              </div>
+              <p className="text-sm text-slate-600">OrderXO manages sender addresses, email subjects, and message templates automatically. Restaurant branding is applied from your saved settings.</p>
             </div>
           )}
 
