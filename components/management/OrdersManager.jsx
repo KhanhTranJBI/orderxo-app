@@ -1,3 +1,4 @@
+import SpecialInstructions from "./SpecialInstructions.jsx";
 "use client";
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -768,17 +769,7 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
               <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-600">Scheduled: {pickupSchedule(order).label}</span><PickupCountdown schedule={pickupSchedule(order)} now={now} /></div>
             ) : <span className="font-bold text-orange-700">ASAP · Prepare as soon as possible</span>}
           </div>
-          {String(order.specialInstructions || "").trim() && (
-            <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
-              <div className="mb-1 flex items-center gap-2 font-bold text-orange-800">
-                <span aria-hidden="true">📝</span>
-                <span>Special Instructions</span>
-              </div>
-              <p className="whitespace-pre-wrap break-words text-sm italic text-orange-900">
-                {order.specialInstructions}
-              </p>
-            </div>
-          )}
+          <SpecialInstructions instructions={order.specialInstructions} className="mt-4" />
           <OrderItems items={order.items} />
           <OrderPriceSummary order={order} />
           {canManage && (
@@ -1419,12 +1410,7 @@ export function OrderHistoryDetails({ order, onClose, canManage = false, organiz
               </div>
             ))}
           </div>
-          {order.specialInstructions && (
-            <div className="mt-5 rounded-xl bg-amber-50 p-4">
-              <h3 className="font-bold">Special instructions</h3>
-              <p>{order.specialInstructions}</p>
-            </div>
-          )}
+          <SpecialInstructions instructions={order.specialInstructions} className="mt-5" />
           <div className="mt-7">
             {line("Subtotal", order.subtotalCents)}
             {cents(order.promoDiscountCents) > 0 &&

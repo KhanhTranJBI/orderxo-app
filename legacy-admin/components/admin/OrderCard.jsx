@@ -1,3 +1,4 @@
+import SpecialInstructions from "../../../components/management/SpecialInstructions.jsx";
 import { formatTime, statusColors } from "@/lib/utils";
 import clsx from "clsx";
 import InfoTooltip from "../InfoTooltip";
@@ -257,13 +258,7 @@ export default function OrderCard({
       </div>
 
       {/* Special Instructions */}
-      {order.specialInstructions && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm">
-          <p className="font-bold text-orange-700 mb-1">📝 Special Instructions</p>
-
-          <p className="text-orange-800 italic">{order.specialInstructions}</p>
-        </div>
-      )}
+      <SpecialInstructions instructions={order.specialInstructions} className="my-4" />
 
       {/* Items */}
       <div className="divide-y divide-gray-200">
