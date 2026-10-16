@@ -54,46 +54,86 @@ export default function OrdersManager({ organizationId }) {
 function Orders({ organizationId, locationId, locationLoading, canManage }) {
   const [alertOrderIds, setAlertOrderIds] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const audioContextRef = useRef(null);
+  const bellAudioRef = useRef(null);
   const soundEnabledRef = useRef(false);
-  const playNewOrderSound = useCallback(() => {
-    const ctx = audioContextRef.current;
-    if (!soundEnabledRef.current || !ctx || ctx.state !== "running") return;
-    // Three short tones: no external audio asset or network request required.
-    [0, 0.32, 0.64].forEach((delay) => {
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(880, ctx.currentTime + delay);
-      gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
-      gain.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + delay + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.23);
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-      oscillator.start(ctx.currentTime + delay);
-      oscillator.stop(ctx.currentTime + delay + 0.24);
+  const alertIdsRef = useRef([]);
+  const [soundError, setSoundError] = useState("");
+
+  // One looping sound for all pending new-order alerts.
+  const stopBell = useCallback(() => {
+    const audio = bellAudioRef.current;
+    if (!audio) return;
+    audio.pause();
+    audio.currentTime = 0;
+  }, []);
+
+  const startBell = useCallback(() => {
+    const audio = bellAudioRef.current;
+    if (!audio || !soundEnabledRef.current || !alertIdsRef.current.length) return;
+    if (!audio.paused) return;
+    audio.loop = true;
+    audio.play().catch((error) => {
+      console.warn("Kitchen bell blocked:", error);
+      setSoundError("Click Enable sound to allow the kitchen bell.");
     });
   }, []);
+
   const enableSound = async () => {
     try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) throw new Error("Audio is not supported by this browser");
-      if (!audioContextRef.current) audioContextRef.current = new AudioContextClass();
-      await audioContextRef.current.resume();
-      if (audioContextRef.current.state !== "running") throw new Error("Audio is blocked");
+      if (!bellAudioRef.current) {
+        bellAudioRef.current = new Audio("/sounds/kitchen-bell.wav");
+        bellAudioRef.current.preload = "auto";
+      }
+      const audio = bellAudioRef.current;
+      audio.loop = true;
       soundEnabledRef.current = true;
       setSoundEnabled(true);
-      playNewOrderSound(); // Confirm the speaker works immediately.
+      setSoundError("");
+      // User click unlocks playback. If there are no alerts, play once as a test.
+      if (alertIdsRef.current.length) {
+        await audio.play();
+      } else {
+        audio.loop = false;
+        await audio.play();
+        audio.onended = () => {
+          audio.onended = null;
+          audio.loop = true;
+          if (alertIdsRef.current.length) startBell();
+        };
+      }
     } catch (error) {
-      console.error("Could not enable new order sound", error);
+      console.error("Unable to play kitchen bell", error);
       soundEnabledRef.current = false;
       setSoundEnabled(false);
+      setSoundError("Cannot play /sounds/kitchen-bell.wav. Check the file and browser audio permissions.");
     }
   };
-  useEffect(() => () => {
-    soundEnabledRef.current = false;
-    audioContextRef.current?.close().catch(() => {});
-  }, []);
+
+  useEffect(() => {
+    bellAudioRef.current = new Audio("/sounds/kitchen-bell.wav");
+    bellAudioRef.current.preload = "auto";
+    bellAudioRef.current.loop = true;
+    return () => {
+      soundEnabledRef.current = false;
+      stopBell();
+      bellAudioRef.current = null;
+    };
+  }, [stopBell]);
+
+  useEffect(() => {
+    alertIdsRef.current = alertOrderIds;
+    if (alertOrderIds.length) startBell();
+    else stopBell();
+  }, [alertOrderIds, startBell, stopBell]);
+
+  const viewAlertedOrders = useCallback(() => {
+    alertIdsRef.current = [];
+    setAlertOrderIds([]);
+    stopBell();
+    setTab("active-orders");
+    setPage(1);
+    if (typeof window !== "undefined") window.location.hash = "tab=active-orders";
+  }, [stopBell]);
   const seenOrdersRef = useRef(new Set());
   const initializedLocationRef = useRef(null);
   const [tab, setTab] = useState("active-orders"),
@@ -121,7 +161,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     }
   }, []);
   const selectTab = (id) => {
-    if (id === "active-orders") setAlertOrderIds([]);
+    // Only the alert modal View Orders action acknowledges the ringing bell.
     setTab(id);
     setPage(1);
     if (typeof window !== "undefined") window.location.hash = `tab=${id}`;
@@ -144,13 +184,12 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       const fresh = ids.filter((id) => !seenOrdersRef.current.has(id));
       ids.forEach((id) => seenOrdersRef.current.add(id));
       if (fresh.length) {
-        playNewOrderSound();
         setAlertOrderIds((previous) => [...new Set([...previous, ...fresh])]);
       }
       // Clear alerts once another staff member confirms or completes an order.
       setAlertOrderIds((previous) => previous.filter((id) => ids.includes(id)));
     },
-    [locationId, playNewOrderSound],
+    [locationId],
   );
   const load = useCallback(async () => {
     if (!locationId) return;
@@ -272,7 +311,8 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
         >
           <BellRing size={18} /> {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
         </button>
-        <span className="text-xs text-slate-500">Keep this dashboard open. Your browser requires a click to enable sound.</span>
+        <span className="text-xs text-slate-500">The kitchen bell repeats until you click View Orders in the alert modal. Browser audio requires an initial click.</span>
+        {soundError && <span role="alert" className="text-xs text-red-600">{soundError}</span>}
       </div>
       {error && (
         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -317,8 +357,8 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           <ReportTable report={report} />
         )}
       </div>
-      {tab !== "active-orders" && alertOrderIds.length > 0 && (
-        <ActiveOrderAlert count={alertOrderIds.length} onView={() => selectTab("active-orders")} />
+      {alertOrderIds.length > 0 && (
+        <ActiveOrderAlert count={alertOrderIds.length} onView={viewAlertedOrders} />
       )}
     </div>
   );
@@ -343,7 +383,7 @@ function ActiveOrderAlert({ count, onView }) {
             onClick={onView}
             className="mt-6 w-full rounded-xl bg-orange-500 px-5 py-3 font-bold text-white transition hover:bg-orange-600"
           >
-            View Active Orders
+            View Order
           </button>
         </div>
       </div>
