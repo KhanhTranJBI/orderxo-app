@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -27,8 +28,16 @@ export default function OwnerForm({ mode, plan = "starter" }) {
     next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/dashboard";
   const [form, setForm] = useState({ locationName: "Main Location" });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
@@ -81,16 +90,8 @@ export default function OwnerForm({ mode, plan = "starter" }) {
           />
         </label>
       ))}
-      {error && (
-        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
-      {message && (
-        <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-700">
-          {message}
-        </p>
-      )}
+      
+      
       <button
         disabled={busy}
         className="w-full rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white disabled:opacity-60"

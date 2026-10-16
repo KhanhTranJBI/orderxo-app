@@ -1,11 +1,16 @@
 "use client";
 
+import { toast } from "react-toastify";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function EndSupportButton() {
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const router = useRouter();
 
   async function endSupport() {
@@ -36,11 +41,7 @@ export default function EndSupportButton() {
       >
         {busy ? "Ending support…" : "End Support"}
       </button>
-      {error && (
-        <p role="alert" className="max-w-xs text-right text-xs text-red-700">
-          {error}
-        </p>
-      )}
+      
     </div>
   );
 }

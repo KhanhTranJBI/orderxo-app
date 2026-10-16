@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { useEffect, useState } from "react";
@@ -34,8 +35,16 @@ export default function LocationSettingsManager({ organizationId }) {
   const [settings, setSettings] = useState(empty);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
   useEffect(() => {
     if (!locationId && loc.locations[0])
       setLocationId(String(loc.locations[0]._id || loc.locations[0].id));
@@ -126,9 +135,7 @@ export default function LocationSettingsManager({ organizationId }) {
         {(error || loc.error) && (
           <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error || loc.error}</p>
         )}
-        {message && (
-          <p className="mt-5 rounded-lg bg-green-50 p-3 text-sm text-green-700">{message}</p>
-        )}
+        
         {loading || loc.loading ? (
           <LoadingSpinner label="Loading location settings…" />
         ) : (

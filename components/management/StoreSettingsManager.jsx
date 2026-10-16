@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -145,8 +146,16 @@ export default function StoreSettingsManager({ organizationId }) {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
 
   const [modal, setModal] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -574,9 +583,7 @@ export default function StoreSettingsManager({ organizationId }) {
           <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{loc.error || error}</p>
         )}
 
-        {message && (
-          <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-800">{message}</p>
-        )}
+        
 
         {!permission.loading && canReadStore && !canManage && (
           <p className="mt-4 rounded-lg border bg-white p-3 text-sm text-slate-700">

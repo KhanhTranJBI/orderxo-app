@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "react-toastify";
 import { useEffect, useMemo, useRef, useState } from "react";
 import HomepageSlidesManager from "./management/HomepageSlidesManager";
 import {
@@ -436,8 +437,16 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
   const [published, setPublished] = useState(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
   const [mobile, setMobile] = useState(false);
   const [selected, setSelected] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
@@ -661,22 +670,8 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
           </button>
         </div>
       </header>
-      {error && (
-        <div
-          role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-        >
-          {error}
-        </div>
-      )}
-      {message && (
-        <div
-          role="status"
-          className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800"
-        >
-          {message}
-        </div>
-      )}
+      
+      
       {loading ? (
         <p className="py-16 text-center text-slate-500">Loading homepage settings…</p>
       ) : (

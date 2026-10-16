@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ownerFetch } from "../lib/ownerFetch";
@@ -6,7 +7,11 @@ import { ownerFetch } from "../lib/ownerFetch";
 export default function GoLiveChecklist({ organizationId, locations, staffMode = false }) {
   const [locationId, setLocationId] = useState(String(locations[0]?._id || ""));
   const [data, setData] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const [busy, setBusy] = useState(false);
   async function refresh(id = locationId) {
     if (!id) return;
@@ -71,11 +76,7 @@ export default function GoLiveChecklist({ organizationId, locations, staffMode =
           </option>
         ))}
       </select>
-      {error && (
-        <p role="alert" className="rounded-lg bg-red-50 p-3 text-red-700">
-          {error}
-        </p>
-      )}
+      
       {!data && !error && <p className="text-slate-500">Checking setup…</p>}
       {data && (
         <>

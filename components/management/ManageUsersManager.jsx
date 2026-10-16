@@ -18,7 +18,11 @@ export default function ManageUsersManager({ organizationId }) {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [optInFilter, setOptInFilter] = useState("all");
@@ -150,11 +154,7 @@ export default function ManageUsersManager({ organizationId }) {
             </select>
           </div>
 
-          {error && (
-            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
+          
           {loading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="animate-spin text-orange-600" size={30} />

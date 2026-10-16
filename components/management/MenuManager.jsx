@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -647,7 +648,11 @@ function CategoryModal({ category, onClose, onSave }) {
   const [isActive, setIsActive] = useState(category?.isActive !== false);
   const [slugTouched, setSlugTouched] = useState(Boolean(category));
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const submit = async () => {
     if (!name.trim()) return setError("Category name is required.");
     setSaving(true);
@@ -677,7 +682,7 @@ function CategoryModal({ category, onClose, onSave }) {
           </button>
         </div>
         <div className="space-y-4 p-6">
-          {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-600">Category Name</span>
             <input
@@ -1068,7 +1073,7 @@ export default function MenuManager({ organizationId }) {
               </div>
             )}
 
-            {error && <p className="mt-4 text-red-600">{error}</p>}
+            
             {tab === "items" ? (
               <>
                 <div className="mt-5 flex gap-2">

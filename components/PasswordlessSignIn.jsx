@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -11,7 +12,11 @@ export default function PasswordlessSignIn() {
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
 
   async function submit(e) {
     e.preventDefault();
@@ -74,11 +79,7 @@ export default function PasswordlessSignIn() {
           placeholder="you@restaurant.com"
         />
       </label>
-      {error && (
-        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
-          {error}
-        </p>
-      )}
+      
       <button
         disabled={busy}
         className="w-full rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white disabled:opacity-60"

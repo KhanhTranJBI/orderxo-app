@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { ownerFetch } from "../lib/ownerFetch";
 export default function StripeConnectManager({ organizationId, locations, initialLocationId }) {
@@ -8,12 +9,20 @@ export default function StripeConnectManager({ organizationId, locations, initia
       : String(locations[0]?._id || ""),
   );
   const [status, setStatus] = useState(null);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const [busy, setBusy] = useState(false);
   const [sources, setSources] = useState([]);
   const [sourceId, setSourceId] = useState("");
   const [confirmSource, setConfirmSource] = useState(null);
-  const [success, setSuccess] = useState("");
+  const [success, setSuccessState] = useState("");
+  const setSuccess = (value) => {
+    setSuccessState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
   const [reload, setReload] = useState(0);
   useEffect(() => {
     if (!locationId) return;
@@ -112,16 +121,8 @@ export default function StripeConnectManager({ organizationId, locations, initia
           </option>
         ))}
       </select>
-      {success && (
-        <p role="status" className="rounded-lg bg-green-50 p-3 text-green-800">
-          {success}
-        </p>
-      )}
-      {error && (
-        <p className="text-red-700" role="alert">
-          {error}
-        </p>
-      )}
+      
+      
       {status && (
         <div className="text-sm space-y-1">
           <p>

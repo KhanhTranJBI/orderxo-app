@@ -22,8 +22,16 @@ export default function BillingManager({
   const [billingSnapshot, setBillingSnapshot] = useState(null);
   const billing = billingSnapshot || locationBilling;
   const [busy, setBusy] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
+  const [notice, setNoticeState] = useState("");
+  const setNotice = (value) => {
+    setNoticeState(value);
+    if (typeof value === "string" && value.trim()) toast.info(value);
+  };
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [confirmPlan, setConfirmPlan] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
@@ -144,16 +152,8 @@ export default function BillingManager({
 
   return (
     <div className="space-y-6">
-      {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          {error}
-        </p>
-      )}
-      {notice && (
-        <p className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-          {notice}
-        </p>
-      )}
+      
+      
 
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
         <p className="text-sm text-slate-500">Current plan</p>

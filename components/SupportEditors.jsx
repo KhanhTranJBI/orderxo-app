@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 const areas = ["menu", "website", "settings"];
 export default function SupportEditors({ workspace }) {
@@ -7,7 +8,11 @@ export default function SupportEditors({ workspace }) {
   const [data, setData] = useState(null);
   const [selected, setSelected] = useState("");
   const [form, setForm] = useState({});
-  const [message, setMessage] = useState("");
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
   const [loading, setLoading] = useState(false);
   const permissions = workspace.session.permissions || [];
   const canEdit = permissions.includes(`setup:${area}`);
@@ -199,11 +204,7 @@ export default function SupportEditors({ workspace }) {
           />
         </div>
       )}
-      {message && (
-        <p role="status" className="rounded-lg bg-slate-100 p-3 text-sm">
-          {message}
-        </p>
-      )}
+      
       <button
         type="button"
         onClick={save}

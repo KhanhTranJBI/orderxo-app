@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "react-toastify";
 import LoadingSpinner from "./ui/LoadingSpinner";
 
 import HomepageBuilder from "./HomepageBuilder";
@@ -488,8 +489,16 @@ export default function RestaurantSettings({
   const [plan, setPlan] = useState(null);
   const [entitlementError, setEntitlementError] = useState("");
   const [upgradeFeature, setUpgradeFeature] = useState(null);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessageState] = useState("");
+  const setMessage = (value) => {
+    setMessageState(value);
+    if (typeof value === "string" && value.trim()) toast.success(value);
+  };
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
 
   useEffect(() => {
     if (!organizationId) {
@@ -662,16 +671,8 @@ export default function RestaurantSettings({
           </div>
         </div>
 
-        {error && (
-          <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-            {error}
-          </div>
-        )}
-        {message && (
-          <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
-            {message}
-          </div>
-        )}
+        
+        
 
         <section className="mt-6 rounded-2xl border bg-white p-6 shadow-sm md:p-8">
           {tab === "General" && (

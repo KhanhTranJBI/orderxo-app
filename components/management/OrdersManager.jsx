@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "react-toastify";
 import SpecialInstructions from "./SpecialInstructions.jsx";
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -326,11 +327,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           </span>
         )}
       </div>
-      {error && (
-        <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-          {error}
-        </div>
-      )}
+      
       {tab === "orders-history" && (
         <div className="relative mt-6 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={19} />
@@ -1585,7 +1582,11 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setErrorState] = useState("");
+  const setError = (value) => {
+    setErrorState(value);
+    if (typeof value === "string" && value.trim()) toast.error(value);
+  };
   const items = order.items || [];
   const itemCents = items.reduce(
     (sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0),
@@ -1706,11 +1707,7 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous
           item refunds need backend reconciliation.
         </p>
-        {error && (
-          <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
-          </p>
-        )}
+        
         <div className="mt-5 flex justify-end gap-3">
           <button disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2">
             Back
