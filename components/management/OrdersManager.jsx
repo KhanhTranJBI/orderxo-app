@@ -440,10 +440,9 @@ function ActiveCarts({ carts }) {
   );
 }
 function OrderTypeBadge({ orderType }) {
-  const dineIn = orderType === "dine_in";
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold ${dineIn ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-      {dineIn ? "DINE IN" : "TO GO"}
+    <span className="inline-flex items-center whitespace-nowrap rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700">
+      {orderType === "dine_in" ? "Dine In" : "To Go"}
     </span>
   );
 }
@@ -459,16 +458,34 @@ function OrderChannel({ channel }) {
     </span>
   );
 }
-// Pickup timestamps should be ISO values supplied by the API. Legacy display-only
-// values remain visible, but do not receive a fabricated countdown.
+// Prefer a complete timestamp. Legacy orders may only have a clock value
+// such as "07:00 AM"; infer the pickup day from order creation as a fallback.
 function pickupSchedule(order) {
   const raw = order.scheduledPickupAt || order.pickupAt || order.pickupTime;
-  if (!raw || /^(asap|now|immediate)$/i.test(String(raw).trim())) return { scheduled: false };
+  if (!raw || /^(asap|now|immediate)$/i.test(String(raw).trim())) {
+    return { scheduled: false };
+  }
   const value = String(raw).trim();
-  const date = new Date(value);
-  const timestamp = Number.isFinite(date.getTime()) && (/\d{4}-\d{2}-\d{2}/.test(value) || typeof raw !== "string")
-    ? date.getTime() : null;
-  return { scheduled: true, label: value, timestamp };
+  const absolute = new Date(raw);
+  if (Number.isFinite(absolute.getTime()) &&
+      (typeof raw !== "string" || /\d{4}-\d{2}-\d{2}/.test(value))) {
+    return { scheduled: true, label: value, timestamp: absolute.getTime() };
+  }
+  const clock = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+  const created = new Date(order.createdAt);
+  if (clock && Number.isFinite(created.getTime())) {
+    let hour = Number(clock[1]);
+    const minute = Number(clock[2]);
+    const period = clock[3]?.toUpperCase();
+    if (minute <= 59 && (period ? hour >= 1 && hour <= 12 : hour <= 23)) {
+      if (period) hour = (hour % 12) + (period === "PM" ? 12 : 0);
+      const pickup = new Date(created);
+      pickup.setHours(hour, minute, 0, 0);
+      if (pickup.getTime() < created.getTime()) pickup.setDate(pickup.getDate() + 1);
+      return { scheduled: true, label: value, timestamp: pickup.getTime(), inferred: true };
+    }
+  }
+  return { scheduled: true, label: value, timestamp: null };
 }
 function PickupCountdown({ schedule, now }) {
   if (!schedule.scheduled) return null;
@@ -641,9 +658,20 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
           </div>
           <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
             {pickupSchedule(order).scheduled ? (
-              <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-600">Scheduled: {pickupSchedule(order).timestamp != null ? new Date(pickupSchedule(order).timestamp).toLocaleString() : pickupSchedule(order).label}</span><PickupCountdown schedule={pickupSchedule(order)} now={now} /></div>
+              <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-600">Scheduled: {pickupSchedule(order).label}</span><PickupCountdown schedule={pickupSchedule(order)} now={now} /></div>
             ) : <span className="font-bold text-orange-700">ASAP · Prepare as soon as possible</span>}
           </div>
+          {String(order.specialInstructions || "").trim() && (
+            <div className="mt-4 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3">
+              <div className="mb-1 flex items-center gap-2 font-bold text-orange-800">
+                <span aria-hidden="true">📝</span>
+                <span>Special Instructions</span>
+              </div>
+              <p className="whitespace-pre-wrap break-words text-sm italic text-orange-900">
+                {order.specialInstructions}
+              </p>
+            </div>
+          )}
           <OrderItems items={order.items} />
           <OrderPriceSummary order={order} />
           {canManage && (
