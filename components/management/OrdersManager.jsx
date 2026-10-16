@@ -1,5 +1,6 @@
-import SpecialInstructions from "./SpecialInstructions.jsx";
 "use client";
+
+import SpecialInstructions from "./SpecialInstructions.jsx";
 import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -106,7 +107,9 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
       console.error("Unable to play kitchen bell", error);
       soundEnabledRef.current = false;
       setSoundEnabled(false);
-      setSoundError("Cannot play /sounds/kitchen-bell.wav. Check the file and browser audio permissions.");
+      setSoundError(
+        "Cannot play /sounds/kitchen-bell.wav. Check the file and browser audio permissions.",
+      );
     }
   };
 
@@ -310,10 +313,18 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           onClick={enableSound}
           className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${soundEnabled ? "border-green-300 bg-green-50 text-green-700" : "border-orange-300 bg-orange-50 text-orange-700"}`}
         >
-          <BellRing size={18} /> {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
+          <BellRing size={18} />{" "}
+          {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
         </button>
-        <span className="text-xs text-slate-500">The kitchen bell repeats until you click View Orders in the alert modal. Browser audio requires an initial click.</span>
-        {soundError && <span role="alert" className="text-xs text-red-600">{soundError}</span>}
+        <span className="text-xs text-slate-500">
+          The kitchen bell repeats until you click View Orders in the alert modal. Browser audio
+          requires an initial click.
+        </span>
+        {soundError && (
+          <span role="alert" className="text-xs text-red-600">
+            {soundError}
+          </span>
+        )}
       </div>
       {error && (
         <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -353,7 +364,16 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             onChanged={load}
           />
         ) : tab === "orders-history" ? (
-          <HistoryTable orders={history} pagination={pagination} page={page} setPage={setPage} canManage={canManage} organizationId={organizationId} locationId={locationId} onChanged={load} />
+          <HistoryTable
+            orders={history}
+            pagination={pagination}
+            page={page}
+            setPage={setPage}
+            canManage={canManage}
+            organizationId={organizationId}
+            locationId={locationId}
+            onChanged={load}
+          />
         ) : (
           <ReportTable report={report} />
         )}
@@ -560,8 +580,10 @@ function pickupSchedule(order) {
   }
   const value = String(raw).trim();
   const absolute = new Date(raw);
-  if (Number.isFinite(absolute.getTime()) &&
-      (typeof raw !== "string" || /\d{4}-\d{2}-\d{2}/.test(value))) {
+  if (
+    Number.isFinite(absolute.getTime()) &&
+    (typeof raw !== "string" || /\d{4}-\d{2}-\d{2}/.test(value))
+  ) {
     return { scheduled: true, label: value, timestamp: absolute.getTime() };
   }
   const clock = value.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
@@ -583,15 +605,23 @@ function pickupSchedule(order) {
 function PickupCountdown({ schedule, now }) {
   if (!schedule.scheduled) return null;
   if (schedule.timestamp === null) {
-    return <span className="font-semibold text-indigo-700">{schedule.label} · Countdown unavailable</span>;
+    return (
+      <span className="font-semibold text-indigo-700">
+        {schedule.label} · Countdown unavailable
+      </span>
+    );
   }
   const remaining = schedule.timestamp - now;
   const minutes = Math.ceil(Math.abs(remaining) / 60000);
   const hours = Math.floor(minutes / 60);
   const label = `${hours ? `${hours}h ` : ""}${minutes % 60}m`;
-  return <span className={`font-bold ${remaining <= 0 ? "text-red-700" : remaining <= 15 * 60000 ? "text-orange-700" : "text-indigo-700"}`}>
-    {remaining <= 0 ? `Pickup time passed ${label} ago` : `Pickup in ${label}`}
-  </span>;
+  return (
+    <span
+      className={`font-bold ${remaining <= 0 ? "text-red-700" : remaining <= 15 * 60000 ? "text-orange-700" : "text-indigo-700"}`}
+    >
+      {remaining <= 0 ? `Pickup time passed ${label} ago` : `Pickup in ${label}`}
+    </span>
+  );
 }
 function OrderPriceSummary({ order }) {
   const count = (order.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
@@ -603,14 +633,37 @@ function OrderPriceSummary({ order }) {
     ["Service fee", order.onlineServiceFeeCents],
     ["Tip", order.tipCents],
   ];
-  return <div className="mt-4 border-t pt-3 text-sm">
-    <div className="mb-2 flex justify-between font-semibold text-slate-700"><span>Total items</span><span>{count}</span></div>
-    {rows.map(([label, cents, discount]) => cents != null && Number(cents) !== 0 && (
-      <div key={label} className="flex justify-between gap-2 py-1 text-slate-600"><span>{label}</span><span>{discount ? "−" : ""}{usd(cents)}</span></div>
-    ))}
-    <div className="mt-2 flex justify-between border-t pt-3 text-base font-bold text-slate-900"><span>Order total</span><span>{usd(order.totalAmountCents)}</span></div>
-    {order.amountPaidCents != null && <div className="flex justify-between py-1 text-slate-600"><span>Amount paid</span><span>{usd(order.amountPaidCents)}</span></div>}
-  </div>;
+  return (
+    <div className="mt-4 border-t pt-3 text-sm">
+      <div className="mb-2 flex justify-between font-semibold text-slate-700">
+        <span>Total items</span>
+        <span>{count}</span>
+      </div>
+      {rows.map(
+        ([label, cents, discount]) =>
+          cents != null &&
+          Number(cents) !== 0 && (
+            <div key={label} className="flex justify-between gap-2 py-1 text-slate-600">
+              <span>{label}</span>
+              <span>
+                {discount ? "−" : ""}
+                {usd(cents)}
+              </span>
+            </div>
+          ),
+      )}
+      <div className="mt-2 flex justify-between border-t pt-3 text-base font-bold text-slate-900">
+        <span>Order total</span>
+        <span>{usd(order.totalAmountCents)}</span>
+      </div>
+      {order.amountPaidCents != null && (
+        <div className="flex justify-between py-1 text-slate-600">
+          <span>Amount paid</span>
+          <span>{usd(order.amountPaidCents)}</span>
+        </div>
+      )}
+    </div>
+  );
 }
 const ACTIVE_ORDER_STATUS_STYLES = {
   paid: {
@@ -634,7 +687,12 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
     return () => clearInterval(timer);
   }, []);
   const asapOrders = orders.filter((order) => !pickupSchedule(order).scheduled);
-  const scheduledOrders = orders.filter((order) => pickupSchedule(order).scheduled).sort((a, b) => (pickupSchedule(a).timestamp ?? Infinity) - (pickupSchedule(b).timestamp ?? Infinity));
+  const scheduledOrders = orders
+    .filter((order) => pickupSchedule(order).scheduled)
+    .sort(
+      (a, b) =>
+        (pickupSchedule(a).timestamp ?? Infinity) - (pickupSchedule(b).timestamp ?? Infinity),
+    );
   const [dialog, setDialog] = useState(null);
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState("");
@@ -731,102 +789,123 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
           {inlineError}
         </p>
       )}
-      {[{ title: "ASAP Orders", orders: asapOrders, color: "text-orange-700" }, { title: "Scheduled Orders", orders: scheduledOrders, color: "text-indigo-700" }].map((section) => (
+      {[
+        { title: "ASAP Orders", orders: asapOrders, color: "text-orange-700" },
+        { title: "Scheduled Orders", orders: scheduledOrders, color: "text-indigo-700" },
+      ].map((section) => (
         <section key={section.title} className="space-y-4">
           <div className="flex items-center justify-between gap-3 border-b pb-2">
             <h2 className={`text-xl font-bold ${section.color}`}>{section.title}</h2>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">{section.orders.length} orders</span>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+              {section.orders.length} orders
+            </span>
           </div>
-          {section.orders.length === 0 ? <p className="text-sm text-slate-500">No orders in this section.</p> : null}
+          {section.orders.length === 0 ? (
+            <p className="text-sm text-slate-500">No orders in this section.</p>
+          ) : null}
           <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {section.orders.map((order) => (
-        <div key={order._id} className={`min-w-0 rounded-2xl border p-4 shadow-sm ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.card || "border-slate-200 bg-white"}`}>
-          <div className="flex flex-wrap justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <strong className="text-lg">
-                  #{order.orderNumber || String(order._id).slice(-6)}
-                </strong>
-                <OrderChannel channel={order.paymentChannel} />
-                <OrderTypeBadge orderType={order.orderType} />
-              </div>
-              <div className="break-words text-sm text-slate-600">
-                {order.customer?.name || "Guest"} · {order.customer?.email || "No email"}
-              </div>
-              <div className="text-xs text-slate-400">
-                {new Date(order.createdAt).toLocaleString()}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-bold">{usd(order.totalAmountCents)}</div>
-              <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold capitalize ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.badge || "bg-slate-100 text-slate-700"}`}>
-                {order.status}
-              </span>
-            </div>
-          </div>
-          <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
-            {pickupSchedule(order).scheduled ? (
-              <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-slate-600">Scheduled: {pickupSchedule(order).label}</span><PickupCountdown schedule={pickupSchedule(order)} now={now} /></div>
-            ) : <span className="font-bold text-orange-700">ASAP · Prepare as soon as possible</span>}
-          </div>
-          <SpecialInstructions instructions={order.specialInstructions} className="mt-4" />
-          <OrderItems items={order.items} />
-          <OrderPriceSummary order={order} />
-          {canManage && (
-            <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
-              {order.status === "paid" && (
-                <button
-                  onClick={() => updateStatusImmediately(order, "preparing")}
-                  disabled={Boolean(directBusyId)}
-                  className="rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white hover:bg-orange-600"
-                >
-                  <Check size={16} className="mr-1 inline" />
-                  {directBusyId === String(order._id) ? "Confirming..." : "Confirm"}
-                </button>
-              )}
-              {order.status === "preparing" && (
-                <button
-                  onClick={() => updateStatusImmediately(order, "ready")}
-                  disabled={Boolean(directBusyId)}
-                  className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
-                >
-                  {directBusyId === String(order._id) ? "Updating..." : "Mark Ready"}
-                </button>
-              )}
-              {order.status === "ready" && (
-                <button
-                  onClick={() => updateStatusImmediately(order, "completed")}
-                  disabled={Boolean(directBusyId)}
-                  className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
-                >
-                  {directBusyId === String(order._id) ? "Updating..." : "Ready Pickup"}
-                </button>
-              )}
-              <button
-                onClick={() => open(order, "print")}
-                className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
+            {section.orders.map((order) => (
+              <div
+                key={order._id}
+                className={`min-w-0 rounded-2xl border p-4 shadow-sm ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.card || "border-slate-200 bg-white"}`}
               >
-                <Printer size={16} className="mr-1 inline" />
-                Print
-              </button>
-              <button
-                onClick={() => open(order, "refund")}
-                className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
-              >
-                <RotateCcw size={16} className="mr-1 inline" />
-                Refund
-              </button>
-              <button
-                onClick={() => open(order, "cancel")}
-                className="rounded-xl border border-red-200 px-4 py-2 font-semibold text-red-600"
-              >
-                <Ban size={16} className="mr-1 inline" />
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-          ))}
+                <div className="flex flex-wrap justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <strong className="text-lg">
+                        #{order.orderNumber || String(order._id).slice(-6)}
+                      </strong>
+                      <OrderChannel channel={order.paymentChannel} />
+                      <OrderTypeBadge orderType={order.orderType} />
+                    </div>
+                    <div className="break-words text-sm text-slate-600">
+                      {order.customer?.name || "Guest"} · {order.customer?.email || "No email"}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {new Date(order.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">{usd(order.totalAmountCents)}</div>
+                    <span
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-semibold capitalize ${ACTIVE_ORDER_STATUS_STYLES[order.status]?.badge || "bg-slate-100 text-slate-700"}`}
+                    >
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+                  {pickupSchedule(order).scheduled ? (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-slate-600">
+                        Scheduled: {pickupSchedule(order).label}
+                      </span>
+                      <PickupCountdown schedule={pickupSchedule(order)} now={now} />
+                    </div>
+                  ) : (
+                    <span className="font-bold text-orange-700">
+                      ASAP · Prepare as soon as possible
+                    </span>
+                  )}
+                </div>
+                <SpecialInstructions instructions={order.specialInstructions} className="mt-4" />
+                <OrderItems items={order.items} />
+                <OrderPriceSummary order={order} />
+                {canManage && (
+                  <div className="mt-5 flex flex-wrap gap-2 border-t pt-4">
+                    {order.status === "paid" && (
+                      <button
+                        onClick={() => updateStatusImmediately(order, "preparing")}
+                        disabled={Boolean(directBusyId)}
+                        className="rounded-xl bg-orange-500 px-4 py-2 font-semibold text-white hover:bg-orange-600"
+                      >
+                        <Check size={16} className="mr-1 inline" />
+                        {directBusyId === String(order._id) ? "Confirming..." : "Confirm"}
+                      </button>
+                    )}
+                    {order.status === "preparing" && (
+                      <button
+                        onClick={() => updateStatusImmediately(order, "ready")}
+                        disabled={Boolean(directBusyId)}
+                        className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
+                      >
+                        {directBusyId === String(order._id) ? "Updating..." : "Mark Ready"}
+                      </button>
+                    )}
+                    {order.status === "ready" && (
+                      <button
+                        onClick={() => updateStatusImmediately(order, "completed")}
+                        disabled={Boolean(directBusyId)}
+                        className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
+                      >
+                        {directBusyId === String(order._id) ? "Updating..." : "Ready Pickup"}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => open(order, "print")}
+                      className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
+                    >
+                      <Printer size={16} className="mr-1 inline" />
+                      Print
+                    </button>
+                    <button
+                      onClick={() => open(order, "refund")}
+                      className="rounded-xl border px-4 py-2 font-semibold text-slate-700"
+                    >
+                      <RotateCcw size={16} className="mr-1 inline" />
+                      Refund
+                    </button>
+                    <button
+                      onClick={() => open(order, "cancel")}
+                      className="rounded-xl border border-red-200 px-4 py-2 font-semibold text-red-600"
+                    >
+                      <Ban size={16} className="mr-1 inline" />
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </section>
       ))}
@@ -998,7 +1077,16 @@ const HistoryPill = ({ children, tone = "green" }) => {
     </span>
   );
 };
-function HistoryTable({ orders, pagination, page, setPage, canManage, organizationId, locationId, onChanged }) {
+function HistoryTable({
+  orders,
+  pagination,
+  page,
+  setPage,
+  canManage,
+  organizationId,
+  locationId,
+  onChanged,
+}) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   useEffect(() => {
     if (!selectedOrder) return;
@@ -1136,7 +1224,17 @@ function HistoryTable({ orders, pagination, page, setPage, canManage, organizati
         </div>
       )}
       {selectedOrder && (
-        <OrderHistoryDetails order={selectedOrder} onClose={() => setSelectedOrder(null)} canManage={canManage} organizationId={organizationId} locationId={locationId} onRefunded={async () => { setSelectedOrder(null); await onChanged(); }} />
+        <OrderHistoryDetails
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          canManage={canManage}
+          organizationId={organizationId}
+          locationId={locationId}
+          onRefunded={async () => {
+            setSelectedOrder(null);
+            await onChanged();
+          }}
+        />
       )}
       {pagination?.totalPages > 1 && (
         <div className="mt-4 flex items-center justify-end gap-3">
@@ -1258,7 +1356,14 @@ function ReportTable({ report }) {
   );
 }
 
-export function OrderHistoryDetails({ order, onClose, canManage = false, organizationId, locationId, onRefunded }) {
+export function OrderHistoryDetails({
+  order,
+  onClose,
+  canManage = false,
+  organizationId,
+  locationId,
+  onRefunded,
+}) {
   const [refundOpen, setRefundOpen] = useState(false);
   const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0);
   const status = String(order.status || "pending").toLowerCase();
@@ -1447,21 +1552,32 @@ export function OrderHistoryDetails({ order, onClose, canManage = false, organiz
           </div>
           {canManage && order.status === "completed" && (
             <div className="mt-6 border-t pt-5">
-              <button type="button" onClick={() => setRefundOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-orange-300 px-4 py-2 font-semibold text-orange-700 hover:bg-orange-50">
+              <button
+                type="button"
+                onClick={() => setRefundOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-orange-300 px-4 py-2 font-semibold text-orange-700 hover:bg-orange-50"
+              >
                 <RotateCcw size={16} /> Refund item or missing add-on
               </button>
-              <p className="mt-2 text-xs text-slate-500">Refunds are subject to the restaurant's refund policy and payment-provider limits.</p>
+              <p className="mt-2 text-xs text-slate-500">
+                Refunds are subject to the restaurant's refund policy and payment-provider limits.
+              </p>
             </div>
           )}
           {refundOpen && (
-            <CompletedOrderRefund order={order} organizationId={organizationId} locationId={locationId} onClose={() => setRefundOpen(false)} onRefunded={onRefunded} />
+            <CompletedOrderRefund
+              order={order}
+              organizationId={organizationId}
+              locationId={locationId}
+              onClose={() => setRefundOpen(false)}
+              onRefunded={onRefunded}
+            />
           )}
         </div>
       </section>
     </div>
   );
 }
-
 
 function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRefunded }) {
   const [mode, setMode] = useState("item");
@@ -1471,52 +1587,142 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const items = order.items || [];
-  const itemCents = items.reduce((sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0), 0);
+  const itemCents = items.reduce(
+    (sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0),
+    0,
+  );
   const alreadyRefunded = Number(order.refundedAmountCents || 0);
-  const remaining = Math.max(0, Number(order.totalAmountCents || 0) - alreadyRefunded - Number(order.onlineServiceFeeCents || 0));
+  const remaining = Math.max(
+    0,
+    Number(order.totalAmountCents || 0) -
+      alreadyRefunded -
+      Number(order.onlineServiceFeeCents || 0),
+  );
   const cents = mode === "item" ? itemCents : Math.round(Number(amount) * 100);
   const submit = async () => {
-    if (!Number.isSafeInteger(cents) || cents <= 0 || cents > remaining) { setError("Refund amount must be greater than zero and within the remaining refundable balance."); return; }
-    if (!reason.trim()) { setError("Please enter a reason for the refund."); return; }
-    setBusy(true); setError("");
+    if (!Number.isSafeInteger(cents) || cents <= 0 || cents > remaining) {
+      setError(
+        "Refund amount must be greater than zero and within the remaining refundable balance.",
+      );
+      return;
+    }
+    if (!reason.trim()) {
+      setError("Please enter a reason for the refund.");
+      return;
+    }
+    setBusy(true);
+    setError("");
     try {
       const query = new URLSearchParams({ organizationId, locationId });
       const response = await ownerFetch(`/api/owner/manage/admin/orders/refund?${query}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId, locationId, orderId: order._id, amountCents: cents, reason: reason.trim() }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          organizationId,
+          locationId,
+          orderId: order._id,
+          amountCents: cents,
+          reason: reason.trim(),
+        }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Refund failed");
       await onRefunded?.();
       onClose();
-    } catch (e) { setError(e.message || "Refund failed"); } finally { setBusy(false); }
+    } catch (e) {
+      setError(e.message || "Refund failed");
+    } finally {
+      setBusy(false);
+    }
   };
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 p-4" onMouseDown={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}>
-      <div role="dialog" aria-modal="true" aria-label="Refund completed order" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+    <div
+      className="fixed inset-0 z-[130] flex items-center justify-center bg-black/60 p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !busy) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Refund completed order"
+        className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+      >
         <h3 className="text-xl font-bold">Refund order #{order.orderNumber}</h3>
-        <p className="mt-2 text-sm text-slate-600">Remaining refundable (estimated): {usd(remaining)}. The backend validates the final amount.</p>
+        <p className="mt-2 text-sm text-slate-600">
+          Remaining refundable (estimated): {usd(remaining)}. The backend validates the final
+          amount.
+        </p>
         <div className="mt-4 flex gap-5 text-sm">
-          <label><input type="radio" checked={mode === "item"} onChange={() => setMode("item")} /> Select items</label>
-          <label><input type="radio" checked={mode === "amount"} onChange={() => setMode("amount")} /> Custom amount / missing add-on</label>
+          <label>
+            <input type="radio" checked={mode === "item"} onChange={() => setMode("item")} /> Select
+            items
+          </label>
+          <label>
+            <input type="radio" checked={mode === "amount"} onChange={() => setMode("amount")} />{" "}
+            Custom amount / missing add-on
+          </label>
         </div>
         {mode === "item" ? (
           <div className="mt-4 max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
             {items.map((item, i) => (
               <label key={i} className="flex items-center justify-between gap-3 text-sm">
-                <span><input type="checkbox" checked={!!selected[i]} onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))} /> {item.quantity || 1}× {item.name}</span>
+                <span>
+                  <input
+                    type="checkbox"
+                    checked={!!selected[i]}
+                    onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))}
+                  />{" "}
+                  {item.quantity || 1}× {item.name}
+                </span>
                 <span>{usd(item.totalPriceCents)}</span>
               </label>
             ))}
             <p className="font-semibold">Selected subtotal: {usd(itemCents)}</p>
           </div>
         ) : (
-          <label className="mt-4 block text-sm font-medium">Refund amount ($)<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 w-full rounded-lg border p-3" /></label>
+          <label className="mt-4 block text-sm font-medium">
+            Refund amount ($)
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-1 w-full rounded-lg border p-3"
+            />
+          </label>
         )}
-        <label className="mt-4 block text-sm font-medium">Reason<input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Missing item, missing add-on, etc." className="mt-1 w-full rounded-lg border p-3" /></label>
-        <p className="mt-3 text-xs text-amber-700">Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous item refunds need backend reconciliation.</p>
-        {error && <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        <div className="mt-5 flex justify-end gap-3"><button disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2">Back</button><button disabled={busy} onClick={submit} className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy ? "Processing..." : `Refund ${usd(cents)}`}</button></div>
+        <label className="mt-4 block text-sm font-medium">
+          Reason
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Missing item, missing add-on, etc."
+            className="mt-1 w-full rounded-lg border p-3"
+          />
+        </label>
+        <p className="mt-3 text-xs text-amber-700">
+          Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous
+          item refunds need backend reconciliation.
+        </p>
+        {error && (
+          <p role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
+        <div className="mt-5 flex justify-end gap-3">
+          <button disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2">
+            Back
+          </button>
+          <button
+            disabled={busy}
+            onClick={submit}
+            className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+          >
+            {busy ? "Processing..." : `Refund ${usd(cents)}`}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import SpecialInstructions from "../../../components/management/SpecialInstructions.jsx";
 "use client";
 
+import SpecialInstructions from "../../../components/management/SpecialInstructions.jsx";
 import Image from "next/image";
 import { formatDateTime, formatTime, statusColors } from "@/lib/utils";
 import InfoTooltip from "@/components/InfoTooltip";

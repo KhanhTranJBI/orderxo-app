@@ -1,6 +1,6 @@
-import SpecialInstructions from "../../../components/management/SpecialInstructions.jsx";
 "use client";
 
+import SpecialInstructions from "../../../components/management/SpecialInstructions.jsx";
 import Image from "next/image";
 import InfoTooltip from "../InfoTooltip";
 import { POINTS_PER_DOLLAR, REWARD_THRESHOLD, REWARD_VALUE } from "@/lib/environment";
