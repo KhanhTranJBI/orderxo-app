@@ -873,9 +873,9 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
                       <button
                         onClick={() => updateStatusImmediately(order, "completed")}
                         disabled={Boolean(directBusyId)}
-                        className="rounded-xl bg-green-600 px-4 py-2 font-semibold text-white"
+                        className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                       >
-                        {directBusyId === String(order._id) ? "Updating..." : "Ready Pickup"}
+                        {directBusyId === String(order._id) ? "Updating..." : (order.orderType === "dine_in" ? "Mark Served" : "Mark Picked Up")}
                       </button>
                     )}
                     <button
