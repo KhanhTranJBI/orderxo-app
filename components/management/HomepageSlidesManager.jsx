@@ -31,58 +31,83 @@ async function api(path, organizationId, method = "GET", body, locationId = "") 
   return d;
 }
 function SlideRow({ slide, onEdit, onDelete, disabled }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: slide._id,
-    disabled,
-  });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: slide._id, disabled });
+
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...attributes}
-      className={`flex items-center gap-4 rounded-2xl border bg-white p-4 ${isDragging ? "shadow-lg opacity-80" : ""}`}
+      className={`min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 ${
+        isDragging ? "relative z-10 opacity-80 shadow-lg" : ""
+      }`}
     >
-      <button
-        {...listeners}
-        disabled={disabled}
-        className={`touch-none text-slate-400 ${disabled ? "cursor-default opacity-30" : "cursor-grab active:cursor-grabbing"}`}
-      >
-        <GripVertical size={20} />
-      </button>
-      <img
-        src={slide.image}
-        alt=""
-        className="h-16 w-24 shrink-0 rounded-lg bg-slate-100 object-cover"
-      />
-      <div className="min-w-0 flex-1">
-        <div className="truncate font-bold">{slide.title}</div>
-        <div className="mt-1 line-clamp-2 text-sm text-slate-500">
-          {slide.subtitle || "No subtitle"}
+      <div className="flex min-w-0 items-center gap-3">
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          disabled={disabled}
+          aria-label="Reorder slide"
+          className={`flex h-9 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 ${
+            disabled ? "cursor-default opacity-30" : "touch-none cursor-grab active:cursor-grabbing"
+          }`}
+        >
+          <GripVertical size={19} />
+        </button>
+        <img
+          src={slide.image}
+          alt=""
+          className="h-16 w-20 shrink-0 rounded-lg bg-slate-100 object-cover sm:w-24"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-bold text-slate-900 sm:text-base" title={slide.title}>
+            {slide.title || "Untitled slide"}
+          </div>
+          <div className="mt-1 line-clamp-2 break-words text-xs text-slate-500 sm:text-sm">
+            {slide.subtitle || "No subtitle"}
+          </div>
         </div>
       </div>
-      <span
-        className={`hidden rounded-full px-2.5 py-1 text-xs font-semibold sm:inline ${slide.isActive !== false ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-500"}`}
-      >
-        {slide.isActive !== false ? "Active" : "Inactive"}
-      </span>
-      {!disabled && (
-        <>
-          <button
-            onClick={() => onEdit(slide)}
-            className="rounded-lg p-2 hover:bg-slate-100"
-            aria-label="Edit slide"
-          >
-            <Pencil size={19} />
-          </button>
-          <button
-            onClick={() => onDelete(slide)}
-            className="rounded-lg p-2 text-red-500 hover:bg-red-50"
-            aria-label="Delete slide"
-          >
-            <Trash2 size={19} />
-          </button>
-        </>
-      )}
+      <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-3">
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+            slide.isActive !== false
+              ? "bg-green-100 text-green-800"
+              : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          {slide.isActive !== false ? "Active" : "Inactive"}
+        </span>
+        {!disabled && (
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onEdit(slide)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100"
+              aria-label="Edit slide"
+            >
+              <Pencil size={19} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(slide)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-red-500 hover:bg-red-50"
+              aria-label="Delete slide"
+            >
+              <Trash2 size={19} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
