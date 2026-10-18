@@ -65,7 +65,12 @@ const emptyOrg = {
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
   smartUpsell: { enabled: false, showInItemModal: true, showInCart: true, showInCheckout: false },
-  marketingAutomations: { abandonedCart: { enabled: true, delayMinutes: 20 } },
+  marketingAutomations: {
+    abandonedCart: { enabled: true, delayMinutes: 20 },
+    winback: { enabled: false, inactiveDays: 30, subject: "We miss you!", message: "We'd love to see you again." },
+    birthday: { enabled: false, subject: "Happy birthday!", message: "Wishing you a wonderful birthday!" },
+    loyalty: { enabled: false, minimumPoints: 100, cooldownDays: 30, subject: "You have rewards waiting!", message: "You have points ready to use on your next order." },
+  },
   ordering: {
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
@@ -111,6 +116,7 @@ function mergeOrg(value = {}) {
     smartUpsell: { ...emptyOrg.smartUpsell, ...(value.smartUpsell || {}) },
     marketingAutomations: {
       abandonedCart: { ...emptyOrg.marketingAutomations.abandonedCart, ...(value.marketingAutomations?.abandonedCart || {}), delayMinutes: value.marketingAutomations?.abandonedCart?.delayMinutes ?? value.ordering?.abandonedCartIntervalMinutes ?? 20 },
+      ...Object.fromEntries(["winback", "birthday", "loyalty"].map((key) => [key, { ...emptyOrg.marketingAutomations[key], ...(value.marketingAutomations?.[key] || {}) }])),
     },
     ordering: {
       ...emptyOrg.ordering,
@@ -1023,15 +1029,31 @@ export default function RestaurantSettings({
                 </div>
               </div>
               {[
-                ["Win-back Emails", "Customers who have not ordered recently"],
-                ["Birthday Rewards", "Celebrate customer birthdays with an optional offer"],
-                ["Loyalty Reminders", "Remind customers when rewards are available"],
-              ].map(([name, detail]) => (
-                <div key={name} className="rounded-xl border border-slate-200 p-5 flex items-center justify-between gap-4">
-                  <div><h3 className="font-semibold text-slate-800">{name}</h3><p className="text-sm text-slate-500">{detail}</p></div>
-                  <span className="shrink-0 text-xs font-semibold text-slate-500">Coming soon</span>
-                </div>
-              ))}
+                { key: "winback", title: "Win-back Emails", detail: "Email subscribed customers after a period without orders.", fields: [["inactiveDays", "Days without an order", [7, 14, 30, 45, 60, 90]]] },
+                { key: "birthday", title: "Birthday Greetings", detail: "Send birthday greetings to opted-in customers who have provided their birthday. No reward is issued automatically.", fields: [] },
+                { key: "loyalty", title: "Loyalty Reminders", detail: "Remind subscribed customers with redeemable restaurant loyalty points.", fields: [["minimumPoints", "Minimum points", [50, 100, 150, 200, 500]], ["cooldownDays", "Repeat no more often than (days)", [7, 14, 30, 60, 90]]] },
+              ].map(({ key, title, detail, fields }) => {
+                const config = org.marketingAutomations?.[key] || {};
+                const change = (field, value) => setOrgPart("marketingAutomations", key, { ...config, [field]: value });
+                return (
+                  <div key={key} className="rounded-xl border border-slate-200 p-5 space-y-4">
+                    <label className="flex items-center gap-3 font-semibold text-slate-900">
+                      <input type="checkbox" checked={config.enabled === true} onChange={(e) => change("enabled", e.target.checked)} />
+                      {title}
+                    </label>
+                    <p className="text-sm text-slate-500">{detail}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {fields.map(([field, label, options]) => (
+                        <Field key={field} label={label}><select className={input} value={config[field] ?? options[0]} onChange={(e) => change(field, Number(e.target.value))}>
+                          {options.map((n) => <option key={n} value={n}>{n}</option>)}
+                        </select></Field>
+                      ))}
+                      <Field label="Email subject"><input className={input} maxLength={160} value={config.subject || ""} onChange={(e) => change("subject", e.target.value)} /></Field>
+                    </div>
+                    <Field label="Email message"><textarea className={input} rows={3} maxLength={2000} value={config.message || ""} onChange={(e) => change("message", e.target.value)} /></Field>
+                  </div>
+                );
+              })}
               <p className="text-xs text-slate-500">Only customers subscribed to marketing emails at this restaurant location receive abandoned-cart reminders. Transactional order emails are unaffected.</p>
             </div>
           )}
