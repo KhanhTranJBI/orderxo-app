@@ -496,6 +496,7 @@ export default function RestaurantSettings({
     smartUpsell: false,
     appearanceCustomization: false,
     homepageBuilder: false,
+    marketingAutomations: false,
   });
   const [plan, setPlan] = useState(null);
   const [entitlementError, setEntitlementError] = useState("");
@@ -559,6 +560,7 @@ export default function RestaurantSettings({
             smartUpsell: feature("smartUpsell", isGrowth),
             appearanceCustomization: feature("appearanceCustomization", isGrowth),
             homepageBuilder: feature("homepageBuilder", isPro),
+            marketingAutomations: feature("marketingAutomations", isPro),
           });
           setEntitlementError("");
         } else {
@@ -613,7 +615,9 @@ export default function RestaurantSettings({
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
           ordering: org.ordering,
-          marketingAutomations: org.marketingAutomations,
+          ...(staffMode || entitlements.marketingAutomations
+            ? { marketingAutomations: org.marketingAutomations }
+            : {}),
           smartUpsell: org.smartUpsell,
           notifications: org.notifications,
         }),
@@ -1006,6 +1010,10 @@ export default function RestaurantSettings({
 
           {tab === "Marketing Automations" && (
             <div className="space-y-5">
+              {!staffMode && (!entitlements.marketingAutomations || !!entitlementError) && (
+                <PlanLocked title="Marketing Automations" required="Pro" href={billingUrl} />
+              )}
+              <fieldset disabled={!staffMode && (!entitlements.marketingAutomations || !!entitlementError)} className="space-y-5 disabled:opacity-60">
               <div>
                 <h2 className="text-xl font-bold text-slate-900">Customer Marketing Automations</h2>
                 <p className="mt-1 text-sm text-slate-600">Configure email reminders for your restaurant. Changes take effect after saving.</p>
@@ -1055,6 +1063,7 @@ export default function RestaurantSettings({
                 );
               })}
               <p className="text-xs text-slate-500">Only customers subscribed to marketing emails at this restaurant location receive abandoned-cart reminders. Transactional order emails are unaffected.</p>
+              </fieldset>
             </div>
           )}
 
@@ -1285,7 +1294,8 @@ export default function RestaurantSettings({
                 disabled={
                   saving ||
                   (!staffMode && !!entitlementError) ||
-                  (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization)
+                  (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization) ||
+                  (tab === "Marketing Automations" && !staffMode && !entitlements.marketingAutomations)
                 }
                 onClick={saveOrganization}
                 className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
