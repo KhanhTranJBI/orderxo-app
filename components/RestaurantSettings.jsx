@@ -17,6 +17,7 @@ const TABS = [
   "Loyalty",
   "Gift Cards",
   "Email",
+  "Marketing Automations",
   "Ordering",
 ];
 
@@ -64,6 +65,7 @@ const emptyOrg = {
   loyalty: { enabled: false, pointsPerDollar: 1, rewardThreshold: 100, rewardValueCents: 500 },
   giftCards: { enabled: false, prefix: "", buyerReceiptSubject: "", recipientReceiptSubject: "" },
   smartUpsell: { enabled: false, showInItemModal: true, showInCart: true, showInCheckout: false },
+  marketingAutomations: { abandonedCart: { enabled: true, delayMinutes: 20 } },
   ordering: {
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
@@ -107,6 +109,9 @@ function mergeOrg(value = {}) {
     loyalty: { ...emptyOrg.loyalty, ...(value.loyalty || {}) },
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
     smartUpsell: { ...emptyOrg.smartUpsell, ...(value.smartUpsell || {}) },
+    marketingAutomations: {
+      abandonedCart: { ...emptyOrg.marketingAutomations.abandonedCart, ...(value.marketingAutomations?.abandonedCart || {}), delayMinutes: value.marketingAutomations?.abandonedCart?.delayMinutes ?? value.ordering?.abandonedCartIntervalMinutes ?? 20 },
+    },
     ordering: {
       ...emptyOrg.ordering,
       ...(value.ordering || {}),
@@ -602,6 +607,7 @@ export default function RestaurantSettings({
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
           ordering: org.ordering,
+          marketingAutomations: org.marketingAutomations,
           smartUpsell: org.smartUpsell,
           notifications: org.notifications,
         }),
@@ -992,6 +998,44 @@ export default function RestaurantSettings({
             </div>
           )}
 
+          {tab === "Marketing Automations" && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Customer Marketing Automations</h2>
+                <p className="mt-1 text-sm text-slate-600">Configure email reminders for your restaurant. Changes take effect after saving.</p>
+              </div>
+              <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-4">
+                <label className="flex items-center gap-3 font-semibold text-slate-900">
+                  <input type="checkbox" checked={org.marketingAutomations?.abandonedCart?.enabled !== false}
+                    onChange={(e) => setOrgPart("marketingAutomations", "abandonedCart", { ...org.marketingAutomations?.abandonedCart, enabled: e.target.checked })} />
+                  Abandoned Cart Recovery
+                </label>
+                <p className="text-sm text-slate-600">Email subscribed customers who leave an online cart without checking out. This uses your existing Mailgun recovery template and tokenized checkout link.</p>
+                <div className="max-w-sm">
+                  <Field label="Send reminder after" hint="Minimum 15 minutes; cron runs every 15 minutes, so delivery can be later than the selected delay.">
+                    <select className={input} value={org.marketingAutomations?.abandonedCart?.delayMinutes ?? 20}
+                      onChange={(e) => setOrgPart("marketingAutomations", "abandonedCart", { ...org.marketingAutomations?.abandonedCart, delayMinutes: Number(e.target.value) })}>
+                      {[15, 20, 30, 45, 60, 120, 240, 1440].map((minutes) => (
+                        <option key={minutes} value={minutes}>{minutes < 60 ? `${minutes} minutes` : minutes === 1440 ? "24 hours" : `${minutes / 60} hours`}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+              </div>
+              {[
+                ["Win-back Emails", "Customers who have not ordered recently"],
+                ["Birthday Rewards", "Celebrate customer birthdays with an optional offer"],
+                ["Loyalty Reminders", "Remind customers when rewards are available"],
+              ].map(([name, detail]) => (
+                <div key={name} className="rounded-xl border border-slate-200 p-5 flex items-center justify-between gap-4">
+                  <div><h3 className="font-semibold text-slate-800">{name}</h3><p className="text-sm text-slate-500">{detail}</p></div>
+                  <span className="shrink-0 text-xs font-semibold text-slate-500">Coming soon</span>
+                </div>
+              ))}
+              <p className="text-xs text-slate-500">Only customers subscribed to marketing emails at this restaurant location receive abandoned-cart reminders. Transactional order emails are unaffected.</p>
+            </div>
+          )}
+
           {tab === "Ordering" && (
             <div className="space-y-7">
               <div>
@@ -1067,21 +1111,6 @@ export default function RestaurantSettings({
                 </div>
               </div>
               <div className="max-w-xl">
-                <Field
-                  label="Abandoned cart interval (minutes)"
-                  hint="Used across all locations when determining when an inactive cart is considered abandoned."
-                >
-                  <input
-                    type="number"
-                    min="1"
-                    max="10080"
-                    className={input}
-                    value={org.ordering?.abandonedCartIntervalMinutes ?? 20}
-                    onChange={(e) =>
-                      setOrgPart("ordering", "abandonedCartIntervalMinutes", Number(e.target.value))
-                    }
-                  />
-                </Field>
                 <div className="mt-5 space-y-4 rounded-xl border border-gray-200 p-4">
                   <h3 className="font-semibold">Online Service Fee</h3>
                   <p className="text-sm text-gray-500">
