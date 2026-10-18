@@ -37,8 +37,8 @@ function Fin({ organizationId, locationId }) {
       setLoading(false);
     })();
   }, [organizationId, locationId, year]);
-  const s = d.summary || {};
-  // Sum the displayed months using integer cents to avoid floating-point drift.
+  // Use the same cent-precise totals for summary cards and the TOTAL row.
+  // The API summary can be rounded independently; never mix it with monthly totals.
   const statementRows = d.statements || [];
   const totalFields = [
     "subtotal",
@@ -93,11 +93,11 @@ function Fin({ organizationId, locationId }) {
       <div className="rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {[
-            ["Gross Sales", s.grossSales],
-            ["Rewards", s.rewardsRedeemed, "red"],
-            ["Refunds", s.refunds, "red"],
-            ["Transaction Fees", s.stripeFees, "red"],
-            ["Net Total", s.netTotal, "green"],
+            ["Gross Sales", totals.grossSales],
+            ["Rewards", totals.rewardsRedeemed, "red"],
+            ["Refunds", totals.refunds, "red"],
+            ["Transaction Fees", totals.stripeFees, "red"],
+            ["Net Total", totals.netTotal, "green"],
           ].map(([k, v, t]) => (
             <div
               key={k}
