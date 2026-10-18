@@ -69,7 +69,10 @@ function SlideRow({ slide, onEdit, onDelete, disabled }) {
           className="h-16 w-20 shrink-0 rounded-lg bg-slate-100 object-cover sm:w-24"
         />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-bold text-slate-900 sm:text-base" title={slide.title}>
+          <div
+            className="truncate text-sm font-bold text-slate-900 sm:text-base"
+            title={slide.title}
+          >
             {slide.title || "Untitled slide"}
           </div>
           <div className="mt-1 line-clamp-2 break-words text-xs text-slate-500 sm:text-sm">
@@ -80,9 +83,7 @@ function SlideRow({ slide, onEdit, onDelete, disabled }) {
       <div className="mt-3 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-3">
         <span
           className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-            slide.isActive !== false
-              ? "bg-green-100 text-green-800"
-              : "bg-slate-100 text-slate-500"
+            slide.isActive !== false ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-500"
           }`}
         >
           {slide.isActive !== false ? "Active" : "Inactive"}

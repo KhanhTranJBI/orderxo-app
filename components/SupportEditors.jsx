@@ -204,7 +204,7 @@ export default function SupportEditors({ workspace }) {
           />
         </div>
       )}
-      
+
       <button
         type="button"
         onClick={save}

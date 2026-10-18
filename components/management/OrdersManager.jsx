@@ -327,7 +327,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           </span>
         )}
       </div>
-      
+
       {tab === "orders-history" && (
         <div className="relative mt-6 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={19} />
@@ -875,7 +875,11 @@ function ActiveOrders({ orders, canManage, organizationId, locationId, onChanged
                         disabled={Boolean(directBusyId)}
                         className="rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
                       >
-                        {directBusyId === String(order._id) ? "Updating..." : (order.orderType === "dine_in" ? "Mark Served" : "Mark Picked Up")}
+                        {directBusyId === String(order._id)
+                          ? "Updating..."
+                          : order.orderType === "dine_in"
+                            ? "Mark Served"
+                            : "Mark Picked Up"}
                       </button>
                     )}
                     <button
@@ -1707,7 +1711,7 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous
           item refunds need backend reconciliation.
         </p>
-        
+
         <div className="mt-5 flex justify-end gap-3">
           <button disabled={busy} onClick={onClose} className="rounded-xl border px-4 py-2">
             Back

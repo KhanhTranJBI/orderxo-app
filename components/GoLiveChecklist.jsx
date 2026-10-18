@@ -76,7 +76,7 @@ export default function GoLiveChecklist({ organizationId, locations, staffMode =
           </option>
         ))}
       </select>
-      
+
       {!data && !error && <p className="text-slate-500">Checking setup…</p>}
       {data && (
         <>

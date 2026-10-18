@@ -670,8 +670,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
           </button>
         </div>
       </header>
-      
-      
+
       {loading ? (
         <p className="py-16 text-center text-slate-500">Loading homepage settings…</p>
       ) : (

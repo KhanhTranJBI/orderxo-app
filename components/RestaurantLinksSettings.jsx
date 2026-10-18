@@ -118,7 +118,8 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
             />
             {key === "googleReview" && (
               <span className="block text-xs font-normal text-slate-500">
-                Paste the direct Write a Review link from Google Business Profile. Used in Order Completed emails.
+                Paste the direct Write a Review link from Google Business Profile. Used in Order
+                Completed emails.
               </span>
             )}
             {key === "google" && (

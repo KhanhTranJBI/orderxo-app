@@ -38,6 +38,25 @@ function Fin({ organizationId, locationId }) {
     })();
   }, [organizationId, locationId, year]);
   const s = d.summary || {};
+  // Sum the displayed months using integer cents to avoid floating-point drift.
+  const statementRows = d.statements || [];
+  const totalFields = [
+    "subtotal",
+    "tax",
+    "tips",
+    "onlineFees",
+    "grossSales",
+    "rewardsRedeemed",
+    "refunds",
+    "stripeFees",
+    "netTotal",
+  ];
+  const totals = Object.fromEntries(
+    totalFields.map((field) => [
+      field,
+      statementRows.reduce((sum, row) => sum + Math.round(Number(row[field] || 0) * 100), 0) / 100,
+    ]),
+  );
   const download = async (month) => {
     const r = await ownerFetch(
       `/api/owner/financials/statement-download?organizationId=${organizationId}&locationId=${locationId}&month=${month}`,
@@ -119,7 +138,7 @@ function Fin({ organizationId, locationId }) {
             </thead>
             <tbody>
               {!loading &&
-                (d.statements || []).map((x) => (
+                statementRows.map((x) => (
                   <tr key={x.month} className="border-b">
                     <td className="px-3 py-4 font-bold">{monthLabel(x.month)}</td>
                     <td className="px-3 py-4 font-semibold">{usd(x.subtotal)}</td>
@@ -142,6 +161,23 @@ function Fin({ organizationId, locationId }) {
                   </tr>
                 ))}
             </tbody>
+            {!loading && statementRows.length > 0 && (
+              <tfoot className="border-t-2 border-slate-300 bg-slate-50 font-bold">
+                <tr>
+                  <td className="px-3 py-4">TOTAL</td>
+                  <td className="px-3 py-4">{usd(totals.subtotal)}</td>
+                  <td className="px-3 py-4 text-blue-600">{usd(totals.tax)}</td>
+                  <td className="px-3 py-4 text-blue-600">{usd(totals.tips)}</td>
+                  <td className="px-3 py-4 text-blue-600">{usd(totals.onlineFees)}</td>
+                  <td className="px-3 py-4">{usd(totals.grossSales)}</td>
+                  <td className="px-3 py-4 text-red-600">-{usd(totals.rewardsRedeemed)}</td>
+                  <td className="px-3 py-4 text-red-600">-{usd(totals.refunds)}</td>
+                  <td className="px-3 py-4 text-red-600">-{usd(totals.stripeFees)}</td>
+                  <td className="px-3 py-4 text-green-600">{usd(totals.netTotal)}</td>
+                  <td className="px-3 py-4" />
+                </tr>
+              </tfoot>
+            )}
           </table>
           {loading && (
             <div className="space-y-3 py-5">

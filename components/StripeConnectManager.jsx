@@ -121,8 +121,7 @@ export default function StripeConnectManager({ organizationId, locations, initia
           </option>
         ))}
       </select>
-      
-      
+
       {status && (
         <div className="text-sm space-y-1">
           <p>

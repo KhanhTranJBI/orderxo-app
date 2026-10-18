@@ -135,7 +135,7 @@ export default function LocationSettingsManager({ organizationId }) {
         {(error || loc.error) && (
           <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error || loc.error}</p>
         )}
-        
+
         {loading || loc.loading ? (
           <LoadingSpinner label="Loading location settings…" />
         ) : (

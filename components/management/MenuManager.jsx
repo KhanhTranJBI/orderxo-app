@@ -682,7 +682,6 @@ function CategoryModal({ category, onClose, onSave }) {
           </button>
         </div>
         <div className="space-y-4 p-6">
-          
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-slate-600">Category Name</span>
             <input
@@ -1073,7 +1072,6 @@ export default function MenuManager({ organizationId }) {
               </div>
             )}
 
-            
             {tab === "items" ? (
               <>
                 <div className="mt-5 flex gap-2">

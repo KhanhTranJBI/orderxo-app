@@ -152,9 +152,6 @@ export default function BillingManager({
 
   return (
     <div className="space-y-6">
-      
-      
-
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
         <p className="text-sm text-slate-500">Current plan</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
@@ -170,23 +167,27 @@ export default function BillingManager({
               <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
                 <p className="font-bold text-base">Your {trialOfferDays}-day free trial is ready</p>
                 <p className="mt-1">
-                  Continue with Stripe to add your payment method and activate your free trial.
-                  Your trial begins when Stripe creates your subscription, not when you accepted the invitation.
+                  Continue with Stripe to add your payment method and activate your free trial. Your
+                  trial begins when Stripe creates your subscription, not when you accepted the
+                  invitation.
                 </p>
                 <p className="mt-2">
-                  Subscription fee during trial: <strong>$0.00</strong>. After the trial,
-                  your estimated subscription is <strong>{usd(currentMonthly)}/month</strong>
-                  unless canceled or changed. OrderXO platform fees and Stripe processing fees are separate.
+                  Subscription fee during trial: <strong>$0.00</strong>. After the trial, your
+                  estimated subscription is <strong>{usd(currentMonthly)}/month</strong>
+                  unless canceled or changed. OrderXO platform fees and Stripe processing fees are
+                  separate.
                 </p>
                 <button
                   type="button"
                   disabled={!!busy}
-                  onClick={() => post(
-                    "/api/owner/billing/checkout",
-                    { organizationId, plan: current },
-                    `checkout-${current}`,
-                    true,
-                  )}
+                  onClick={() =>
+                    post(
+                      "/api/owner/billing/checkout",
+                      { organizationId, plan: current },
+                      `checkout-${current}`,
+                      true,
+                    )
+                  }
                   className="mt-3 rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
                 >
                   {busy === `checkout-${current}`
@@ -281,7 +282,8 @@ export default function BillingManager({
           </div>
           {hasTrialOffer && (
             <p className="mt-3 text-sm font-medium text-emerald-700">
-              {trialOfferDays}-day free trial available — $0 subscription fee during the trial after Stripe activation.
+              {trialOfferDays}-day free trial available — $0 subscription fee during the trial after
+              Stripe activation.
             </p>
           )}
           {isTrialing && (
@@ -487,9 +489,15 @@ export default function BillingManager({
             {isTrialing && (
               <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-900">
                 <p className="font-semibold">Free trial: $0.00 subscription fee during trial</p>
-                <p className="mt-1">Trial ends: {trialEnd ? formatDate(trialEnd) : "Date unavailable — verify in Stripe"}</p>
+                <p className="mt-1">
+                  Trial ends:{" "}
+                  {trialEnd ? formatDate(trialEnd) : "Date unavailable — verify in Stripe"}
+                </p>
                 {trialDaysRemaining != null && <p>{trialDaysRemaining} days remaining</p>}
-                <p className="mt-1">Regular monthly fees below apply after your free trial. The 1% platform fee continues during the trial.</p>
+                <p className="mt-1">
+                  Regular monthly fees below apply after your free trial. The 1% platform fee
+                  continues during the trial.
+                </p>
               </div>
             )}
             {rank[confirmPlan.id] > rank[current] ? (

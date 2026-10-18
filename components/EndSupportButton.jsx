@@ -41,7 +41,6 @@ export default function EndSupportButton() {
       >
         {busy ? "Ending support…" : "End Support"}
       </button>
-      
     </div>
   );
 }

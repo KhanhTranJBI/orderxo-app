@@ -154,7 +154,6 @@ export default function ManageUsersManager({ organizationId }) {
             </select>
           </div>
 
-          
           {loading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="animate-spin text-orange-600" size={30} />

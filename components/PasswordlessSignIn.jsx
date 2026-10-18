@@ -79,7 +79,7 @@ export default function PasswordlessSignIn() {
           placeholder="you@restaurant.com"
         />
       </label>
-      
+
       <button
         disabled={busy}
         className="w-full rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white disabled:opacity-60"

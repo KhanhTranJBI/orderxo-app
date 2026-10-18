@@ -583,8 +583,6 @@ export default function StoreSettingsManager({ organizationId }) {
           <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{loc.error || error}</p>
         )}
 
-        
-
         {!permission.loading && canReadStore && !canManage && (
           <p className="mt-4 rounded-lg border bg-white p-3 text-sm text-slate-700">
             <strong>Read only.</strong> Editing, deleting, status changes and customization require
