@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import LoadingSpinner from "./ui/LoadingSpinner";
 
 import HomepageBuilder from "./HomepageBuilder";
+import LocalSeoAssistant from "./LocalSeoAssistant";
 import { ownerFetch } from "../lib/ownerFetch";
 
 import Link from "next/link";
@@ -18,6 +19,7 @@ const TABS = [
   "Gift Cards",
   "Email",
   "Marketing Automations",
+  "Google Reviews & SEO",
   "Ordering",
 ];
 
@@ -1179,6 +1181,16 @@ export default function RestaurantSettings({
             </div>
           )}
 
+          {tab === "Google Reviews & SEO" && (
+            <LocalSeoAssistant
+              restaurantName={org.name}
+              logoUrl={org.branding?.logoUrl}
+              websiteUrl={org.website?.url || org.website?.domain || ""}
+              contactEmail={org.contactEmail}
+              locationAddress={org.address?.line1 || ""}
+              googleMapsUrl={org.googleMapUrl || ""}
+            />
+          )}
           {tab === "Ordering" && (
             <div className="space-y-7">
               <div>
@@ -1400,7 +1412,7 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          {tab !== "Homepage" && (
+          {tab !== "Homepage" && tab !== "Google Reviews & SEO" && (
             <div className="mt-8 border-t pt-6">
               <button
                 disabled={
