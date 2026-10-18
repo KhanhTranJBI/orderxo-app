@@ -1278,6 +1278,7 @@ function ReportTable({ report }) {
       "promoDiscount",
       "refunded",
       "transactionFee",
+      "platformFee",
       "netTotal",
     ])
       a[k] = (a[k] || 0) + Number(d[k] || 0);
@@ -1294,11 +1295,12 @@ function ReportTable({ report }) {
     d.promoDiscount ? `-${usdD(d.promoDiscount)}` : "—",
     `-${usdD(d.refunded)}`,
     `-${usdD(d.transactionFee)}`,
+    `-${usdD(d.platformFee)}`,
     usdD(d.netTotal),
   ];
   return (
     <div className="overflow-x-auto rounded-2xl bg-white shadow">
-      <table className="min-w-[1450px] w-full text-sm">
+      <table className="min-w-[1600px] w-full text-sm">
         <thead className="bg-slate-100 text-left text-slate-600">
           <tr>
             {[
@@ -1313,6 +1315,7 @@ function ReportTable({ report }) {
               "Promotion Discount",
               "Refunded Amount",
               "Transaction Fee",
+              "Platform Fee",
               "Net Total",
             ].map((h) => (
               <th key={h} className="px-4 py-4 font-bold whitespace-nowrap">
@@ -1333,7 +1336,7 @@ function ReportTable({ report }) {
               {cells(d).map((v, j) => (
                 <td
                   key={j}
-                  className={`px-4 py-3 whitespace-nowrap ${[2, 3, 4].includes(j) ? (i === 0 ? "text-blue-300" : "text-blue-600") : [6, 7, 8, 9].includes(j) ? (i === 0 ? "text-red-400" : "text-red-600") : j === 10 ? (i === 0 ? "text-green-400" : "text-green-600") : ""}`}
+                  className={`px-4 py-3 whitespace-nowrap ${[2, 3, 4].includes(j) ? (i === 0 ? "text-blue-300" : "text-blue-600") : [6, 7, 8, 9, 10].includes(j) ? (i === 0 ? "text-red-400" : "text-red-600") : j === 11 ? (i === 0 ? "text-green-400" : "text-green-600") : ""}`}
                 >
                   {v}
                 </td>
@@ -1347,7 +1350,7 @@ function ReportTable({ report }) {
             {cells(totals).map((v, j) => (
               <td
                 key={j}
-                className={`px-4 py-4 whitespace-nowrap ${[2, 3, 4].includes(j) ? "text-blue-300" : [6, 7, 8, 9].includes(j) ? "text-red-400" : j === 10 ? "text-green-400" : ""}`}
+                className={`px-4 py-4 whitespace-nowrap ${[2, 3, 4].includes(j) ? "text-blue-300" : [6, 7, 8, 9, 10].includes(j) ? "text-red-400" : j === 11 ? "text-green-400" : ""}`}
               >
                 {v}
               </td>
