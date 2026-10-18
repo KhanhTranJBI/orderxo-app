@@ -1189,6 +1189,7 @@ export default function RestaurantSettings({
               contactEmail={org.contactEmail}
               locationAddress={org.address?.line1 || ""}
               googleMapsUrl={org.googleMapUrl || ""}
+              googleReviewUrl={org.website?.social?.googleReview || ""}
             />
           )}
           {tab === "Ordering" && (

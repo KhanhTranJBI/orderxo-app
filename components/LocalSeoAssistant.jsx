@@ -87,8 +87,8 @@ async function buildSign({ reviewUrl, title, message, restaurantName, logoUrl, f
   return { canvas, widthInches, heightInches };
 }
 
-export default function LocalSeoAssistant({ restaurantName, logoUrl, websiteUrl, contactEmail, locationAddress, googleMapsUrl }) {
-  const [reviewUrl, setReviewUrl] = useState("");
+export default function LocalSeoAssistant({ restaurantName, logoUrl, websiteUrl, contactEmail, locationAddress, googleMapsUrl, googleReviewUrl = "" }) {
+  const reviewUrl = typeof googleReviewUrl === "string" ? googleReviewUrl.trim() : "";
   const [title, setTitle] = useState(DEFAULT_TITLE);
   const [message, setMessage] = useState(DEFAULT_MESSAGE);
   const [format, setFormat] = useState("table");
@@ -101,12 +101,12 @@ export default function LocalSeoAssistant({ restaurantName, logoUrl, websiteUrl,
   useEffect(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(key) || "null");
-      if (saved) { setReviewUrl(saved.reviewUrl || ""); setTitle(saved.title || DEFAULT_TITLE); setMessage(saved.message || DEFAULT_MESSAGE); setFormat(SIZES[saved.format] ? saved.format : "table"); setColor(/^#[0-9a-f]{6}$/i.test(saved.color) ? saved.color : "#ea580c"); }
+      if (saved) { setTitle(saved.title || DEFAULT_TITLE); setMessage(saved.message || DEFAULT_MESSAGE); setFormat(SIZES[saved.format] ? saved.format : "table"); setColor(/^#[0-9a-f]{6}$/i.test(saved.color) ? saved.color : "#ea580c"); }
     } catch { /* Ignore invalid local preferences. */ }
   }, [key]);
   useEffect(() => {
-    try { window.localStorage.setItem(key, JSON.stringify({ reviewUrl, title, message, format, color })); } catch { /* Storage unavailable. */ }
-  }, [key, reviewUrl, title, message, format, color]);
+    try { window.localStorage.setItem(key, JSON.stringify({ title, message, format, color })); } catch { /* Storage unavailable. */ }
+  }, [key, title, message, format, color]);
   useEffect(() => {
     let cancelled = false;
     if (!valid) { setPreview(""); return; }
@@ -147,14 +147,14 @@ export default function LocalSeoAssistant({ restaurantName, logoUrl, websiteUrl,
       <div><h2 className="text-xl font-bold text-slate-900">Google Reviews & Local SEO</h2><p className="mt-2 text-sm text-slate-600">Create a printable Google review sign for your restaurant. No Google account connection required.</p></div>
       <div className="rounded-xl border border-slate-200 p-5 space-y-5">
         <div><h3 className="text-lg font-semibold">Google Review QR Generator</h3><p className="mt-1 text-sm text-slate-600">Use the official review link from your Google Business Profile. Customers can scan the QR code to leave honest feedback.</p></div>
-        <div><label htmlFor="google-review-url" className="block text-sm font-medium mb-1">Google review link</label><input id="google-review-url" type="url" className="w-full rounded-lg border border-slate-300 p-3" placeholder="https://g.page/r/.../review" value={reviewUrl} onChange={(e)=>setReviewUrl(e.target.value)} /><p className="mt-1 text-xs text-slate-500">In Google Business Profile, choose “Ask for reviews” to copy your official link. <a className="text-orange-700 underline" href="https://business.google.com/" target="_blank" rel="noopener noreferrer">Open Google Business Profile ↗</a></p>{reviewUrl && !valid && <p className="mt-1 text-sm text-red-700">Enter a valid HTTPS Google review or Google Maps link.</p>}</div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-medium text-slate-900">Google review link from Restaurant Settings</p>{reviewUrl ? <p className="mt-1 break-all text-sm text-slate-600">{reviewUrl}</p> : <p className="mt-1 text-sm text-amber-700">No Google Review Link is configured yet.</p>}{!valid && <p className="mt-2 text-sm text-amber-700">{reviewUrl ? "The saved link must be a valid HTTPS Google review URL." : "Add your Google review link under Social & Links, then save your restaurant settings."}</p>}<p className="mt-2 text-xs text-slate-500">To update this link, open <strong>Social & Links → Google Review Link</strong> and save. The QR generator uses that saved setting automatically.</p></div>
         <div className="grid gap-4 md:grid-cols-2"><label className="text-sm font-medium">Headline<input maxLength={90} className="mt-1 w-full rounded-lg border border-slate-300 p-3" value={title} onChange={(e)=>setTitle(e.target.value)}/></label><label className="text-sm font-medium">Print size<select className="mt-1 w-full rounded-lg border border-slate-300 p-3" value={format} onChange={(e)=>setFormat(e.target.value)}><option value="table">Table sign — 4 × 6 in</option><option value="counter">Counter sign — 5 × 7 in</option><option value="sticker">Sticker — 2 × 2 in</option></select></label></div>
         <label className="block text-sm font-medium">Custom message<textarea maxLength={180} rows={3} className="mt-1 w-full rounded-lg border border-slate-300 p-3" value={message} onChange={(e)=>setMessage(e.target.value)}/></label>
         <label className="flex items-center gap-3 text-sm font-medium">Accent color <input type="color" value={color} onChange={(e)=>setColor(e.target.value)} className="h-10 w-16 cursor-pointer" /></label>
         <div className="rounded-xl bg-slate-100 p-5 flex justify-center"><div className="w-full max-w-xs rounded-lg bg-white px-6 py-7 text-center shadow-sm border-t-8" style={{ borderTopColor: color }}><p className="text-sm font-bold mb-3" style={{ color }}>{restaurantName || "Your restaurant"}</p><h4 className="text-xl font-bold break-words">{title || "Your headline"}</h4><p className="mt-2 text-sm text-slate-600 break-words">{message}</p>{preview ? <img src={preview} alt="Scannable Google review QR code preview" className="mx-auto mt-4 h-48 w-48" /> : <div className="mx-auto mt-4 flex h-48 w-48 items-center justify-center rounded border border-dashed text-sm text-slate-400">Add a valid Google review link to preview QR</div>}<p className="mt-2 font-bold text-sm" style={{ color }}>SCAN TO REVIEW</p></div></div>
         <div className="flex flex-wrap gap-3"><button type="button" disabled={!valid || !title.trim() || !message.trim() || working} onClick={()=>download("png")} className="rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50">{working ? "Generating…" : "Download PNG"}</button><button type="button" disabled={!valid || !title.trim() || !message.trim() || working} onClick={()=>download("pdf")} className="rounded-lg border border-slate-300 px-5 py-3 font-semibold disabled:opacity-50">Download print-ready PDF</button></div>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-        <p className="text-xs text-slate-500">Design settings are saved in this browser only. PNG exports are generated at 300 DPI. Do not offer incentives for Google reviews or selectively request positive reviews. Test the printed QR code before distributing.</p>
+        <p className="text-xs text-slate-500">Headline, message, size and color are saved in this browser only. The review link comes from Restaurant Settings. PNG exports are generated at 300 DPI. Do not offer incentives for Google reviews or selectively request positive reviews. Test the printed QR code before distributing.</p>
       </div>
       <div className="rounded-xl border border-slate-200 p-5 space-y-4"><div className="flex items-center justify-between"><h3 className="text-lg font-semibold">Local SEO readiness</h3><span className="text-sm font-semibold">{score}/{checklist.length} completed</span></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-emerald-500" style={{ width: `${(score/checklist.length)*100}%` }}/></div><ul className="space-y-2">{checklist.map((item)=><li key={item.label} className="text-sm"><span className={item.ok ? "text-emerald-700" : "text-amber-700"}>{item.ok ? "✓" : "○"}</span> {item.label}</li>)}</ul><p className="text-xs text-slate-500">This checks saved OrderXO profile fields only, not live Google rankings. Verify hours, category, menu and photos in Google Business Profile.</p></div>
     </div>
