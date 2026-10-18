@@ -67,9 +67,24 @@ const emptyOrg = {
   smartUpsell: { enabled: false, showInItemModal: true, showInCart: true, showInCheckout: false },
   marketingAutomations: {
     abandonedCart: { enabled: true, delayMinutes: 20 },
-    winback: { enabled: false, inactiveDays: 30, subject: "We miss you!", message: "We'd love to see you again." },
-    birthday: { enabled: false, subject: "Happy birthday!", message: "Wishing you a wonderful birthday!" },
-    loyalty: { enabled: false, minimumPoints: 100, cooldownDays: 30, subject: "You have rewards waiting!", message: "You have points ready to use on your next order." },
+    winback: {
+      enabled: false,
+      inactiveDays: 30,
+      subject: "We miss you!",
+      message: "We'd love to see you again.",
+    },
+    birthday: {
+      enabled: false,
+      subject: "Happy birthday!",
+      message: "Wishing you a wonderful birthday!",
+    },
+    loyalty: {
+      enabled: false,
+      minimumPoints: 100,
+      cooldownDays: 30,
+      subject: "You have rewards waiting!",
+      message: "You have points ready to use on your next order.",
+    },
   },
   ordering: {
     abandonedCartIntervalMinutes: 20,
@@ -115,8 +130,20 @@ function mergeOrg(value = {}) {
     giftCards: { ...emptyOrg.giftCards, ...(value.giftCards || {}) },
     smartUpsell: { ...emptyOrg.smartUpsell, ...(value.smartUpsell || {}) },
     marketingAutomations: {
-      abandonedCart: { ...emptyOrg.marketingAutomations.abandonedCart, ...(value.marketingAutomations?.abandonedCart || {}), delayMinutes: value.marketingAutomations?.abandonedCart?.delayMinutes ?? value.ordering?.abandonedCartIntervalMinutes ?? 20 },
-      ...Object.fromEntries(["winback", "birthday", "loyalty"].map((key) => [key, { ...emptyOrg.marketingAutomations[key], ...(value.marketingAutomations?.[key] || {}) }])),
+      abandonedCart: {
+        ...emptyOrg.marketingAutomations.abandonedCart,
+        ...(value.marketingAutomations?.abandonedCart || {}),
+        delayMinutes:
+          value.marketingAutomations?.abandonedCart?.delayMinutes ??
+          value.ordering?.abandonedCartIntervalMinutes ??
+          20,
+      },
+      ...Object.fromEntries(
+        ["winback", "birthday", "loyalty"].map((key) => [
+          key,
+          { ...emptyOrg.marketingAutomations[key], ...(value.marketingAutomations?.[key] || {}) },
+        ]),
+      ),
     },
     ordering: {
       ...emptyOrg.ordering,
@@ -688,6 +715,15 @@ export default function RestaurantSettings({
         </div>
 
         <section className="mt-6 rounded-2xl border bg-white p-6 shadow-sm md:p-8">
+          {staffMode && (
+            <div
+              role="note"
+              className="mb-7 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
+            >
+              OrderXO Staff Access — You may update this restaurant's settings with your assigned
+              permissions. Publishing requires setup:publish permission.
+            </div>
+          )}
           {tab === "General" && (
             <div className="space-y-7">
               <div>
@@ -742,12 +778,6 @@ export default function RestaurantSettings({
 
           {tab === "Appearance" && (
             <div className="space-y-8">
-              {staffMode && (
-                <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                  OrderXO Staff Access — You may update this restaurant's appearance with your
-                  assigned setup permissions. Changes are audited.
-                </p>
-              )}
               {!staffMode && !entitlements.appearanceCustomization && (
                 <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />
               )}
@@ -815,12 +845,6 @@ export default function RestaurantSettings({
 
           {tab === "Homepage" && (
             <div className="space-y-5">
-              {staffMode && (
-                <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                  OrderXO Staff Access — You may edit and save homepage drafts with setup:website
-                  permission. Publishing requires setup:publish permission.
-                </p>
-              )}
               {!staffMode && !entitlements.homepageBuilder && (
                 <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />
               )}
@@ -953,7 +977,7 @@ export default function RestaurantSettings({
                   delivery and templates.
                 </p>
               </div>
-              {!staffMode && (
+              {(!staffMode || staffPermissions?.includes("settings.email.test")) && (
                 <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-3">
                   <h3 className="font-bold text-slate-900">Send test email</h3>
                   <p className="text-sm text-slate-600">
@@ -1013,56 +1037,144 @@ export default function RestaurantSettings({
               {!staffMode && (!entitlements.marketingAutomations || !!entitlementError) && (
                 <PlanLocked title="Marketing Automations" required="Pro" href={billingUrl} />
               )}
-              <fieldset disabled={!staffMode && (!entitlements.marketingAutomations || !!entitlementError)} className="space-y-5 disabled:opacity-60">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Customer Marketing Automations</h2>
-                <p className="mt-1 text-sm text-slate-600">Configure email reminders for your restaurant. Changes take effect after saving.</p>
-              </div>
-              <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-4">
-                <label className="flex items-center gap-3 font-semibold text-slate-900">
-                  <input type="checkbox" checked={org.marketingAutomations?.abandonedCart?.enabled !== false}
-                    onChange={(e) => setOrgPart("marketingAutomations", "abandonedCart", { ...org.marketingAutomations?.abandonedCart, enabled: e.target.checked })} />
-                  Abandoned Cart Recovery
-                </label>
-                <p className="text-sm text-slate-600">Email subscribed customers who leave an online cart without checking out. This uses your existing Mailgun recovery template and tokenized checkout link.</p>
-                <div className="max-w-sm">
-                  <Field label="Send reminder after" hint="Minimum 15 minutes; cron runs every 15 minutes, so delivery can be later than the selected delay.">
-                    <select className={input} value={org.marketingAutomations?.abandonedCart?.delayMinutes ?? 20}
-                      onChange={(e) => setOrgPart("marketingAutomations", "abandonedCart", { ...org.marketingAutomations?.abandonedCart, delayMinutes: Number(e.target.value) })}>
-                      {[15, 20, 30, 45, 60, 120, 240, 1440].map((minutes) => (
-                        <option key={minutes} value={minutes}>{minutes < 60 ? `${minutes} minutes` : minutes === 1440 ? "24 hours" : `${minutes / 60} hours`}</option>
-                      ))}
-                    </select>
-                  </Field>
+              <fieldset
+                disabled={!staffMode && (!entitlements.marketingAutomations || !!entitlementError)}
+                className="space-y-5 disabled:opacity-60"
+              >
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Customer Marketing Automations
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">
+                    Configure email reminders for your restaurant. Changes take effect after saving.
+                  </p>
                 </div>
-              </div>
-              {[
-                { key: "winback", title: "Win-back Emails", detail: "Email subscribed customers after a period without orders.", fields: [["inactiveDays", "Days without an order", [7, 14, 30, 45, 60, 90]]] },
-                { key: "birthday", title: "Birthday Greetings", detail: "Send birthday greetings to opted-in customers who have provided their birthday. No reward is issued automatically.", fields: [] },
-                { key: "loyalty", title: "Loyalty Reminders", detail: "Remind subscribed customers with redeemable restaurant loyalty points.", fields: [["minimumPoints", "Minimum points", [50, 100, 150, 200, 500]], ["cooldownDays", "Repeat no more often than (days)", [7, 14, 30, 60, 90]]] },
-              ].map(({ key, title, detail, fields }) => {
-                const config = org.marketingAutomations?.[key] || {};
-                const change = (field, value) => setOrgPart("marketingAutomations", key, { ...config, [field]: value });
-                return (
-                  <div key={key} className="rounded-xl border border-slate-200 p-5 space-y-4">
-                    <label className="flex items-center gap-3 font-semibold text-slate-900">
-                      <input type="checkbox" checked={config.enabled === true} onChange={(e) => change("enabled", e.target.checked)} />
-                      {title}
-                    </label>
-                    <p className="text-sm text-slate-500">{detail}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {fields.map(([field, label, options]) => (
-                        <Field key={field} label={label}><select className={input} value={config[field] ?? options[0]} onChange={(e) => change(field, Number(e.target.value))}>
-                          {options.map((n) => <option key={n} value={n}>{n}</option>)}
-                        </select></Field>
-                      ))}
-                      <Field label="Email subject"><input className={input} maxLength={160} value={config.subject || ""} onChange={(e) => change("subject", e.target.value)} /></Field>
-                    </div>
-                    <Field label="Email message"><textarea className={input} rows={3} maxLength={2000} value={config.message || ""} onChange={(e) => change("message", e.target.value)} /></Field>
+                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-4">
+                  <label className="flex items-center gap-3 font-semibold text-slate-900">
+                    <input
+                      type="checkbox"
+                      checked={org.marketingAutomations?.abandonedCart?.enabled !== false}
+                      onChange={(e) =>
+                        setOrgPart("marketingAutomations", "abandonedCart", {
+                          ...org.marketingAutomations?.abandonedCart,
+                          enabled: e.target.checked,
+                        })
+                      }
+                    />
+                    Abandoned Cart Recovery
+                  </label>
+                  <p className="text-sm text-slate-600">
+                    Email subscribed customers who leave an online cart without checking out. This
+                    uses your existing Mailgun recovery template and tokenized checkout link.
+                  </p>
+                  <div className="max-w-sm">
+                    <Field
+                      label="Send reminder after"
+                      hint="Minimum 15 minutes; cron runs every 15 minutes, so delivery can be later than the selected delay."
+                    >
+                      <select
+                        className={input}
+                        value={org.marketingAutomations?.abandonedCart?.delayMinutes ?? 20}
+                        onChange={(e) =>
+                          setOrgPart("marketingAutomations", "abandonedCart", {
+                            ...org.marketingAutomations?.abandonedCart,
+                            delayMinutes: Number(e.target.value),
+                          })
+                        }
+                      >
+                        {[15, 20, 30, 45, 60, 120, 240, 1440].map((minutes) => (
+                          <option key={minutes} value={minutes}>
+                            {minutes < 60
+                              ? `${minutes} minutes`
+                              : minutes === 1440
+                                ? "24 hours"
+                                : `${minutes / 60} hours`}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
                   </div>
-                );
-              })}
-              <p className="text-xs text-slate-500">Only customers subscribed to marketing emails at this restaurant location receive abandoned-cart reminders. Transactional order emails are unaffected.</p>
+                </div>
+                {[
+                  {
+                    key: "winback",
+                    title: "Win-back Emails",
+                    detail: "Email subscribed customers after a period without orders.",
+                    fields: [["inactiveDays", "Days without an order", [7, 14, 30, 45, 60, 90]]],
+                  },
+                  {
+                    key: "birthday",
+                    title: "Birthday Greetings",
+                    detail:
+                      "Send birthday greetings to opted-in customers who have provided their birthday. No reward is issued automatically.",
+                    fields: [],
+                  },
+                  {
+                    key: "loyalty",
+                    title: "Loyalty Reminders",
+                    detail:
+                      "Remind subscribed customers with redeemable restaurant loyalty points.",
+                    fields: [
+                      ["minimumPoints", "Minimum points", [50, 100, 150, 200, 500]],
+                      ["cooldownDays", "Repeat no more often than (days)", [7, 14, 30, 60, 90]],
+                    ],
+                  },
+                ].map(({ key, title, detail, fields }) => {
+                  const config = org.marketingAutomations?.[key] || {};
+                  const change = (field, value) =>
+                    setOrgPart("marketingAutomations", key, { ...config, [field]: value });
+                  return (
+                    <div key={key} className="rounded-xl border border-slate-200 p-5 space-y-4">
+                      <label className="flex items-center gap-3 font-semibold text-slate-900">
+                        <input
+                          type="checkbox"
+                          checked={config.enabled === true}
+                          onChange={(e) => change("enabled", e.target.checked)}
+                        />
+                        {title}
+                      </label>
+                      <p className="text-sm text-slate-500">{detail}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {fields.map(([field, label, options]) => (
+                          <Field key={field} label={label}>
+                            <select
+                              className={input}
+                              value={config[field] ?? options[0]}
+                              onChange={(e) => change(field, Number(e.target.value))}
+                            >
+                              {options.map((n) => (
+                                <option key={n} value={n}>
+                                  {n}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                        ))}
+                        <Field label="Email subject">
+                          <input
+                            className={input}
+                            maxLength={160}
+                            value={config.subject || ""}
+                            onChange={(e) => change("subject", e.target.value)}
+                          />
+                        </Field>
+                      </div>
+                      <Field label="Email message">
+                        <textarea
+                          className={input}
+                          rows={3}
+                          maxLength={2000}
+                          value={config.message || ""}
+                          onChange={(e) => change("message", e.target.value)}
+                        />
+                      </Field>
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-slate-500">
+                  Only customers subscribed to marketing emails at this restaurant location receive
+                  abandoned-cart reminders. Transactional order emails are unaffected.
+                </p>
               </fieldset>
             </div>
           )}
@@ -1295,7 +1407,9 @@ export default function RestaurantSettings({
                   saving ||
                   (!staffMode && !!entitlementError) ||
                   (tab === "Appearance" && !staffMode && !entitlements.appearanceCustomization) ||
-                  (tab === "Marketing Automations" && !staffMode && !entitlements.marketingAutomations)
+                  (tab === "Marketing Automations" &&
+                    !staffMode &&
+                    !entitlements.marketingAutomations)
                 }
                 onClick={saveOrganization}
                 className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50"
