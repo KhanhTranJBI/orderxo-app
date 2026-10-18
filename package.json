@@ -24,7 +24,9 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "next-auth": "^4.24.13",
-    "react-toastify": "^11.0.5"
+    "react-toastify": "^11.0.5",
+    "qrcode": "^1.5.4",
+    "jspdf": "^2.5.2"
   },
   "devDependencies": {
     "autoprefixer": "^10",
