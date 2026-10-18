@@ -977,7 +977,7 @@ export default function RestaurantSettings({
                   delivery and templates.
                 </p>
               </div>
-              {(!staffMode || staffPermissions?.includes("settings.email.test")) && (
+              {!staffMode && (
                 <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-3">
                   <h3 className="font-bold text-slate-900">Send test email</h3>
                   <p className="text-sm text-slate-600">
