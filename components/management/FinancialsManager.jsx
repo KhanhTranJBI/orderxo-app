@@ -49,6 +49,7 @@ function Fin({ organizationId, locationId }) {
     "rewardsRedeemed",
     "refunds",
     "stripeFees",
+    "platformFees",
     "netTotal",
   ];
   const totals = Object.fromEntries(
@@ -91,12 +92,13 @@ function Fin({ organizationId, locationId }) {
       </div>
       {err && <p className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">{err}</p>}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
           {[
             ["Gross Sales", totals.grossSales],
             ["Rewards", totals.rewardsRedeemed, "red"],
             ["Refunds", totals.refunds, "red"],
             ["Transaction Fees", totals.stripeFees, "red"],
+            ["Platform Fees", totals.platformFees, "red"],
             ["Net Total", totals.netTotal, "green"],
           ].map(([k, v, t]) => (
             <div
@@ -114,7 +116,7 @@ function Fin({ organizationId, locationId }) {
           ))}
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1300px] w-full text-left">
+          <table className="min-w-[1450px] w-full text-left">
             <thead className="border-b text-slate-500">
               <tr>
                 {[
@@ -127,6 +129,7 @@ function Fin({ organizationId, locationId }) {
                   "Rewards Redeemed",
                   "Refunded Amount",
                   "Transaction Fee",
+                  "Platform Fee",
                   "Net Total",
                   "Statement",
                 ].map((x) => (
@@ -149,6 +152,7 @@ function Fin({ organizationId, locationId }) {
                     <td className="px-3 py-4 text-red-600">-{usd(x.rewardsRedeemed)}</td>
                     <td className="px-3 py-4 text-red-600">-{usd(x.refunds)}</td>
                     <td className="px-3 py-4 text-red-600">-{usd(x.stripeFees)}</td>
+                    <td className="px-3 py-4 text-red-600">-{usd(x.platformFees)}</td>
                     <td className="px-3 py-4 font-bold text-green-600">{usd(x.netTotal)}</td>
                     <td className="px-3 py-4">
                       <button
@@ -173,6 +177,7 @@ function Fin({ organizationId, locationId }) {
                   <td className="px-3 py-4 text-red-600">-{usd(totals.rewardsRedeemed)}</td>
                   <td className="px-3 py-4 text-red-600">-{usd(totals.refunds)}</td>
                   <td className="px-3 py-4 text-red-600">-{usd(totals.stripeFees)}</td>
+                  <td className="px-3 py-4 text-red-600">-{usd(totals.platformFees)}</td>
                   <td className="px-3 py-4 text-green-600">{usd(totals.netTotal)}</td>
                   <td className="px-3 py-4" />
                 </tr>
