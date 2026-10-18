@@ -91,10 +91,21 @@ export default function ManageUsersManager({ organizationId }) {
       : date.toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
   };
 
+  const formatBirthday = (value) => {
+    if (!value) return "—";
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value));
+    if (!match) return "—";
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    if (month < 1 || month > 12 || day < 1 || day > 31) return "—";
+    return `${match[2]}/${match[3]}`;
+  };
+
   const columns = [
     ["Name", "name"],
     ["Email", "email"],
     ["Phone", "phone"],
+    ["Birthday", "birthday"],
     ["Role", "role"],
     ["Loyalty Points", "loyaltyPoints"],
     ["Reserved", "reservedPoints"],
@@ -195,6 +206,7 @@ export default function ManageUsersManager({ organizationId }) {
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">{user.email || "-"}</td>
                       <td className="whitespace-nowrap px-3 py-3">{user.phone || "-"}</td>
+                      <td className="whitespace-nowrap px-3 py-3">{formatBirthday(user.birthday)}</td>
                       <td className="whitespace-nowrap px-3 py-3 capitalize">
                         {user.role || "customer"}
                       </td>
