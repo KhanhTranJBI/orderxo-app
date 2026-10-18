@@ -1114,6 +1114,7 @@ function HistoryTable({
     "Promotion",
     "Refunded",
     "Transaction Fee",
+    "Platform Fee",
     "Net",
   ];
   return (
@@ -1122,7 +1123,7 @@ function HistoryTable({
         <Empty>No orders found.</Empty>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
-          <table className="w-full min-w-[1700px] text-sm">
+          <table className="w-full min-w-[1850px] text-sm">
             <thead className="bg-slate-50 text-left text-slate-600">
               <tr>
                 {headers.map((h) => (
@@ -1216,6 +1217,7 @@ function HistoryTable({
                     </td>
                     <td className="px-4 py-5 text-red-600">-{usdD(o.refunded)}</td>
                     <td className="px-4 py-5 text-red-600">-{usdD(o.stripeFee)}</td>
+                    <td className="px-4 py-5 text-red-600">-{usd(o.platformFeeCents)}</td>
                     <td className="px-4 py-5 font-bold text-green-600">{usdD(o.net)}</td>
                   </tr>
                 );
