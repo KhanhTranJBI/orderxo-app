@@ -27,6 +27,24 @@ function Cards({ organizationId, locationId }) {
     [found, setFound] = useState(null),
     [err, setErr] = useState(""),
     [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncTabFromHash = () => {
+      const hash = decodeURIComponent(window.location.hash.slice(1));
+      const requested = hash.startsWith("tab=") ? hash.slice(4) : hash;
+      if (requested === "active-gift-cards" || requested === "active") setTab("active");
+      if (requested === "gift-cards-history" || requested === "history") setTab("history");
+    };
+    syncTabFromHash();
+    window.addEventListener("hashchange", syncTabFromHash);
+    return () => window.removeEventListener("hashchange", syncTabFromHash);
+  }, []);
+  const selectTab = (id) => {
+    setTab(id);
+    if (typeof window !== "undefined") {
+      window.location.hash = id === "active" ? "active-gift-cards" : "gift-cards-history";
+    }
+  };
   const load = async () => {
     if (!locationId) return;
     setLoading(true);
@@ -59,8 +77,8 @@ function Cards({ organizationId, locationId }) {
   }
   return (
     <section className="mt-8">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-md">
-        <nav className="flex gap-8 px-6">
+      <div className="overflow-x-auto border-b border-slate-200">
+        <nav className="flex min-w-max gap-4">
           {[
             [
               "active",
@@ -75,8 +93,8 @@ function Cards({ organizationId, locationId }) {
           ].map(([id, Icon, label]) => (
             <button
               key={id}
-              onClick={() => setTab(id)}
-              className={`relative flex items-center gap-2 py-5 text-lg font-semibold ${tab === id ? "text-orange-600" : "text-slate-500"} after:absolute after:bottom-0 after:left-0 after:h-[3px] after:w-full after:bg-orange-500 ${tab === id ? "after:scale-x-100" : "after:scale-x-0"}`}
+              onClick={() => selectTab(id)}
+              className={`flex items-center gap-2 border-b-[3px] px-4 py-4 text-base font-semibold transition-colors ${tab === id ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"}`}
             >
               <Icon size={18} />
               {label}

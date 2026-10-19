@@ -137,7 +137,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     stopBell();
     setTab("active-orders");
     setPage(1);
-    if (typeof window !== "undefined") window.location.hash = "tab=active-orders";
+    if (typeof window !== "undefined") window.location.hash = "active-orders";
   }, [stopBell]);
   const seenOrdersRef = useRef(new Set());
   const initializedLocationRef = useRef(null);
@@ -160,16 +160,23 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     return () => clearTimeout(t);
   }, [search]);
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const t = new URLSearchParams(window.location.hash.slice(1)).get("tab");
-      if (["active-carts", "active-orders", "orders-history", "report"].includes(t)) setTab(t);
-    }
+    if (typeof window === "undefined") return;
+    const syncTabFromHash = () => {
+        const hash = decodeURIComponent(window.location.hash.slice(1));
+        const requested = hash.startsWith("tab=") ? hash.slice(4) : hash;
+        if (["active-carts", "active-orders", "orders-history", "report"].includes(requested)) {
+          setTab(requested);
+        }
+      };
+      syncTabFromHash();
+      window.addEventListener("hashchange", syncTabFromHash);
+      return () => window.removeEventListener("hashchange", syncTabFromHash);
   }, []);
   const selectTab = (id) => {
     // Only the alert modal View Orders action acknowledges the ringing bell.
     setTab(id);
     setPage(1);
-    if (typeof window !== "undefined") window.location.hash = `tab=${id}`;
+    if (typeof window !== "undefined") window.location.hash = id;
   };
   // Only notify for newly arriving, paid-but-unconfirmed orders. The first
   // snapshot establishes a baseline and never interrupts an owner on tab change.
@@ -293,13 +300,13 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           are disabled.
         </div>
       )}
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-md">
-        <div className="flex min-w-max">
+      <div className="overflow-x-auto border-b border-slate-200">
+        <div className="flex min-w-max gap-4">
           {tabs.map(({ id, label, Icon, count }) => (
             <button
               key={id}
               onClick={() => selectTab(id)}
-              className={`flex items-center gap-2 border-b-4 px-6 py-5 text-base font-semibold transition ${tab === id ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+              className={`flex items-center gap-2 border-b-[3px] px-4 py-4 text-base font-semibold transition-colors ${tab === id ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"}`}
             >
               <Icon size={20} />
               {label}
