@@ -11,6 +11,17 @@ import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 import HomepageSlidesManager from "./HomepageSlidesManager";
 
+const STORE_TAB_HASHES = {
+  hours: "store-hours",
+  notices: "notices",
+  homepage: "homepage-slides",
+  locationDetails: "location-details",
+  printing: "printing",
+};
+const STORE_HASH_TABS = Object.fromEntries(
+  Object.entries(STORE_TAB_HASHES).map(([tab, hash]) => [hash, tab]),
+);
+
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const defaultHours = () =>
@@ -137,6 +148,42 @@ export default function StoreSettingsManager({ organizationId }) {
     isAdmin || (permission.organization?.role === "staff" && canManage);
 
   const [tab, setTab] = useState("hours");
+  const isAllowedTab = useCallback((candidate, currentScope) => {
+    if (candidate === "homepage") return canReadHomepage;
+    if (candidate === "hours" || candidate === "notices") return canReadStore;
+    if (candidate === "locationDetails" || candidate === "printing") {
+      return canReadStore && currentScope !== "default";
+    }
+    return false;
+  }, [canReadHomepage, canReadStore]);
+
+  const selectStoreTab = useCallback((nextTab) => {
+    if (!isAllowedTab(nextTab, scope)) return;
+    setTab(nextTab);
+    const hash = STORE_TAB_HASHES[nextTab];
+    if (hash && window.location.hash !== `#${hash}`) {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
+    }
+  }, [isAllowedTab, scope]);
+
+  // Deep links and browser Back/Forward navigation.
+  useEffect(() => {
+    if (permission.loading || loc.loading) return;
+    const syncFromHash = () => {
+      const hash = decodeURIComponent(window.location.hash.slice(1)).toLowerCase();
+      const requested = STORE_HASH_TABS[hash];
+      if (requested && isAllowedTab(requested, scope)) setTab(requested);
+      else if (!isAllowedTab(tab, scope)) setTab(canReadStore ? "hours" : "homepage");
+    };
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+    };
+  }, [permission.loading, loc.loading, isAllowedTab, scope, canReadStore]);
+
 
   const [scope, setScope] = useState("default");
   const [useDefault, setUseDefault] = useState(false);
@@ -202,7 +249,7 @@ export default function StoreSettingsManager({ organizationId }) {
       loc.locations.some((l) => String(l._id || l.id) === requestedLocationId)
     ) {
       setScope(requestedLocationId);
-      if (["locationDetails", "hours", "printing", "notices", "homepage"].includes(requestedTab)) {
+      if (!window.location.hash && STORE_TAB_HASHES[requestedTab]) {
         setTab(requestedTab);
       }
     }
@@ -590,15 +637,15 @@ export default function StoreSettingsManager({ organizationId }) {
           </p>
         )}
 
-        <div className="mt-6 flex gap-6 rounded-t-2xl border-x border-t border-b bg-white px-5 pt-1">
+        <div className="mt-6 flex flex-wrap gap-x-7 border-b border-slate-200">
           {canReadStore && (
             <>
               <button
-                onClick={() => setTab("hours")}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                onClick={() => selectStoreTab("hours")}
+                className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
                   tab === "hours"
-                    ? "border-orange-500 text-orange-600"
-                    : "border-transparent text-slate-500"
+                    ? "border-orange-600 text-orange-600"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <Clock3 size={18} />
@@ -606,11 +653,11 @@ export default function StoreSettingsManager({ organizationId }) {
               </button>
 
               <button
-                onClick={() => setTab("notices")}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+                onClick={() => selectStoreTab("notices")}
+                className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
                   tab === "notices"
-                    ? "border-orange-500 text-orange-600"
-                    : "border-transparent text-slate-500"
+                    ? "border-orange-600 text-orange-600"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
                 <Info size={18} />
@@ -621,11 +668,11 @@ export default function StoreSettingsManager({ organizationId }) {
 
           {canReadHomepage && (
             <button
-              onClick={() => setTab("homepage")}
-              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+              onClick={() => selectStoreTab("homepage")}
+              className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
                 tab === "homepage"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-slate-500"
+                  ? "border-orange-600 text-orange-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               <Images size={18} />
@@ -635,8 +682,8 @@ export default function StoreSettingsManager({ organizationId }) {
 
           {canReadStore && scope !== "default" && (
             <button
-              onClick={() => setTab("locationDetails")}
-              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${tab === "locationDetails" ? "border-orange-500 text-orange-600" : "border-transparent text-slate-500"}`}
+              onClick={() => selectStoreTab("locationDetails")}
+              className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${tab === "locationDetails" ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"}`}
             >
               <Info size={18} /> Location Details
             </button>
@@ -644,11 +691,11 @@ export default function StoreSettingsManager({ organizationId }) {
 
           {canReadStore && scope !== "default" && (
             <button
-              onClick={() => setTab("printing")}
-              className={`flex items-center gap-2 border-b-2 px-1 py-4 font-semibold ${
+              onClick={() => selectStoreTab("printing")}
+              className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
                 tab === "printing"
-                  ? "border-orange-500 text-orange-600"
-                  : "border-transparent text-slate-500"
+                  ? "border-orange-600 text-orange-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               <Printer size={18} />
