@@ -23,6 +23,23 @@ const TABS = [
   "Ordering",
 ];
 
+// Stable, shareable URL fragments for Restaurant Settings tabs.
+const TAB_HASHES = {
+  "General": "general",
+  "Social & Links": "social-links",
+  "Appearance": "appearance",
+  "Homepage": "homepage",
+  "Loyalty": "loyalty",
+  "Gift Cards": "gift-cards",
+  "Email": "email",
+  "Marketing Automations": "marketing-automations",
+  "Google Reviews & SEO": "google-reviews-seo",
+  "Ordering": "ordering",
+};
+const HASH_TABS = Object.fromEntries(
+  Object.entries(TAB_HASHES).map(([name, hash]) => [hash, name]),
+);
+
 const emptyOrg = {
   name: "",
   contactEmail: "",
@@ -527,6 +544,32 @@ export default function RestaurantSettings({
   staffPermissions = [],
 }) {
   const [tab, setTab] = useState("General");
+
+  // Respect direct links, browser Back/Forward, and manual hash changes.
+  useEffect(() => {
+    const syncTabFromHash = () => {
+      const hash = window.location.hash.slice(1).toLowerCase();
+      const nextTab = HASH_TABS[hash];
+      if (nextTab) setTab(nextTab);
+    };
+    syncTabFromHash();
+    window.addEventListener("hashchange", syncTabFromHash);
+    window.addEventListener("popstate", syncTabFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncTabFromHash);
+      window.removeEventListener("popstate", syncTabFromHash);
+    };
+  }, []);
+
+  const selectTab = (name) => {
+    setTab(name);
+    setMessage("");
+    setError("");
+    const hash = TAB_HASHES[name];
+    if (hash && window.location.hash !== `#${hash}`) {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
+    }
+  };
   const [focusGoogleReviewLink, setFocusGoogleReviewLink] = useState(false);
   useEffect(() => {
     if (tab !== "Social & Links" || !focusGoogleReviewLink) return;
@@ -728,11 +771,7 @@ export default function RestaurantSettings({
             {TABS.map((name) => (
               <button
                 key={name}
-                onClick={() => {
-                  setTab(name);
-                  setMessage("");
-                  setError("");
-                }}
+                onClick={() => selectTab(name)}
                 className={`border-b-2 px-4 py-3 text-sm font-semibold ${tab === name ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
               >
                 {name}
@@ -1265,9 +1304,7 @@ export default function RestaurantSettings({
               googleReviewUrl={org.website?.social?.googleReview || ""}
               onEditReviewLink={() => {
                 setFocusGoogleReviewLink(true);
-                setTab("Social & Links");
-                setMessage("");
-                setError("");
+                selectTab("Social & Links");
               }}
             />
           )}
