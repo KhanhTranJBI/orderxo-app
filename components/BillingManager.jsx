@@ -58,7 +58,7 @@ export default function BillingManager({
   const trialOfferDays = !active && Number(subscription?.trialOffer?.days || 0);
   const hasTrialOffer = trialOfferDays > 0;
 
-  const monthlyPrices = { starter: 7900, growth: 12900, pro: 19900 };
+  const monthlyPrices = { starter: 2900, growth: 6900, pro: 12900 };
   const count = Math.max(1, Number(billing?.locationCount) || 1);
   const estimatedMonthly = (planId) => {
     const base = monthlyPrices[planId];
@@ -160,7 +160,7 @@ export default function BillingManager({
             <p className="mt-1 text-sm">
               Status:{" "}
               <span className="font-semibold capitalize">
-                {subscription?.status || "incomplete"}
+                {subscription?.status === "trialing" ? "Free Trial" : subscription?.status || "incomplete"}
               </span>
             </p>
             {hasTrialOffer && (
@@ -257,26 +257,20 @@ export default function BillingManager({
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>First location</span>
-              <strong>{usd(isTrialing ? 0 : billing.baseMonthlyCents)}</strong>
+              <strong>{isTrialing ? usd(0) : billing.baseMonthlyCents == null ? "See Stripe Billing" : usd(billing.baseMonthlyCents)}</strong>
             </div>
             <div className="flex justify-between">
               <span>
                 {Math.max(0, billing.locationCount - 1)} additional locations (20% off each)
               </span>
-              <strong>
-                {usd(
-                  isTrialing
-                    ? 0
-                    : Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents,
-                )}
-              </strong>
+              <strong>{isTrialing ? usd(0) : billing.additionalMonthlyCents == null ? "See Stripe Billing" : usd(Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents)}</strong>
             </div>
             <div className="flex justify-between border-t pt-3 text-base">
               <strong>
                 {isTrialing ? "Subscription during free trial" : "Estimated monthly subscription"}
               </strong>
               <strong className={isTrialing ? "text-green-700" : ""}>
-                {usd(isTrialing ? 0 : billing.monthlyTotalCents)}
+                {isTrialing ? usd(0) : billing.monthlyTotalCents == null ? "See Stripe Billing" : usd(billing.monthlyTotalCents)}
               </strong>
             </div>
           </div>
@@ -289,7 +283,7 @@ export default function BillingManager({
           {isTrialing && (
             <div className="mt-3 flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
               <span>Regular monthly subscription after trial</span>
-              <strong>{usd(billing.monthlyTotalCents)}</strong>
+              <strong>{billing.monthlyTotalCents == null ? "Check Stripe Billing" : usd(billing.monthlyTotalCents)}</strong>
             </div>
           )}
           <p className="mt-3 text-xs text-slate-500">
