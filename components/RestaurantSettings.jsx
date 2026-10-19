@@ -513,6 +513,17 @@ export default function RestaurantSettings({
   staffPermissions = [],
 }) {
   const [tab, setTab] = useState("General");
+  const [focusGoogleReviewLink, setFocusGoogleReviewLink] = useState(false);
+  useEffect(() => {
+    if (tab !== "Social & Links" || !focusGoogleReviewLink) return;
+    const id = window.requestAnimationFrame(() => {
+      const field = document.getElementById("google-review-link");
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field?.focus({ preventScroll: true });
+      setFocusGoogleReviewLink(false);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [tab, focusGoogleReviewLink]);
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1190,6 +1201,12 @@ export default function RestaurantSettings({
               locationAddress={org.address?.line1 || ""}
               googleMapsUrl={org.googleMapUrl || ""}
               googleReviewUrl={org.website?.social?.googleReview || ""}
+              onEditReviewLink={() => {
+                setFocusGoogleReviewLink(true);
+                setTab("Social & Links");
+                setMessage("");
+                setError("");
+              }}
             />
           )}
           {tab === "Ordering" && (

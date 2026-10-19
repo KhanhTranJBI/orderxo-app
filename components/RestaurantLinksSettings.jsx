@@ -111,6 +111,7 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
           <label key={key} className="space-y-1 text-sm font-medium">
             {label}
             <input
+              id={key === "googleReview" ? "google-review-link" : undefined}
               className={input}
               value={social[key] || ""}
               placeholder="https://..."
