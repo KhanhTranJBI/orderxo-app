@@ -147,24 +147,35 @@ export default function StoreSettingsManager({ organizationId }) {
   const canEditRestaurantDefault =
     isAdmin || (permission.organization?.role === "staff" && canManage);
 
+  const [scope, setScope] = useState("default");
   const [tab, setTab] = useState("hours");
-  const isAllowedTab = useCallback((candidate, currentScope) => {
-    if (candidate === "homepage") return canReadHomepage;
-    if (candidate === "hours" || candidate === "notices") return canReadStore;
-    if (candidate === "locationDetails" || candidate === "printing") {
-      return canReadStore && currentScope !== "default";
-    }
-    return false;
-  }, [canReadHomepage, canReadStore]);
+  const isAllowedTab = useCallback(
+    (candidate, currentScope) => {
+      if (candidate === "homepage") return canReadHomepage;
+      if (candidate === "hours" || candidate === "notices") return canReadStore;
+      if (candidate === "locationDetails" || candidate === "printing") {
+        return canReadStore && currentScope !== "default";
+      }
+      return false;
+    },
+    [canReadHomepage, canReadStore],
+  );
 
-  const selectStoreTab = useCallback((nextTab) => {
-    if (!isAllowedTab(nextTab, scope)) return;
-    setTab(nextTab);
-    const hash = STORE_TAB_HASHES[nextTab];
-    if (hash && window.location.hash !== `#${hash}`) {
-      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
-    }
-  }, [isAllowedTab, scope]);
+  const selectStoreTab = useCallback(
+    (nextTab) => {
+      if (!isAllowedTab(nextTab, scope)) return;
+      setTab(nextTab);
+      const hash = STORE_TAB_HASHES[nextTab];
+      if (hash && window.location.hash !== `#${hash}`) {
+        window.history.pushState(
+          null,
+          "",
+          `${window.location.pathname}${window.location.search}#${hash}`,
+        );
+      }
+    },
+    [isAllowedTab, scope],
+  );
 
   // Deep links and browser Back/Forward navigation.
   useEffect(() => {
@@ -184,8 +195,6 @@ export default function StoreSettingsManager({ organizationId }) {
     };
   }, [permission.loading, loc.loading, isAllowedTab, scope, canReadStore]);
 
-
-  const [scope, setScope] = useState("default");
   const [useDefault, setUseDefault] = useState(false);
 
   const [manual, setManual] = useState(true);
