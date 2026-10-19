@@ -74,11 +74,25 @@ const emptyOrg = {
       inactiveDays: 30,
       subject: "We miss you!",
       message: "We'd love to see you again.",
+      rewardEnabled: true,
+      rewardType: "percent",
+      discountPercent: 15,
+      discountAmountCents: 700,
+      maxDiscountAmountCents: 700,
+      minSubtotalCents: 2000,
+      validDays: 7,
     },
     birthday: {
       enabled: false,
       subject: "Happy birthday!",
       message: "Wishing you a wonderful birthday!",
+      rewardEnabled: true,
+      rewardType: "percent",
+      discountPercent: 10,
+      discountAmountCents: 500,
+      maxDiscountAmountCents: 500,
+      minSubtotalCents: 1500,
+      validDays: 7,
     },
     loyalty: {
       enabled: false,
@@ -1112,14 +1126,14 @@ export default function RestaurantSettings({
                   {
                     key: "winback",
                     title: "Win-back Emails",
-                    detail: "Email subscribed customers after a period without orders.",
+                    detail: "Send opted-in customers a unique, single-use welcome-back promo after inactivity.",
                     fields: [["inactiveDays", "Days without an order", [7, 14, 30, 45, 60, 90]]],
                   },
                   {
                     key: "birthday",
-                    title: "Birthday Greetings",
+                    title: "Birthday Rewards",
                     detail:
-                      "Send birthday greetings to opted-in customers who have provided their birthday. No reward is issued automatically.",
+                      "Send a birthday email and a unique, single-use promo code. Customers can enter their birthday only once.",
                     fields: [],
                   },
                   {
@@ -1172,6 +1186,54 @@ export default function RestaurantSettings({
                           />
                         </Field>
                       </div>
+                      {(key === "winback" || key === "birthday") && (
+                        <div className="space-y-4 rounded-lg border border-orange-200 bg-orange-50/40 p-4">
+                          <h4 className="text-sm font-semibold text-slate-900">Discount reward</h4>
+                          <p className="text-xs text-slate-600">
+                            Each eligible customer receives a unique code for one online order.
+                            Discounts are enforced by the ordering API.
+                          </p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Field label="Discount type">
+                                <select className={input} value={config.rewardType || "percent"}
+                                  onChange={(e) => change("rewardType", e.target.value)}>
+                                  <option value="percent">Percentage off</option>
+                                  <option value="fixed">Fixed amount off</option>
+                                </select>
+                              </Field>
+                              {config.rewardType === "fixed" ? (
+                                <Field label="Discount amount ($)">
+                                  <input className={input} type="number" min="0.01" max="1000" step="0.01"
+                                    value={(Number(config.discountAmountCents ?? (key === "birthday" ? 500 : 700)) / 100)}
+                                    onChange={(e) => change("discountAmountCents", Math.max(1, Math.round(Number(e.target.value || 0) * 100)))} />
+                                </Field>
+                              ) : (
+                                <>
+                                  <Field label="Discount (%)">
+                                    <input className={input} type="number" min="1" max="100" step="1"
+                                      value={config.discountPercent ?? (key === "birthday" ? 10 : 15)}
+                                      onChange={(e) => change("discountPercent", Math.max(1, Math.min(100, Number(e.target.value || 1))))} />
+                                  </Field>
+                                  <Field label="Maximum discount ($; 0 = no cap)">
+                                    <input className={input} type="number" min="0" max="1000" step="0.01"
+                                      value={Number(config.maxDiscountAmountCents ?? (key === "birthday" ? 500 : 700)) / 100}
+                                      onChange={(e) => change("maxDiscountAmountCents", Math.max(0, Math.round(Number(e.target.value || 0) * 100)))} />
+                                  </Field>
+                                </>
+                              )}
+                              <Field label="Minimum food subtotal ($)">
+                                <input className={input} type="number" min="0" max="10000" step="0.01"
+                                  value={Number(config.minSubtotalCents ?? (key === "birthday" ? 1500 : 2000)) / 100}
+                                  onChange={(e) => change("minSubtotalCents", Math.max(0, Math.round(Number(e.target.value || 0) * 100)))} />
+                              </Field>
+                              <Field label="Promo validity (days)">
+                                <input className={input} type="number" min="1" max="90" step="1"
+                                  value={config.validDays ?? 7}
+                                  onChange={(e) => change("validDays", Math.max(1, Math.min(90, Number(e.target.value || 1))))} />
+                              </Field>
+                          </div>
+                        </div>
+                      )}
                       <Field label="Email message">
                         <textarea
                           className={input}
