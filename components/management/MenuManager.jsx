@@ -846,6 +846,30 @@ export default function MenuManager({ organizationId }) {
     [error, setError] = useState(""),
     [menuScope, setMenuScope] = useState("default"),
     [overrideItem, setOverrideItem] = useState(null);
+  // Keep the selected menu tab in the URL for deep links and browser history.
+  useEffect(() => {
+    const syncFromHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === "#modifiers") setTab("modifiers");
+      else if (hash === "#menu-items" || hash === "#items") setTab("items");
+    };
+    syncFromHash();
+    window.addEventListener("hashchange", syncFromHash);
+    window.addEventListener("popstate", syncFromHash);
+    return () => {
+      window.removeEventListener("hashchange", syncFromHash);
+      window.removeEventListener("popstate", syncFromHash);
+    };
+  }, []);
+
+  const selectMenuTab = (nextTab) => {
+    setTab(nextTab);
+    const hash = nextTab === "modifiers" ? "modifiers" : "menu-items";
+    if (window.location.hash !== `#${hash}`) {
+      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
+    }
+  };
+
   const load = useCallback(async () => {
     if (!loc.locationId) return;
     try {
@@ -1043,19 +1067,27 @@ export default function MenuManager({ organizationId }) {
                 activation changes and location customization are disabled.
               </div>
             )}
-            <div className="flex gap-2 mt-6">
+            <div className="mt-6 flex gap-8 overflow-x-auto border-b border-slate-200" role="tablist" aria-label="Menu Manager sections">
               <button
-                className={tab === "items" ? "primary" : "secondary"}
-                onClick={() => setTab("items")}
+                type="button"
+                role="tab"
+                id="menu-items-tab"
+                aria-selected={tab === "items"}
+                onClick={() => selectMenuTab("items")}
+                className={`flex shrink-0 items-center gap-2 border-b-[3px] px-4 py-4 text-base font-semibold transition-colors ${tab === "items" ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
               >
-                <MenuIcon size={16} className="inline mr-2" />
+                <MenuIcon size={18} aria-hidden="true" />
                 Menu Items
               </button>
               <button
-                className={tab === "modifiers" ? "primary" : "secondary"}
-                onClick={() => setTab("modifiers")}
+                type="button"
+                role="tab"
+                id="modifiers-tab"
+                aria-selected={tab === "modifiers"}
+                onClick={() => selectMenuTab("modifiers")}
+                className={`flex shrink-0 items-center gap-2 border-b-[3px] px-4 py-4 text-base font-semibold transition-colors ${tab === "modifiers" ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
               >
-                <SlidersHorizontal size={16} className="inline mr-2" />
+                <SlidersHorizontal size={18} aria-hidden="true" />
                 Modifiers
               </button>
             </div>
