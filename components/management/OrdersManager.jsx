@@ -36,25 +36,26 @@ async function get(path, organizationId, locationId, params = {}) {
   if (!r.ok) throw new Error(d.error || "Request failed");
   return d;
 }
-export default function OrdersManager({ organizationId }) {
+export default function OrdersManager({ organizationId, mode = "operations" }) {
   return (
     <LocationPageShell
       organizationId={organizationId}
       title="Orders"
-      description="Manage carts, active orders, order history and reports for each location."
+      description={mode === "reports" ? "Order history and sales reports." : "Manage carts and active orders."}
     >
       {({ locationId, loading, access }) => (
         <Orders
           organizationId={organizationId}
           locationId={locationId}
           locationLoading={loading}
-          canManage={access.can("orders.manage")}
+          canManage={mode === "operations" && access.can("orders.manage")}
+          mode={mode}
         />
       )}
     </LocationPageShell>
   );
 }
-function Orders({ organizationId, locationId, locationLoading, canManage }) {
+function Orders({ organizationId, locationId, locationLoading, canManage, mode = "operations" }) {
   const [alertOrderIds, setAlertOrderIds] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(false);
   const bellAudioRef = useRef(null);
@@ -141,7 +142,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
   }, [stopBell]);
   const seenOrdersRef = useRef(new Set());
   const initializedLocationRef = useRef(null);
-  const [tab, setTab] = useState("active-orders"),
+  const [tab, setTab] = useState(mode === "reports" ? "orders-history" : "active-orders"),
     [active, setActive] = useState([]),
     [carts, setCarts] = useState([]),
     [history, setHistory] = useState([]),
@@ -164,14 +165,14 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     const syncTabFromHash = () => {
         const hash = decodeURIComponent(window.location.hash.slice(1));
         const requested = hash.startsWith("tab=") ? hash.slice(4) : hash;
-        if (["active-carts", "active-orders", "orders-history", "report"].includes(requested)) {
+        if ((mode === "reports" ? ["orders-history", "report"] : ["active-carts", "active-orders"]).includes(requested)) {
           setTab(requested);
         }
       };
       syncTabFromHash();
       window.addEventListener("hashchange", syncTabFromHash);
       return () => window.removeEventListener("hashchange", syncTabFromHash);
-  }, []);
+  }, [mode]);
   const selectTab = (id) => {
     // Only the alert modal View Orders action acknowledges the ringing bell.
     setTab(id);
@@ -280,7 +281,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     (s, d) => s + Number(d.orderCount || 0),
     0,
   );
-  const tabs = [
+  const allTabs = [
     { id: "active-carts", label: "Active Carts", Icon: ShoppingCart, count: carts.length },
     { id: "active-orders", label: "Active Orders", Icon: Flame, count: active.length },
     {
@@ -291,10 +292,11 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
     },
     { id: "report", label: "Report", Icon: BarChart3, count: reportCount },
   ];
+  const tabs = allTabs.filter(({ id }) => mode === "reports" ? ["orders-history", "report"].includes(id) : ["active-carts", "active-orders"].includes(id));
   if (locationLoading && !locationId) return <LoadingSpinner fullPage label="Loading locations…" />;
   return (
     <div className="mt-8">
-      {!canManage && (
+      {mode === "operations" && !canManage && (
         <div className="mb-5 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
           Read only — you can view orders, carts, history and reports, but order-management actions
           are disabled.
@@ -315,7 +317,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           ))}
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {mode === "operations" && <div className="mt-4 flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={enableSound}
@@ -333,7 +335,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
             {soundError}
           </span>
         )}
-      </div>
+      </div>}
 
       {tab === "orders-history" && (
         <div className="relative mt-6 max-w-md">
@@ -382,7 +384,7 @@ function Orders({ organizationId, locationId, locationLoading, canManage }) {
           <ReportTable report={report} />
         )}
       </div>
-      {alertOrderIds.length > 0 && (
+      {mode === "operations" && alertOrderIds.length > 0 && (
         <ActiveOrderAlert count={alertOrderIds.length} onView={viewAlertedOrders} />
       )}
     </div>
