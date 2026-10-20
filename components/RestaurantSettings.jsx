@@ -1,6 +1,7 @@
 "use client";
 import { toast } from "react-toastify";
 import LoadingSpinner from "./ui/LoadingSpinner";
+import PrintableOrderingQR from "./PrintableOrderingQR";
 
 import HomepageBuilder from "./HomepageBuilder";
 import LocalSeoAssistant from "./LocalSeoAssistant";
@@ -120,6 +121,7 @@ const emptyOrg = {
     },
   },
   ordering: {
+    qrPoster: { heading: "Scan to Order", description: "Scan the QR code to order directly from your phone.", footer: "Order online • Fast & Easy" },
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
     serviceFee: {
@@ -182,6 +184,7 @@ function mergeOrg(value = {}) {
       ...emptyOrg.ordering,
       ...(value.ordering || {}),
       serviceFee: { ...emptyOrg.ordering.serviceFee, ...(value.ordering?.serviceFee || {}) },
+      qrPoster: { ...emptyOrg.ordering.qrPoster, ...(value.ordering?.qrPoster || {}) },
     },
     notifications: { ...emptyOrg.notifications, ...(value.notifications || {}) },
     emailSettings: {
@@ -1382,6 +1385,15 @@ export default function RestaurantSettings({
                   ))}
                 </div>
               </div>
+              <PrintableOrderingQR
+                organizationId={organizationId}
+                customDomain={org.customDomainStatus === "verified" ? org.customDomain : ""}
+                orderxoDomain={org.orderxoDomainStatus === "verified" ? org.orderxoDomain : ""}
+                restaurantName={org.name}
+                logoUrl={org.branding?.logoUrl}
+                poster={org.ordering?.qrPoster || emptyOrg.ordering.qrPoster}
+                onChange={(qrPoster) => setOrgPart("ordering", "qrPoster", qrPoster)}
+              />
               <div className="max-w-xl">
                 <div className="mt-5 space-y-4 rounded-xl border border-gray-200 p-4">
                   <h3 className="font-semibold">Online Service Fee</h3>
