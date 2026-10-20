@@ -5,6 +5,23 @@ import { backendRequest, cookieName } from "../../lib/backend";
 import LogoutButton from "../../components/LogoutButton";
 import EndSupportButton from "../../components/EndSupportButton";
 
+// Presentation only: never change the underlying organization status here.
+function getOrganizationStatus(org) {
+  const status = String(org.status || "pending").toLowerCase();
+  const reason = String(org.suspensionReason || "").toLowerCase();
+  const isOnboardingSuspension = status === "suspended" && !reason;
+
+  if (status === "active")
+    return { label: "Active", className: "bg-green-100 text-green-800 ring-green-200", kind: "active" };
+  if (["pending", "draft", "onboarding"].includes(status) || isOnboardingSuspension)
+    return { label: "Setup in progress", className: "bg-amber-100 text-amber-900 ring-amber-200", kind: "setup" };
+  if (status === "suspended")
+    return { label: "Account needs attention", className: "bg-red-100 text-red-800 ring-red-200", kind: "restricted" };
+  if (["archived", "disabled", "inactive"].includes(status))
+    return { label: "Inactive", className: "bg-slate-200 text-slate-700 ring-slate-300", kind: "inactive" };
+  return { label: "Status unavailable", className: "bg-slate-100 text-slate-700 ring-slate-200", kind: "unknown" };
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
@@ -78,6 +95,7 @@ export default async function Dashboard() {
           <div className="grid gap-5 md:grid-cols-2">
             {organizations.map((org) => {
               const id = String(org._id || org.id || "");
+              const displayStatus = getOrganizationStatus(org);
               const isOwner = org.role === "owner";
               const proTeam = planByOrg[id] === "pro";
               const isAdmin = isOwner || org.role === "admin";
@@ -92,29 +110,47 @@ export default async function Dashboard() {
                 <section key={id} className="rounded-2xl border bg-white p-6 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="text-xl font-bold">{org.name}</h2>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize">
-                      {org.status || "pending"}
+                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}>
+                      {displayStatus.label}
                     </span>
                   </div>
                   <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
-                  {org.status !== "active" && (
+                  {displayStatus.kind === "setup" && (
                     <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                      <p className="font-semibold">Online ordering is currently unavailable.</p>
+                      <p className="font-semibold">Finish setting up your restaurant</p>
+                      <p className="mt-1">Complete the go-live checklist, connect Stripe, and confirm your subscription before accepting online orders.</p>
+                      {(isAdmin || staffMode) && (
+                        <Link href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`} className="mt-3 inline-block font-semibold underline">
+                          Continue setup
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                  {displayStatus.kind === "restricted" && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                      <p className="font-semibold">Your restaurant account needs attention</p>
                       <p className="mt-1">
                         {org.suspensionReason === "subscription_canceled"
-                          ? "Your OrderXO subscription ended. Reactivate a plan to put the restaurant back online."
+                          ? "Your OrderXO subscription ended. Reactivate your plan to restore service."
                           : org.suspensionReason === "billing_unpaid"
-                            ? "There is a billing problem with your OrderXO subscription. Update billing to restore service."
-                            : "This restaurant is not currently active. Check Billing & subscription or contact OrderXO support."}
+                            ? "There is a billing issue with your subscription. Update your billing details to restore service."
+                            : "This restaurant is currently restricted. Review billing or contact OrderXO support for assistance."}
                       </p>
                       {isAdmin && (
-                        <Link
-                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-                          className="mt-3 inline-block font-semibold underline"
-                        >
+                        <Link href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`} className="mt-3 inline-block font-semibold underline">
                           Review billing & subscription
                         </Link>
                       )}
+                    </div>
+                  )}
+                  {displayStatus.kind === "inactive" && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      This restaurant is inactive. Contact OrderXO support if you need to restore access.
+                    </div>
+                  )}
+                  {displayStatus.kind === "unknown" && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      We couldn't determine this restaurant's status. Contact OrderXO support if this persists.
                     </div>
                   )}
                   {(isAdmin || staffMode) && (
