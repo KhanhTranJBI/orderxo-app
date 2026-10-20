@@ -4,6 +4,29 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ownerFetch } from "../lib/ownerFetch";
 
+// Convert older checklist links (?tab=locationDetails) to Store Settings hash navigation.
+function normalizeChecklistHref(href) {
+  if (typeof href !== "string" || !href.trim()) return "/dashboard/settings/go-live";
+  const [pathAndQuery, fragment = ""] = href.split("#", 2);
+  const [pathname, query = ""] = pathAndQuery.split("?", 2);
+  const params = new URLSearchParams(query);
+  const legacyTab = params.get("tab");
+  const tabs = {
+    locationDetails: "location-details",
+    hours: "store-hours",
+    storeHours: "store-hours",
+    notices: "notices",
+    homepage: "homepage-slides",
+    homepageSlides: "homepage-slides",
+    printing: "printing",
+  };
+  const mappedTab = tabs[legacyTab];
+  if (!mappedTab) return href;
+  params.delete("tab");
+  const search = params.toString();
+  return `${pathname}${search ? `?${search}` : ""}#tab=${mappedTab}`;
+}
+
 export default function GoLiveChecklist({ organizationId, locations, staffMode = false }) {
   const [locationId, setLocationId] = useState(String(locations[0]?._id || ""));
   const [data, setData] = useState(null);
@@ -120,7 +143,7 @@ export default function GoLiveChecklist({ organizationId, locations, staffMode =
                       href={
                         step.id === "menu" || /^menu and prices$/i.test(step.label || "")
                           ? `/dashboard/restaurants/${encodeURIComponent(organizationId)}/menu`
-                          : step.href
+                          : normalizeChecklistHref(step.href)
                       }
                     >
                       Configure →

@@ -21,6 +21,11 @@ const STORE_TAB_HASHES = {
 const STORE_HASH_TABS = Object.fromEntries(
   Object.entries(STORE_TAB_HASHES).map(([tab, hash]) => [hash, tab]),
 );
+const storeTabFromHash = (hash) => {
+  const raw = decodeURIComponent(String(hash || "").replace(/^#/, "")).toLowerCase();
+  const value = raw.startsWith("tab=") ? raw.slice(4) : raw;
+  return STORE_HASH_TABS[value] || null;
+};
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -166,11 +171,11 @@ export default function StoreSettingsManager({ organizationId }) {
       if (!isAllowedTab(nextTab, scope)) return;
       setTab(nextTab);
       const hash = STORE_TAB_HASHES[nextTab];
-      if (hash && window.location.hash !== `#${hash}`) {
+      if (hash && window.location.hash !== `#tab=${hash}`) {
         window.history.pushState(
           null,
           "",
-          `${window.location.pathname}${window.location.search}#${hash}`,
+          `${window.location.pathname}${window.location.search}#tab=${hash}`,
         );
       }
     },
@@ -181,8 +186,7 @@ export default function StoreSettingsManager({ organizationId }) {
   useEffect(() => {
     if (permission.loading || loc.loading) return;
     const syncFromHash = () => {
-      const hash = decodeURIComponent(window.location.hash.slice(1)).toLowerCase();
-      const requested = STORE_HASH_TABS[hash];
+      const requested = storeTabFromHash(window.location.hash);
       if (requested && isAllowedTab(requested, scope)) setTab(requested);
       else if (!isAllowedTab(tab, scope)) setTab(canReadStore ? "hours" : "homepage");
     };
