@@ -123,7 +123,7 @@ export default function KioskManager({ organizationId, selectedLocationId, embed
         <div className="rounded-xl border border-orange-200 bg-orange-50 p-6">
           <h2 className="text-xl font-bold text-slate-900">Kiosk Devices is a Pro feature</h2>
           <p className="mt-2 text-slate-700">Upgrade to Pro to pair and manage self-service kiosks for this location.</p>
-          <Link className="mt-4 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white" href="/dashboard/settings/billing">View plans & upgrade</Link>
+          <Link className="mt-4 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white" href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}>View plans & upgrade</Link>
         </div>
       ) : null}
       {proEnabled && canManage && <form onSubmit={create} className="flex flex-wrap items-end gap-3 rounded-xl border p-4">
