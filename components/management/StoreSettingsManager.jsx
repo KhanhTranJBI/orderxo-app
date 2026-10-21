@@ -6,10 +6,11 @@ import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Clock3, Images, Info, Pencil, Plus, Printer, Trash2, X } from "lucide-react";
+import { Clock3, Images, Info, Pencil, Plus, Printer, TabletSmartphone, Trash2, X } from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 import HomepageSlidesManager from "./HomepageSlidesManager";
+import KioskManager from "./KioskManager";
 
 const STORE_TAB_HASHES = {
   hours: "store-hours",
@@ -17,6 +18,7 @@ const STORE_TAB_HASHES = {
   homepage: "homepage-slides",
   locationDetails: "location-details",
   printing: "printing",
+  kiosks: "kiosk-devices",
 };
 const STORE_HASH_TABS = Object.fromEntries(
   Object.entries(STORE_TAB_HASHES).map(([tab, hash]) => [hash, tab]),
@@ -158,7 +160,7 @@ export default function StoreSettingsManager({ organizationId }) {
     (candidate, currentScope) => {
       if (candidate === "homepage") return canReadHomepage;
       if (candidate === "hours" || candidate === "notices") return canReadStore;
-      if (candidate === "locationDetails" || candidate === "printing") {
+      if (candidate === "locationDetails" || candidate === "printing" || candidate === "kiosks") {
         return canReadStore && currentScope !== "default";
       }
       return false;
@@ -285,7 +287,7 @@ export default function StoreSettingsManager({ organizationId }) {
         (STORE_TAB_HASHES[requestedTab] ? requestedTab : null);
       if (
         deepLinkedTab &&
-        ((deepLinkedTab !== "printing" && deepLinkedTab !== "locationDetails") || canReadStore)
+        ((deepLinkedTab !== "printing" && deepLinkedTab !== "locationDetails" && deepLinkedTab !== "kiosks") || canReadStore)
       ) {
         setTab(deepLinkedTab);
       }
@@ -728,6 +730,20 @@ export default function StoreSettingsManager({ organizationId }) {
 
           {canReadStore && scope !== "default" && (
             <button
+              onClick={() => selectStoreTab("kiosks")}
+              className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
+                tab === "kiosks"
+                  ? "border-orange-600 text-orange-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <TabletSmartphone size={18} />
+              Kiosk Devices
+            </button>
+          )}
+
+          {canReadStore && scope !== "default" && (
+            <button
               onClick={() => selectStoreTab("printing")}
               className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
                 tab === "printing"
@@ -746,6 +762,14 @@ export default function StoreSettingsManager({ organizationId }) {
         ) : (
           (scope === "default" || selectedLocationId) && (
             <>
+              {tab === "kiosks" && scope !== "default" && canReadStore && (
+                <KioskManager
+                  organizationId={organizationId}
+                  selectedLocationId={selectedLocationId}
+                  embedded
+                  canManage={canManage}
+                />
+              )}
               {tab === "hours" && (
                 <>
                   {scope !== "default" && (

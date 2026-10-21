@@ -15,8 +15,6 @@ const tools = [
   ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
-  ["Location Settings", "location-settings", "Configure location-specific settings and printers."],
-  ["Kiosk Devices", "kiosks", "Pair iPads, generate pairing codes, and revoke kiosk devices."],
 ];
 
 // Organization status is not the same as go-live or subscription status.

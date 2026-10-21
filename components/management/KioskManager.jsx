@@ -4,8 +4,20 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 import { ownerFetch } from "../../lib/ownerFetch";
 import useRestaurantLocation from "./useRestaurantLocation";
-export default function KioskManager({ organizationId }) {
+export default function KioskManager({ organizationId, selectedLocationId, embedded = false, canManage = true }) {
   const loc = useRestaurantLocation(organizationId);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [proEnabled, setProEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    setPlanLoading(true);
+    ownerFetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" })
+      .then(async r => { if (!r.ok) throw new Error("Subscription unavailable"); return r.json(); })
+      .then(d => { if (active) setProEnabled(d.features?.kioskDevices === true && d.subscription?.plan === "pro"); })
+      .catch(() => { if (active) setProEnabled(false); })
+      .finally(() => { if (active) setPlanLoading(false); });
+    return () => { active = false; };
+  }, [organizationId]);
   const [locationId, setLocationId] = useState(""),
     [devices, setDevices] = useState([]),
     [name, setName] = useState("Front Counter"),
@@ -13,9 +25,13 @@ export default function KioskManager({ organizationId }) {
     [pair, setPair] = useState(null),
     [revokeId, setRevokeId] = useState(null);
   useEffect(() => {
-    if (!locationId && loc.locations?.length)
+    if (embedded) {
+      setLocationId(selectedLocationId || "");
+      setPair(null);
+    } else if (!locationId && loc.locations?.length) {
       setLocationId(String(loc.locations[0]._id || loc.locations[0].id));
-  }, [loc.locations, locationId]);
+    }
+  }, [embedded, selectedLocationId, loc.locations, locationId]);
   const request = async (method, body) => {
     const q = new URLSearchParams({ organizationId, locationId });
     const r = await ownerFetch(`/api/owner/kiosk/installations?${q}`, {
@@ -29,7 +45,7 @@ export default function KioskManager({ organizationId }) {
     return d;
   };
   async function refresh() {
-    if (!locationId) return;
+    if (!locationId || !proEnabled) return;
     try {
       const d = await request("GET");
       setDevices(d.installations || []);
@@ -39,9 +55,10 @@ export default function KioskManager({ organizationId }) {
   }
   useEffect(() => {
     refresh();
-  }, [locationId, organizationId]);
+  }, [locationId, organizationId, proEnabled]);
   async function create(e) {
     e.preventDefault();
+    if (!canManage || !proEnabled) return;
     setBusy(true);
     try {
       const d = await request("POST", { name });
@@ -55,7 +72,7 @@ export default function KioskManager({ organizationId }) {
     }
   }
   async function revoke() {
-    if (!revokeId) return;
+    if (!revokeId || !canManage || !proEnabled) return;
     setBusy(true);
     try {
       await request("DELETE", { installationId: revokeId });
@@ -69,20 +86,22 @@ export default function KioskManager({ organizationId }) {
     }
   }
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className={embedded ? "mt-5 space-y-6 rounded-2xl border bg-white p-5 md:p-6" : "mx-auto max-w-5xl space-y-6 p-6"}>
       <div>
-        <Link
-          href={`/dashboard/restaurants/${organizationId}/location-settings`}
-          className="text-sm text-blue-600"
-        >
-          ← Location Settings
-        </Link>
+        {!embedded && (
+          <Link
+            href={`/dashboard/restaurants/${organizationId}/store#tab=kiosk-devices`}
+            className="text-sm text-blue-600"
+          >
+            ← Store Settings
+          </Link>
+        )}
         <h1 className="mt-2 text-3xl font-bold">Kiosk Devices</h1>
         <p className="text-gray-600">
           Pair each iPad with one location. Revoke individual devices at any time.
         </p>
       </div>
-      <label className="block font-medium">
+      {!embedded && <label className="block font-medium">
         Location
         <select
           className="mt-2 block w-full rounded-lg border p-3"
@@ -98,8 +117,16 @@ export default function KioskManager({ organizationId }) {
             </option>
           ))}
         </select>
-      </label>
-      <form onSubmit={create} className="flex flex-wrap items-end gap-3 rounded-xl border p-4">
+      </label>}
+      {embedded && <p className="text-sm text-slate-600">Location: <strong>{loc.locations?.find(x => String(x._id || x.id) === locationId)?.name || "Selected location"}</strong></p>}
+      {planLoading ? <p className="rounded-xl border p-4 text-slate-600">Checking subscription…</p> : !proEnabled ? (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 p-6">
+          <h2 className="text-xl font-bold text-slate-900">Kiosk Devices is a Pro feature</h2>
+          <p className="mt-2 text-slate-700">Upgrade to Pro to pair and manage self-service kiosks for this location.</p>
+          <Link className="mt-4 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white" href="/dashboard/settings/billing">View plans & upgrade</Link>
+        </div>
+      ) : null}
+      {proEnabled && canManage && <form onSubmit={create} className="flex flex-wrap items-end gap-3 rounded-xl border p-4">
         <label className="flex-1">
           Device name
           <input
@@ -116,8 +143,8 @@ export default function KioskManager({ organizationId }) {
         >
           Add Kiosk
         </button>
-      </form>
-      {pair && (
+      </form>}
+      {proEnabled && pair && (
         <div className="rounded-xl border-2 border-green-500 bg-green-50 p-5">
           <h2 className="font-bold">One-time pairing code</h2>
           <p className="my-4 break-all font-mono text-2xl tracking-wider">{pair.pairingCode}</p>
@@ -133,7 +160,7 @@ export default function KioskManager({ organizationId }) {
           </button>
         </div>
       )}
-      <div className="space-y-3">
+      {proEnabled && <div className="space-y-3">
         {devices.map((d) => (
           <div key={d.id} className="flex items-center justify-between rounded-xl border p-4">
             <div>
@@ -142,7 +169,7 @@ export default function KioskManager({ organizationId }) {
                 {d.revokedAt ? "Revoked" : d.pairedAt ? "Paired" : "Awaiting pairing"}
               </p>
             </div>
-            {!d.revokedAt && (
+            {canManage && !d.revokedAt && (
               <button
                 onClick={() => setRevokeId(d.id)}
                 className="rounded-lg border border-red-300 px-4 py-2 text-red-700"
@@ -152,8 +179,8 @@ export default function KioskManager({ organizationId }) {
             )}
           </div>
         ))}
-      </div>
-      {revokeId && (
+      </div>}
+      {proEnabled && revokeId && (
         <div
           role="dialog"
           aria-modal="true"

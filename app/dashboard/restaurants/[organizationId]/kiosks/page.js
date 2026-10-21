@@ -1,4 +1,4 @@
-import KioskManager from "../../../../../components/management/KioskManager";
+import { redirect } from "next/navigation";
 export default function Page({ params }) {
-  return <KioskManager organizationId={params.organizationId} />;
+  redirect(`/dashboard/restaurants/${params.organizationId}/store#tab=kiosk-devices`);
 }
