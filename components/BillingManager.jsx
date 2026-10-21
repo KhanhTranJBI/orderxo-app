@@ -160,7 +160,9 @@ export default function BillingManager({
             <p className="mt-1 text-sm">
               Status:{" "}
               <span className="font-semibold capitalize">
-                {subscription?.status === "trialing" ? "Free Trial" : subscription?.status || "incomplete"}
+                {subscription?.status === "trialing"
+                  ? "Free Trial"
+                  : subscription?.status || "incomplete"}
               </span>
             </p>
             {hasTrialOffer && (
@@ -257,20 +259,36 @@ export default function BillingManager({
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span>First location</span>
-              <strong>{isTrialing ? usd(0) : billing.baseMonthlyCents == null ? "See Stripe Billing" : usd(billing.baseMonthlyCents)}</strong>
+              <strong>
+                {isTrialing
+                  ? usd(0)
+                  : billing.baseMonthlyCents == null
+                    ? "See Stripe Billing"
+                    : usd(billing.baseMonthlyCents)}
+              </strong>
             </div>
             <div className="flex justify-between">
               <span>
                 {Math.max(0, billing.locationCount - 1)} additional locations (20% off each)
               </span>
-              <strong>{isTrialing ? usd(0) : billing.additionalMonthlyCents == null ? "See Stripe Billing" : usd(Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents)}</strong>
+              <strong>
+                {isTrialing
+                  ? usd(0)
+                  : billing.additionalMonthlyCents == null
+                    ? "See Stripe Billing"
+                    : usd(Math.max(0, billing.locationCount - 1) * billing.additionalMonthlyCents)}
+              </strong>
             </div>
             <div className="flex justify-between border-t pt-3 text-base">
               <strong>
                 {isTrialing ? "Subscription during free trial" : "Estimated monthly subscription"}
               </strong>
               <strong className={isTrialing ? "text-green-700" : ""}>
-                {isTrialing ? usd(0) : billing.monthlyTotalCents == null ? "See Stripe Billing" : usd(billing.monthlyTotalCents)}
+                {isTrialing
+                  ? usd(0)
+                  : billing.monthlyTotalCents == null
+                    ? "See Stripe Billing"
+                    : usd(billing.monthlyTotalCents)}
               </strong>
             </div>
           </div>
@@ -283,7 +301,11 @@ export default function BillingManager({
           {isTrialing && (
             <div className="mt-3 flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-sm">
               <span>Regular monthly subscription after trial</span>
-              <strong>{billing.monthlyTotalCents == null ? "Check Stripe Billing" : usd(billing.monthlyTotalCents)}</strong>
+              <strong>
+                {billing.monthlyTotalCents == null
+                  ? "Check Stripe Billing"
+                  : usd(billing.monthlyTotalCents)}
+              </strong>
             </div>
           )}
           <p className="mt-3 text-xs text-slate-500">

@@ -20,21 +20,47 @@ const tools = [
 // Organization status is not the same as go-live or subscription status.
 // Keep the backend status unchanged and show an understandable owner-facing label.
 function getWorkspaceStatus(status) {
-  const value = String(status || "").trim().toLowerCase();
+  const value = String(status || "")
+    .trim()
+    .toLowerCase();
   switch (value) {
     case "active":
-      return { label: "Account active", description: "Your restaurant account is active. Check the go-live checklist to confirm online ordering readiness.", className: "bg-emerald-50 text-emerald-800" };
+      return {
+        label: "Account active",
+        description:
+          "Your restaurant account is active. Check the go-live checklist to confirm online ordering readiness.",
+        className: "bg-emerald-50 text-emerald-800",
+      };
     case "pending":
     case "draft":
     case "onboarding":
-      return { label: "Setup in progress", description: "Complete the restaurant setup checklist before going live.", className: "bg-amber-50 text-amber-900" };
+      return {
+        label: "Setup in progress",
+        description: "Complete the restaurant setup checklist before going live.",
+        className: "bg-amber-50 text-amber-900",
+      };
     case "suspended":
-      return { label: "Account needs attention", description: "This restaurant is currently restricted. Check your subscription and setup status, or contact OrderXO support for the reason.", className: "bg-amber-50 text-amber-900" };
+      return {
+        label: "Account needs attention",
+        description:
+          "This restaurant is currently restricted. Check your subscription and setup status, or contact OrderXO support for the reason.",
+        className: "bg-amber-50 text-amber-900",
+      };
     case "archived":
     case "disabled":
-      return { label: "Account inactive", description: "This restaurant is not currently active. Contact OrderXO support if you need to restore access.", className: "bg-slate-100 text-slate-700" };
+      return {
+        label: "Account inactive",
+        description:
+          "This restaurant is not currently active. Contact OrderXO support if you need to restore access.",
+        className: "bg-slate-100 text-slate-700",
+      };
     default:
-      return { label: "Status unavailable", description: "Check the restaurant setup checklist or contact OrderXO support to confirm your account status.", className: "bg-slate-100 text-slate-700" };
+      return {
+        label: "Status unavailable",
+        description:
+          "Check the restaurant setup checklist or contact OrderXO support to confirm your account status.",
+        className: "bg-slate-100 text-slate-700",
+      };
   }
 }
 
@@ -95,7 +121,9 @@ export default async function RestaurantManager({ params }) {
             </p>
           </div>
           <div className="max-w-sm text-left sm:text-right" role="status">
-            <span className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${workspaceStatus.className}`}>
+            <span
+              className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${workspaceStatus.className}`}
+            >
               {workspaceStatus.label}
             </span>
             <p className="mt-2 text-xs leading-5 text-slate-600">{workspaceStatus.description}</p>

@@ -866,7 +866,11 @@ export default function MenuManager({ organizationId }) {
     setTab(nextTab);
     const hash = nextTab === "modifiers" ? "modifiers" : "menu-items";
     if (window.location.hash !== `#${hash}`) {
-      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
+      window.history.pushState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#${hash}`,
+      );
     }
   };
 
@@ -1067,7 +1071,11 @@ export default function MenuManager({ organizationId }) {
                 activation changes and location customization are disabled.
               </div>
             )}
-            <div className="mt-6 flex gap-8 overflow-x-auto border-b border-slate-200" role="tablist" aria-label="Menu Manager sections">
+            <div
+              className="mt-6 flex gap-8 overflow-x-auto border-b border-slate-200"
+              role="tablist"
+              aria-label="Menu Manager sections"
+            >
               <button
                 type="button"
                 role="tab"

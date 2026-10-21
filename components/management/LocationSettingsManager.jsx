@@ -107,6 +107,12 @@ export default function LocationSettingsManager({ organizationId }) {
               Location settings
             </p>
             <h1 className="mt-1 text-3xl font-bold">Location configuration</h1>
+            <Link
+              href={`/dashboard/restaurants/${organizationId}/kiosks`}
+              className="mt-3 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+            >
+              Manage Kiosk Devices →
+            </Link>
             <p className="mt-2 text-slate-600">
               Physical printer configuration is stored separately for each location.
             </p>

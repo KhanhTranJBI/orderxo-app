@@ -41,7 +41,9 @@ export default function OrdersManager({ organizationId, mode = "operations" }) {
     <LocationPageShell
       organizationId={organizationId}
       title="Orders"
-      description={mode === "reports" ? "Order history and sales reports." : "Manage carts and active orders."}
+      description={
+        mode === "reports" ? "Order history and sales reports." : "Manage carts and active orders."
+      }
     >
       {({ locationId, loading, access }) => (
         <Orders
@@ -163,15 +165,20 @@ function Orders({ organizationId, locationId, locationLoading, canManage, mode =
   useEffect(() => {
     if (typeof window === "undefined") return;
     const syncTabFromHash = () => {
-        const hash = decodeURIComponent(window.location.hash.slice(1));
-        const requested = hash.startsWith("tab=") ? hash.slice(4) : hash;
-        if ((mode === "reports" ? ["orders-history", "report"] : ["active-carts", "active-orders"]).includes(requested)) {
-          setTab(requested);
-        }
-      };
-      syncTabFromHash();
-      window.addEventListener("hashchange", syncTabFromHash);
-      return () => window.removeEventListener("hashchange", syncTabFromHash);
+      const hash = decodeURIComponent(window.location.hash.slice(1));
+      const requested = hash.startsWith("tab=") ? hash.slice(4) : hash;
+      if (
+        (mode === "reports"
+          ? ["orders-history", "report"]
+          : ["active-carts", "active-orders"]
+        ).includes(requested)
+      ) {
+        setTab(requested);
+      }
+    };
+    syncTabFromHash();
+    window.addEventListener("hashchange", syncTabFromHash);
+    return () => window.removeEventListener("hashchange", syncTabFromHash);
   }, [mode]);
   const selectTab = (id) => {
     // Only the alert modal View Orders action acknowledges the ringing bell.
@@ -292,7 +299,11 @@ function Orders({ organizationId, locationId, locationLoading, canManage, mode =
     },
     { id: "report", label: "Report", Icon: BarChart3, count: reportCount },
   ];
-  const tabs = allTabs.filter(({ id }) => mode === "reports" ? ["orders-history", "report"].includes(id) : ["active-carts", "active-orders"].includes(id));
+  const tabs = allTabs.filter(({ id }) =>
+    mode === "reports"
+      ? ["orders-history", "report"].includes(id)
+      : ["active-carts", "active-orders"].includes(id),
+  );
   if (locationLoading && !locationId) return <LoadingSpinner fullPage label="Loading locations…" />;
   return (
     <div className="mt-8">
@@ -317,25 +328,27 @@ function Orders({ organizationId, locationId, locationLoading, canManage, mode =
           ))}
         </div>
       </div>
-      {mode === "operations" && <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={enableSound}
-          className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${soundEnabled ? "border-green-300 bg-green-50 text-green-700" : "border-orange-300 bg-orange-50 text-orange-700"}`}
-        >
-          <BellRing size={18} />{" "}
-          {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
-        </button>
-        <span className="text-xs text-slate-500">
-          The kitchen bell repeats until you click View Orders in the alert modal. Browser audio
-          requires an initial click.
-        </span>
-        {soundError && (
-          <span role="alert" className="text-xs text-red-600">
-            {soundError}
+      {mode === "operations" && (
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={enableSound}
+            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold ${soundEnabled ? "border-green-300 bg-green-50 text-green-700" : "border-orange-300 bg-orange-50 text-orange-700"}`}
+          >
+            <BellRing size={18} />{" "}
+            {soundEnabled ? "Sound enabled · Test sound" : "Enable new order sound"}
+          </button>
+          <span className="text-xs text-slate-500">
+            The kitchen bell repeats until you click View Orders in the alert modal. Browser audio
+            requires an initial click.
           </span>
-        )}
-      </div>}
+          {soundError && (
+            <span role="alert" className="text-xs text-red-600">
+              {soundError}
+            </span>
+          )}
+        </div>
+      )}
 
       {tab === "orders-history" && (
         <div className="relative mt-6 max-w-md">

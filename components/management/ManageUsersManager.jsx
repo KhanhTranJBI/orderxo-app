@@ -206,7 +206,9 @@ export default function ManageUsersManager({ organizationId }) {
                       </td>
                       <td className="whitespace-nowrap px-3 py-3">{user.email || "-"}</td>
                       <td className="whitespace-nowrap px-3 py-3">{user.phone || "-"}</td>
-                      <td className="whitespace-nowrap px-3 py-3">{formatBirthday(user.birthday)}</td>
+                      <td className="whitespace-nowrap px-3 py-3">
+                        {formatBirthday(user.birthday)}
+                      </td>
                       <td className="whitespace-nowrap px-3 py-3 capitalize">
                         {user.role || "customer"}
                       </td>

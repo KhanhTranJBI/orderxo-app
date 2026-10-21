@@ -12,14 +12,34 @@ function getOrganizationStatus(org) {
   const isOnboardingSuspension = status === "suspended" && !reason;
 
   if (status === "active")
-    return { label: "Active", className: "bg-green-100 text-green-800 ring-green-200", kind: "active" };
+    return {
+      label: "Active",
+      className: "bg-green-100 text-green-800 ring-green-200",
+      kind: "active",
+    };
   if (["pending", "draft", "onboarding"].includes(status) || isOnboardingSuspension)
-    return { label: "Setup in progress", className: "bg-amber-100 text-amber-900 ring-amber-200", kind: "setup" };
+    return {
+      label: "Setup in progress",
+      className: "bg-amber-100 text-amber-900 ring-amber-200",
+      kind: "setup",
+    };
   if (status === "suspended")
-    return { label: "Account needs attention", className: "bg-red-100 text-red-800 ring-red-200", kind: "restricted" };
+    return {
+      label: "Account needs attention",
+      className: "bg-red-100 text-red-800 ring-red-200",
+      kind: "restricted",
+    };
   if (["archived", "disabled", "inactive"].includes(status))
-    return { label: "Inactive", className: "bg-slate-200 text-slate-700 ring-slate-300", kind: "inactive" };
-  return { label: "Status unavailable", className: "bg-slate-100 text-slate-700 ring-slate-200", kind: "unknown" };
+    return {
+      label: "Inactive",
+      className: "bg-slate-200 text-slate-700 ring-slate-300",
+      kind: "inactive",
+    };
+  return {
+    label: "Status unavailable",
+    className: "bg-slate-100 text-slate-700 ring-slate-200",
+    kind: "unknown",
+  };
 }
 
 export const dynamic = "force-dynamic";
@@ -110,7 +130,9 @@ export default async function Dashboard() {
                 <section key={id} className="rounded-2xl border bg-white p-6 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
                     <h2 className="text-xl font-bold">{org.name}</h2>
-                    <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}>
+                    <span
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}
+                    >
                       {displayStatus.label}
                     </span>
                   </div>
@@ -118,9 +140,15 @@ export default async function Dashboard() {
                   {displayStatus.kind === "setup" && (
                     <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                       <p className="font-semibold">Finish setting up your restaurant</p>
-                      <p className="mt-1">Complete the go-live checklist, connect Stripe, and confirm your subscription before accepting online orders.</p>
+                      <p className="mt-1">
+                        Complete the go-live checklist, connect Stripe, and confirm your
+                        subscription before accepting online orders.
+                      </p>
                       {(isAdmin || staffMode) && (
-                        <Link href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`} className="mt-3 inline-block font-semibold underline">
+                        <Link
+                          href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
+                          className="mt-3 inline-block font-semibold underline"
+                        >
                           Continue setup
                         </Link>
                       )}
@@ -137,7 +165,10 @@ export default async function Dashboard() {
                             : "This restaurant is currently restricted. Review billing or contact OrderXO support for assistance."}
                       </p>
                       {isAdmin && (
-                        <Link href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`} className="mt-3 inline-block font-semibold underline">
+                        <Link
+                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                          className="mt-3 inline-block font-semibold underline"
+                        >
                           Review billing & subscription
                         </Link>
                       )}
@@ -145,12 +176,14 @@ export default async function Dashboard() {
                   )}
                   {displayStatus.kind === "inactive" && (
                     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                      This restaurant is inactive. Contact OrderXO support if you need to restore access.
+                      This restaurant is inactive. Contact OrderXO support if you need to restore
+                      access.
                     </div>
                   )}
                   {displayStatus.kind === "unknown" && (
                     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                      We couldn't determine this restaurant's status. Contact OrderXO support if this persists.
+                      We couldn't determine this restaurant's status. Contact OrderXO support if
+                      this persists.
                     </div>
                   )}
                   {(isAdmin || staffMode) && (

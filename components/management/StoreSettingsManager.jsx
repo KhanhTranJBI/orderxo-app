@@ -187,9 +187,12 @@ export default function StoreSettingsManager({ organizationId }) {
     if (permission.loading || loc.loading) return;
     // Wait for the URL-selected location to become the active scope before
     // resolving location-only tabs such as Printing.
-    if (requestedLocationId && loc.locations.some(
-      (l) => String(l._id || l.id) === requestedLocationId
-    ) && scope !== requestedLocationId) return;
+    if (
+      requestedLocationId &&
+      loc.locations.some((l) => String(l._id || l.id) === requestedLocationId) &&
+      scope !== requestedLocationId
+    )
+      return;
     const syncFromHash = () => {
       const requested = storeTabFromHash(window.location.hash);
       if (requested && isAllowedTab(requested, scope)) setTab(requested);
@@ -202,7 +205,15 @@ export default function StoreSettingsManager({ organizationId }) {
       window.removeEventListener("hashchange", syncFromHash);
       window.removeEventListener("popstate", syncFromHash);
     };
-  }, [permission.loading, loc.loading, isAllowedTab, scope, canReadStore, requestedLocationId, loc.locations]);
+  }, [
+    permission.loading,
+    loc.loading,
+    isAllowedTab,
+    scope,
+    canReadStore,
+    requestedLocationId,
+    loc.locations,
+  ]);
 
   const [useDefault, setUseDefault] = useState(false);
 
@@ -269,9 +280,13 @@ export default function StoreSettingsManager({ organizationId }) {
       setScope(requestedLocationId);
       // The URL can specify a tab using #tab=printing (preferred) or ?tab=printing.
       // Resolve it against the requested location, not the previous/default scope.
-      const deepLinkedTab = storeTabFromHash(window.location.hash) ||
+      const deepLinkedTab =
+        storeTabFromHash(window.location.hash) ||
         (STORE_TAB_HASHES[requestedTab] ? requestedTab : null);
-      if (deepLinkedTab && (deepLinkedTab !== "printing" && deepLinkedTab !== "locationDetails" || canReadStore)) {
+      if (
+        deepLinkedTab &&
+        ((deepLinkedTab !== "printing" && deepLinkedTab !== "locationDetails") || canReadStore)
+      ) {
         setTab(deepLinkedTab);
       }
     }

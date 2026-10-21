@@ -26,16 +26,16 @@ const TABS = [
 
 // Stable, shareable URL fragments for Restaurant Settings tabs.
 const TAB_HASHES = {
-  "General": "general",
+  General: "general",
   "Social & Links": "social-links",
-  "Appearance": "appearance",
-  "Homepage": "homepage",
-  "Loyalty": "loyalty",
+  Appearance: "appearance",
+  Homepage: "homepage",
+  Loyalty: "loyalty",
   "Gift Cards": "gift-cards",
-  "Email": "email",
+  Email: "email",
   "Marketing Automations": "marketing-automations",
   "Google Reviews & SEO": "google-reviews-seo",
-  "Ordering": "ordering",
+  Ordering: "ordering",
 };
 const HASH_TABS = Object.fromEntries(
   Object.entries(TAB_HASHES).map(([name, hash]) => [hash, name]),
@@ -121,7 +121,11 @@ const emptyOrg = {
     },
   },
   ordering: {
-    qrPoster: { heading: "Scan to Order", description: "Scan the QR code to order directly from your phone.", footer: "Order online • Fast & Easy" },
+    qrPoster: {
+      heading: "Scan to Order",
+      description: "Scan the QR code to order directly from your phone.",
+      footer: "Order online • Fast & Easy",
+    },
     abandonedCartIntervalMinutes: 20,
     serviceFeePerItemCents: 0,
     serviceFee: {
@@ -570,7 +574,11 @@ export default function RestaurantSettings({
     setError("");
     const hash = TAB_HASHES[name];
     if (hash && window.location.hash !== `#${hash}`) {
-      window.history.pushState(null, "", `${window.location.pathname}${window.location.search}#${hash}`);
+      window.history.pushState(
+        null,
+        "",
+        `${window.location.pathname}${window.location.search}#${hash}`,
+      );
     }
   };
   const [focusGoogleReviewLink, setFocusGoogleReviewLink] = useState(false);
@@ -1168,7 +1176,8 @@ export default function RestaurantSettings({
                   {
                     key: "winback",
                     title: "Win-back Emails",
-                    detail: "Send opted-in customers a unique, single-use welcome-back promo after inactivity.",
+                    detail:
+                      "Send opted-in customers a unique, single-use welcome-back promo after inactivity.",
                     fields: [["inactiveDays", "Days without an order", [7, 14, 30, 45, 60, 90]]],
                   },
                   {
@@ -1236,43 +1245,115 @@ export default function RestaurantSettings({
                             Discounts are enforced by the ordering API.
                           </p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <Field label="Discount type">
-                                <select className={input} value={config.rewardType || "percent"}
-                                  onChange={(e) => change("rewardType", e.target.value)}>
-                                  <option value="percent">Percentage off</option>
-                                  <option value="fixed">Fixed amount off</option>
-                                </select>
+                            <Field label="Discount type">
+                              <select
+                                className={input}
+                                value={config.rewardType || "percent"}
+                                onChange={(e) => change("rewardType", e.target.value)}
+                              >
+                                <option value="percent">Percentage off</option>
+                                <option value="fixed">Fixed amount off</option>
+                              </select>
+                            </Field>
+                            {config.rewardType === "fixed" ? (
+                              <Field label="Discount amount ($)">
+                                <input
+                                  className={input}
+                                  type="number"
+                                  min="0.01"
+                                  max="1000"
+                                  step="0.01"
+                                  value={
+                                    Number(
+                                      config.discountAmountCents ??
+                                        (key === "birthday" ? 500 : 700),
+                                    ) / 100
+                                  }
+                                  onChange={(e) =>
+                                    change(
+                                      "discountAmountCents",
+                                      Math.max(1, Math.round(Number(e.target.value || 0) * 100)),
+                                    )
+                                  }
+                                />
                               </Field>
-                              {config.rewardType === "fixed" ? (
-                                <Field label="Discount amount ($)">
-                                  <input className={input} type="number" min="0.01" max="1000" step="0.01"
-                                    value={(Number(config.discountAmountCents ?? (key === "birthday" ? 500 : 700)) / 100)}
-                                    onChange={(e) => change("discountAmountCents", Math.max(1, Math.round(Number(e.target.value || 0) * 100)))} />
+                            ) : (
+                              <>
+                                <Field label="Discount (%)">
+                                  <input
+                                    className={input}
+                                    type="number"
+                                    min="1"
+                                    max="100"
+                                    step="1"
+                                    value={config.discountPercent ?? (key === "birthday" ? 10 : 15)}
+                                    onChange={(e) =>
+                                      change(
+                                        "discountPercent",
+                                        Math.max(1, Math.min(100, Number(e.target.value || 1))),
+                                      )
+                                    }
+                                  />
                                 </Field>
-                              ) : (
-                                <>
-                                  <Field label="Discount (%)">
-                                    <input className={input} type="number" min="1" max="100" step="1"
-                                      value={config.discountPercent ?? (key === "birthday" ? 10 : 15)}
-                                      onChange={(e) => change("discountPercent", Math.max(1, Math.min(100, Number(e.target.value || 1))))} />
-                                  </Field>
-                                  <Field label="Maximum discount ($; 0 = no cap)">
-                                    <input className={input} type="number" min="0" max="1000" step="0.01"
-                                      value={Number(config.maxDiscountAmountCents ?? (key === "birthday" ? 500 : 700)) / 100}
-                                      onChange={(e) => change("maxDiscountAmountCents", Math.max(0, Math.round(Number(e.target.value || 0) * 100)))} />
-                                  </Field>
-                                </>
-                              )}
-                              <Field label="Minimum food subtotal ($)">
-                                <input className={input} type="number" min="0" max="10000" step="0.01"
-                                  value={Number(config.minSubtotalCents ?? (key === "birthday" ? 1500 : 2000)) / 100}
-                                  onChange={(e) => change("minSubtotalCents", Math.max(0, Math.round(Number(e.target.value || 0) * 100)))} />
-                              </Field>
-                              <Field label="Promo validity (days)">
-                                <input className={input} type="number" min="1" max="90" step="1"
-                                  value={config.validDays ?? 7}
-                                  onChange={(e) => change("validDays", Math.max(1, Math.min(90, Number(e.target.value || 1))))} />
-                              </Field>
+                                <Field label="Maximum discount ($; 0 = no cap)">
+                                  <input
+                                    className={input}
+                                    type="number"
+                                    min="0"
+                                    max="1000"
+                                    step="0.01"
+                                    value={
+                                      Number(
+                                        config.maxDiscountAmountCents ??
+                                          (key === "birthday" ? 500 : 700),
+                                      ) / 100
+                                    }
+                                    onChange={(e) =>
+                                      change(
+                                        "maxDiscountAmountCents",
+                                        Math.max(0, Math.round(Number(e.target.value || 0) * 100)),
+                                      )
+                                    }
+                                  />
+                                </Field>
+                              </>
+                            )}
+                            <Field label="Minimum food subtotal ($)">
+                              <input
+                                className={input}
+                                type="number"
+                                min="0"
+                                max="10000"
+                                step="0.01"
+                                value={
+                                  Number(
+                                    config.minSubtotalCents ?? (key === "birthday" ? 1500 : 2000),
+                                  ) / 100
+                                }
+                                onChange={(e) =>
+                                  change(
+                                    "minSubtotalCents",
+                                    Math.max(0, Math.round(Number(e.target.value || 0) * 100)),
+                                  )
+                                }
+                              />
+                            </Field>
+                            <Field label="Promo validity (days)">
+                              <input
+                                className={input}
+                                type="number"
+                                min="1"
+                                max="90"
+                                step="1"
+                                value={config.validDays ?? 7}
+                                onChange={(e) =>
+                                  change(
+                                    "validDays",
+                                    Math.max(1, Math.min(90, Number(e.target.value || 1))),
+                                  )
+                                }
+                              />
+                            </Field>
                           </div>
                         </div>
                       )}
