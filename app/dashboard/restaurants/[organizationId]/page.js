@@ -15,6 +15,8 @@ const tools = [
   ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
+  ["Location Settings", "location-settings", "Configure location-specific settings and printers."],
+  ["Kiosk Devices", "kiosks", "Pair iPads, generate pairing codes, and revoke kiosk devices."],
 ];
 
 // Organization status is not the same as go-live or subscription status.
@@ -167,10 +169,14 @@ export default async function RestaurantManager({ params }) {
                           ? "financials.read"
                           : slug === "users"
                             ? "customers.read"
-                            : slug === "store"
+                            : slug === "store" || slug === "location-settings" || slug === "kiosks"
                               ? null
                               : "settings.read";
-              return slug === "store" ? can("store.read") || can("homepage.read") : can(need);
+              return slug === "store" || slug === "location-settings"
+                ? can("store.read") || can("homepage.read")
+                : slug === "kiosks"
+                  ? isAdmin || can("store.manage")
+                  : can(need);
             })
             .map(([name, slug, description]) => {
               const managePermission =
@@ -184,12 +190,12 @@ export default async function RestaurantManager({ params }) {
                         ? "giftcards.manage"
                         : slug === "users"
                           ? "customers.manage"
-                          : slug === "store"
+                          : slug === "store" || slug === "location-settings" || slug === "kiosks"
                             ? null
                             : null;
               const readOnly =
                 !isAdmin &&
-                (slug === "store"
+                ((slug === "store" || slug === "location-settings" || slug === "kiosks")
                   ? !can("store.manage") && !can("homepage.manage")
                   : managePermission && !can(managePermission));
               return (
