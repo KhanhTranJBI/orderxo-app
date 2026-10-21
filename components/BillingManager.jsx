@@ -395,9 +395,9 @@ export default function BillingManager({
             const isPending = pending === plan.id;
             const upgrade = rank[plan.id] > rank[current];
             const label = !active
-              ? hasTrialOffer
-                ? `Start ${trialOfferDays}-day free trial`
-                : "Continue with Stripe"
+              ? isCurrent
+                ? "Complete setup with Stripe"
+                : `Choose ${plan.name}`
               : isCurrent
                 ? "Current plan"
                 : isPending
@@ -421,7 +421,9 @@ export default function BillingManager({
                         ? upgrade
                           ? "Upgrade immediately"
                           : "Change next billing period"
-                        : "Start subscription"}
+                        : isCurrent
+                          ? "Complete subscription setup"
+                          : `Select ${plan.name} subscription`}
                 </p>
                 <button
                   disabled={disabled}
