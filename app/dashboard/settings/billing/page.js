@@ -28,18 +28,31 @@ export default async function Billing({ searchParams }) {
         <p className="mb-7 mt-2 text-slate-600">
           Manage your OrderXO plan, payment method and invoices through Stripe Billing.
         </p>
-        {result?.status === 200 && Number(result.data.subscription?.platformFeePromotion?.durationDays) > 0 && (() => {
-          const offer = result.data.subscription.platformFeePromotion;
-          const active = offer.startsAt && offer.endsAt && Date.now() < new Date(offer.endsAt).getTime();
-          const pending = !offer.startsAt;
-          return (active || pending) ? (
-            <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
-              <strong>0% Platform Fee — {offer.durationDays}-day promotion</strong>
-              <p className="mt-1 text-sm">{pending
-                ? "Your promotion starts with your first online checkout. Standard Stripe processing fees still apply."
-                : `Promotion ends ${new Date(offer.endsAt).toLocaleDateString("en-US")}. Your normal plan platform fee resumes automatically.`}</p>
+        {result?.status === 200 && (() => {
+          const subscription = result.data.subscription || {};
+          const offer = subscription.platformFeePromotion;
+          const standardBps = subscription.pricing?.platformFeeBps ?? 100;
+          const now = Date.now();
+          const pending = Number(offer?.durationDays) > 0 && !offer?.startsAt;
+          const active = Boolean(offer?.startsAt && offer?.endsAt && now >= new Date(offer.startsAt).getTime() && now < new Date(offer.endsAt).getTime());
+          const expired = Boolean(offer?.endsAt && now >= new Date(offer.endsAt).getTime());
+          const daysLeft = active ? Math.max(0, Math.ceil((new Date(offer.endsAt).getTime() - now) / 86400000)) : 0;
+          return <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-label="Platform fee">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-bold">Platform Fee</h2>
+              <span className={`rounded-full px-3 py-1 text-sm font-semibold ${active ? "bg-green-100 text-green-800" : pending ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>
+                {active ? "Promotion Active" : pending ? "Promotion Pending" : expired ? "Promotion Ended" : "Standard Rate"}
+              </span>
             </div>
-          ) : null;
+            <div className="mt-4 flex gap-12">
+              <div><p className="text-sm text-slate-500">Current rate</p><p className="text-3xl font-bold">{(active ? 0 : standardBps / 100).toLocaleString("en-US")}%</p></div>
+              <div><p className="text-sm text-slate-500">Standard rate</p><p className="text-3xl font-bold">{(standardBps / 100).toLocaleString("en-US")}%</p></div>
+            </div>
+            {pending && <p className="mt-4 text-sm text-amber-800">Your {offer.durationDays}-day 0% promotion begins when you accept your invitation.</p>}
+            {active && <p className="mt-4 text-sm text-green-800">Your 0% promotion ends {new Date(offer.endsAt).toLocaleDateString("en-US", { dateStyle: "long" })} ({daysLeft} days remaining). The standard rate then resumes automatically.</p>}
+            {expired && <p className="mt-4 text-sm text-slate-600">Your promotion ended {new Date(offer.endsAt).toLocaleDateString("en-US")}. The standard rate applies.</p>}
+            <p className="mt-3 text-xs text-slate-500">Applied to food subtotal after discounts, excluding tax, tips and online service fees. Stripe processing fees are separate.</p>
+          </section>;
         })()}
         {!id ? (
           <p>Select a restaurant from your dashboard.</p>
