@@ -8,3 +8,7 @@ export async function POST(req) {
 export async function DELETE(req) {
   return proxy(req, "/api/kiosk/installations", true);
 }
+
+export async function PATCH(req) {
+  return proxy(req, "/api/kiosk/installations", true);
+}
