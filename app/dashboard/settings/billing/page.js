@@ -28,6 +28,19 @@ export default async function Billing({ searchParams }) {
         <p className="mb-7 mt-2 text-slate-600">
           Manage your OrderXO plan, payment method and invoices through Stripe Billing.
         </p>
+        {result?.status === 200 && Number(result.data.subscription?.platformFeePromotion?.durationDays) > 0 && (() => {
+          const offer = result.data.subscription.platformFeePromotion;
+          const active = offer.startsAt && offer.endsAt && Date.now() < new Date(offer.endsAt).getTime();
+          const pending = !offer.startsAt;
+          return (active || pending) ? (
+            <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+              <strong>0% Platform Fee — {offer.durationDays}-day promotion</strong>
+              <p className="mt-1 text-sm">{pending
+                ? "Your promotion starts with your first online checkout. Standard Stripe processing fees still apply."
+                : `Promotion ends ${new Date(offer.endsAt).toLocaleDateString("en-US")}. Your normal plan platform fee resumes automatically.`}</p>
+            </div>
+          ) : null;
+        })()}
         {!id ? (
           <p>Select a restaurant from your dashboard.</p>
         ) : result?.status === 200 ? (
