@@ -23,7 +23,10 @@ export default function KioskManager({ organizationId, selectedLocationId, embed
     [name, setName] = useState("Front Counter"),
     [busy, setBusy] = useState(false),
     [pair, setPair] = useState(null),
-    [revokeId, setRevokeId] = useState(null);
+    [revokeId, setRevokeId] = useState(null),
+    [editingReader, setEditingReader] = useState(null),
+    [readerLocation, setReaderLocation] = useState(""),
+    [readerId, setReaderId] = useState("");
   useEffect(() => {
     if (embedded) {
       setLocationId(selectedLocationId || "");
@@ -70,6 +73,16 @@ export default function KioskManager({ organizationId, selectedLocationId, embed
     } finally {
       setBusy(false);
     }
+  }
+  async function saveReader() {
+    if (!editingReader || busy) return;
+    setBusy(true);
+    try {
+      await request("PATCH", { installationId: editingReader.id, terminalLocationId: readerLocation, terminalReaderId: readerId });
+      setEditingReader(null);
+      toast.success("Reader assignment saved. Payment processing is not yet enabled.");
+      await refresh();
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   }
   async function revoke() {
     if (!revokeId || !canManage || !proEnabled) return;
@@ -170,6 +183,10 @@ export default function KioskManager({ organizationId, selectedLocationId, embed
               </p>
             </div>
             {canManage && !d.revokedAt && (
+              <button type="button" onClick={() => { setEditingReader(d); setReaderLocation(d.terminalLocationId || ""); setReaderId(d.terminalReaderId || ""); }}
+                className="ml-auto mr-3 rounded-lg border px-4 py-2 text-sm">{d.terminalReaderId ? "Edit reader" : "Assign S710"}</button>
+            )}
+            {canManage && !d.revokedAt && (
               <button
                 onClick={() => setRevokeId(d.id)}
                 className="rounded-lg border border-red-300 px-4 py-2 text-red-700"
@@ -180,6 +197,18 @@ export default function KioskManager({ organizationId, selectedLocationId, embed
           </div>
         ))}
       </div>}
+      {proEnabled && editingReader && (
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
+          <div className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6">
+            <h2 className="text-xl font-bold">Assign Stripe S710 · {editingReader.name}</h2>
+            <p className="text-sm text-slate-600">Save the IDs from Stripe Dashboard → Terminal. This records the assignment only; it does not activate payments.</p>
+            <label className="block">Terminal location ID<input className="mt-1 w-full rounded-lg border p-3" placeholder="tml_..." value={readerLocation} onChange={e => setReaderLocation(e.target.value)} /></label>
+            <label className="block">Reader ID<input className="mt-1 w-full rounded-lg border p-3" placeholder="tmr_..." value={readerId} onChange={e => setReaderId(e.target.value)} /></label>
+            <div className="flex justify-end gap-3"><button type="button" className="rounded-lg border px-4 py-2" onClick={() => setEditingReader(null)}>Cancel</button>
+              <button type="button" disabled={busy || Boolean(readerLocation) !== Boolean(readerId)} className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50" onClick={saveReader}>Save assignment</button></div>
+          </div>
+        </div>
+      )}
       {proEnabled && revokeId && (
         <div
           role="dialog"
