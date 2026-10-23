@@ -18,7 +18,7 @@ export const metadata = {
   title: "OrderXO — Restaurant Owner Portal",
   description: "Manage your restaurant, online orders, locations, and subscription with OrderXO.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.ico?v=1",
   },
 };
 
