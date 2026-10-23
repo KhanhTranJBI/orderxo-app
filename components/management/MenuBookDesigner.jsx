@@ -460,25 +460,26 @@ export default function MenuBookDesigner({ organizationId }) {
                         }}
                       >
                         <header
-                          className="text-center border-b pb-4 mb-6"
+                          className="text-center border-b pb-2 mb-3"
                           style={{ borderColor: colors.accent }}
                         >
                           {logo && (
                             <img
                               src={logo}
                               alt="Restaurant logo"
-                              className="h-20 w-20 mx-auto mb-2 object-contain"
+                              className="mx-auto mb-1 object-contain"
+                              style={{ width: "auto", height: "0.85in", maxWidth: "2.6in" }}
                             />
                           )}
                           {(titleMode === "every-page" || index === 0) && (
                             <>
                               <h2
-                                className="text-3xl font-bold tracking-wide"
+                                className="text-2xl font-bold tracking-wide"
                                 style={{ color: colors.accent }}
                               >
                                 {title}
                               </h2>
-                              <div className="text-xs mt-2 tracking-widest uppercase">
+                              <div className="text-xs mt-1 tracking-widest uppercase">
                                 Freshly prepared · Made to order
                               </div>
                             </>
@@ -486,39 +487,44 @@ export default function MenuBookDesigner({ organizationId }) {
                         </header>
                         <div className="space-y-4">
                           {group.map((section, sectionIndex) => (
-                            <section key={`${section.categoryId}-${sectionIndex}`} className="mb-5">
+                            <section key={`${section.categoryId}-${sectionIndex}`} className="mb-3">
                               <h3
-                                className="text-xl font-bold mt-5 mb-3 pb-1 border-b"
+                                className="text-xl font-bold mt-2 mb-2 pb-1 border-b"
                                 style={{ color: colors.accent, borderColor: colors.accent }}
                               >
                                 {section.categoryLabel}
                               </h3>
                               <div
-                                className="grid gap-3"
+                                className="grid gap-3 items-start"
                                 style={{
                                   gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))`,
                                 }}
                               >
                                 {section.items.map((item) => (
-                                  <>
+                                  <div key={id(item)} className="min-w-0 break-inside-avoid">
                                     <div
-                                      key={id(item)}
-                                      className={`min-w-0 break-inside-avoid ${section.columns === 1 ? "flex items-start gap-3" : ""}`}
+                                      className={
+                                        section.columns === 1 ? "flex items-start gap-3" : "min-w-0"
+                                      }
                                     >
                                       {showPhotos && item.image && (
                                         <img
                                           src={item.image}
                                           alt=""
-                                          className={`${section.columns === 1 ? "w-24 h-24 shrink-0" : "w-full aspect-square mb-2"} rounded object-cover`}
+                                          className={`${section.columns === 1 ? "shrink-0" : "w-full mb-2"} rounded object-cover`}
                                           style={
                                             section.columns === 1
-                                              ? { width: "1in", height: "1in" }
-                                              : { aspectRatio: "1 / 1" }
+                                              ? {
+                                                  width: "1in",
+                                                  height: "1in",
+                                                  aspectRatio: "1 / 1",
+                                                }
+                                              : { width: "100%", aspectRatio: "1 / 1" }
                                           }
                                         />
                                       )}
                                       <div className="min-w-0 flex-1">
-                                        <div className="flex items-baseline justify-between gap-3 font-semibold text-sm">
+                                        <div className="flex items-baseline justify-between gap-2 font-semibold text-sm">
                                           <span className="min-w-0">{item.name}</span>
                                           <span className="whitespace-nowrap">
                                             {money(item.priceCents)}
@@ -533,7 +539,7 @@ export default function MenuBookDesigner({ organizationId }) {
                                     </div>
                                     <button
                                       type="button"
-                                      className="print:hidden block w-fit text-left text-xs underline opacity-60 mt-1"
+                                      className="print:hidden block w-fit text-left text-xs underline opacity-60 mt-2"
                                       onClick={() =>
                                         setManualBreaks((old) =>
                                           old.includes(id(item))
@@ -546,7 +552,7 @@ export default function MenuBookDesigner({ organizationId }) {
                                         ? "Remove page break"
                                         : "Start new page before this item"}
                                     </button>
-                                  </>
+                                  </div>
                                 ))}
                               </div>
                             </section>
