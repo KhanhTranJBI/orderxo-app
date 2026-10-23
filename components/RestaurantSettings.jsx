@@ -10,6 +10,7 @@ import { ownerFetch } from "../lib/ownerFetch";
 import Link from "next/link";
 import RestaurantLinksSettings from "./RestaurantLinksSettings";
 import { useEffect, useState } from "react";
+import { Settings, Link2, Palette, House, Star, Gift, Mail, Megaphone, Search, ShoppingCart } from "lucide-react";
 
 const TABS = [
   "General",
@@ -23,6 +24,19 @@ const TABS = [
   "Google Reviews & SEO",
   "Ordering",
 ];
+
+const TAB_ICONS = {
+  General: Settings,
+  "Social & Links": Link2,
+  Appearance: Palette,
+  Homepage: House,
+  Loyalty: Star,
+  "Gift Cards": Gift,
+  Email: Mail,
+  "Marketing Automations": Megaphone,
+  "Google Reviews & SEO": Search,
+  Ordering: ShoppingCart,
+};
 
 // Stable, shareable URL fragments for Restaurant Settings tabs.
 const TAB_HASHES = {
@@ -779,15 +793,17 @@ export default function RestaurantSettings({
         )}
         <div className="mt-7 overflow-x-auto border-b">
           <div className="flex min-w-max gap-1">
-            {TABS.map((name) => (
-              <button
+            {TABS.map((name) => {
+              const TabIcon = TAB_ICONS[name];
+              return <button
                 key={name}
                 onClick={() => selectTab(name)}
-                className={`border-b-2 px-4 py-3 text-sm font-semibold ${tab === name ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
+                className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold ${tab === name ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
               >
+                <TabIcon size={18} aria-hidden="true" className="shrink-0" />
                 {name}
-              </button>
-            ))}
+              </button>;
+            })}
           </div>
         </div>
 
