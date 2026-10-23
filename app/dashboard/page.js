@@ -113,7 +113,7 @@ export default async function Dashboard() {
             <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-end gap-3">
             <OwnerAccountNavigation staffMode={staffMode} email={sessionEmail(cookies().get(staffMode ? "orderxo_support_session" : cookieName)?.value)} />
             {canCreateRestaurant && (
               <Link
