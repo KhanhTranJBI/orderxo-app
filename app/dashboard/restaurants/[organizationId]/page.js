@@ -13,6 +13,7 @@ const tools = [
   ["Financials", "financials", "Transactions, refunds, reports and statements."],
   ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
+  ["Menu Book Designer", "menu-book", "Design, preview and print multi-page restaurant menus."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
 ];
@@ -157,7 +158,7 @@ export default async function RestaurantManager({ params }) {
               const need =
                 slug === "orders"
                   ? "orders.read"
-                  : slug === "menu"
+                  : (slug === "menu" || slug === "menu-book")
                     ? "menu.read"
                     : slug === "promotions"
                       ? "promotions.read"
@@ -180,7 +181,7 @@ export default async function RestaurantManager({ params }) {
               const managePermission =
                 slug === "orders"
                   ? "orders.manage"
-                  : slug === "menu"
+                  : (slug === "menu" || slug === "menu-book")
                     ? "menu.manage"
                     : slug === "promotions"
                       ? "promotions.manage"
