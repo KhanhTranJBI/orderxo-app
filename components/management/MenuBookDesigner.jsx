@@ -386,7 +386,7 @@ export default function MenuBookDesigner({ organizationId }) {
               <div className="border-t pt-3 space-y-3">
                 <strong>Categories & layouts</strong>
                 <p className="text-xs text-slate-500">
-                  Hide a whole category or choose 1, 2, or 3 columns for its printed items.
+                  Hide a whole category or choose 1, 2, 3, or 4 columns for its printed items.
                 </p>
                 {categoryGroups.map((group) => (
                   <div key={group.categoryId} className="rounded-lg border p-3 space-y-2">
@@ -414,6 +414,7 @@ export default function MenuBookDesigner({ organizationId }) {
                         <option value={1}>1 column</option>
                         <option value={2}>2 columns</option>
                         <option value={3}>3 columns</option>
+                        <option value={4}>4 columns</option>
                       </select>
                     </label>
                   </div>

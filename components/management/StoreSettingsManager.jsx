@@ -6,7 +6,17 @@ import { ownerFetch } from "../../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Clock3, Images, Info, Pencil, Plus, Printer, TabletSmartphone, Trash2, X } from "lucide-react";
+import {
+  Clock3,
+  Images,
+  Info,
+  Pencil,
+  Plus,
+  Printer,
+  TabletSmartphone,
+  Trash2,
+  X,
+} from "lucide-react";
 import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 import HomepageSlidesManager from "./HomepageSlidesManager";
@@ -287,7 +297,10 @@ export default function StoreSettingsManager({ organizationId }) {
         (STORE_TAB_HASHES[requestedTab] ? requestedTab : null);
       if (
         deepLinkedTab &&
-        ((deepLinkedTab !== "printing" && deepLinkedTab !== "locationDetails" && deepLinkedTab !== "kiosks") || canReadStore)
+        ((deepLinkedTab !== "printing" &&
+          deepLinkedTab !== "locationDetails" &&
+          deepLinkedTab !== "kiosks") ||
+          canReadStore)
       ) {
         setTab(deepLinkedTab);
       }

@@ -158,7 +158,7 @@ export default async function RestaurantManager({ params }) {
               const need =
                 slug === "orders"
                   ? "orders.read"
-                  : (slug === "menu" || slug === "menu-book")
+                  : slug === "menu" || slug === "menu-book"
                     ? "menu.read"
                     : slug === "promotions"
                       ? "promotions.read"
@@ -181,7 +181,7 @@ export default async function RestaurantManager({ params }) {
               const managePermission =
                 slug === "orders"
                   ? "orders.manage"
-                  : (slug === "menu" || slug === "menu-book")
+                  : slug === "menu" || slug === "menu-book"
                     ? "menu.manage"
                     : slug === "promotions"
                       ? "promotions.manage"
@@ -194,7 +194,7 @@ export default async function RestaurantManager({ params }) {
                             : null;
               const readOnly =
                 !isAdmin &&
-                ((slug === "store" || slug === "location-settings" || slug === "kiosks")
+                (slug === "store" || slug === "location-settings" || slug === "kiosks"
                   ? !can("store.manage") && !can("homepage.manage")
                   : managePermission && !can(managePermission));
               return (
