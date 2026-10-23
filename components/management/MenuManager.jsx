@@ -764,6 +764,26 @@ function CategoryModal({ category, onClose, onSave }) {
                 placeholder="https://..."
               />
             </label>
+            <UploadButton
+              endpoint="menuImage"
+              onClientUploadComplete={(files) => {
+                const url = files?.[0]?.ufsUrl || files?.[0]?.url;
+                if (!url) {
+                  toast.error("Upload completed but no image URL was returned.");
+                  return;
+                }
+                setImage(url);
+                toast.success("Category image uploaded. Save changes to keep it.");
+              }}
+              onUploadError={(error) => {
+                toast.error(error?.message || "Category image upload failed.");
+              }}
+              appearance={{
+                button: "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
+                allowedContent: "!hidden",
+              }}
+              content={{ button: "Upload image" }}
+            />
           </div>
           {category && (
             <label className="flex items-center gap-2 text-sm font-medium">
