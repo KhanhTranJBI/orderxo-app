@@ -1,5 +1,6 @@
 "use client";
 import { toast } from "react-toastify";
+import { UploadButton } from "@uploadthing/react";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -339,12 +340,34 @@ function ItemModal({
               value={f.description}
               onChange={(e) => setF({ ...f, description: e.target.value })}
             />
-            <input
-              className="field"
-              placeholder="Image URL"
-              value={f.image}
-              onChange={(e) => setF({ ...f, image: e.target.value })}
-            />
+            <div className="flex flex-wrap items-center gap-3">
+              <input
+                className="field min-w-0 flex-1"
+                placeholder="Image URL"
+                value={f.image || ""}
+                onChange={(e) => setF((prev) => ({ ...prev, image: e.target.value }))}
+              />
+              <UploadButton
+                endpoint="menuImage"
+                onClientUploadComplete={(files) => {
+                  const url = files?.[0]?.ufsUrl || files?.[0]?.url;
+                  if (!url) {
+                    toast.error("Upload completed but no image URL was returned.");
+                    return;
+                  }
+                  setF((prev) => ({ ...prev, image: url }));
+                  toast.success("Image uploaded. Save the menu item to keep the change.");
+                }}
+                onUploadError={(error) => {
+                  toast.error(error?.message || "Image upload failed.");
+                }}
+                appearance={{
+                  button: "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
+                  allowedContent: "!hidden",
+                }}
+                content={{ button: "Upload image" }}
+              />
+            </div>
             <div className="flex flex-wrap gap-2">
               {[
                 ["bestSeller", "Best Seller"],
