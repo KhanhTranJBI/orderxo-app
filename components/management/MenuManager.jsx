@@ -1,5 +1,8 @@
 "use client";
 import { toast } from "react-toastify";
+import { generateReactHelpers } from "@uploadthing/react";
+
+const { useUploadThing } = generateReactHelpers();
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -273,6 +276,16 @@ function ItemModal({
   }));
   const [search, setSearch] = useState("");
   const [editGroup, setEditGroup] = useState(null);
+  const { startUpload, isUploading } = useUploadThing("menuImage", {
+    onClientUploadComplete: (files) => {
+      const url = files?.[0]?.serverData?.url || files?.[0]?.ufsUrl || files?.[0]?.url;
+      if (url) {
+        setF((previous) => ({ ...previous, image: url }));
+        toast.success("Image uploaded. Save the menu item to apply it.");
+      } else toast.error("Upload completed without an image URL");
+    },
+    onUploadError: (error) => toast.error(error.message || "Image upload failed"),
+  });
   const attached = new Set(f.modifierGroups.map((x) => String(x.group)));
   const available = groups.filter(
     (g) => !attached.has(String(g._id)) && g.title.toLowerCase().includes(search.toLowerCase()),
@@ -346,6 +359,27 @@ function ItemModal({
               value={f.image}
               onChange={(e) => setF({ ...f, image: e.target.value })}
             />
+            <label className={`inline-flex items-center gap-2 rounded-lg border border-orange-300 px-4 py-2 text-sm font-semibold text-orange-700 ${isUploading ? "cursor-wait opacity-60" : "cursor-pointer hover:bg-orange-50"}`}>
+              {isUploading ? "Uploading image…" : "Upload Image"}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="sr-only"
+                disabled={isUploading}
+                onChange={async (event) => {
+                  const file = event.target.files?.[0];
+                  event.target.value = "";
+                  if (!file) return;
+                  if (file.size > 4 * 1024 * 1024) {
+                    toast.error("Choose an image smaller than 4 MB");
+                    return;
+                  }
+                  try { await startUpload([file]); }
+                  catch (error) { toast.error(error?.message || "Image upload failed"); }
+                }}
+              />
+            </label>
+            <p className="text-xs text-gray-500">JPG, PNG, WebP or GIF · Max 4 MB. Or paste an Image URL above.</p>
             <div className="flex flex-wrap gap-2">
               {[
                 ["bestSeller", "Best Seller"],
