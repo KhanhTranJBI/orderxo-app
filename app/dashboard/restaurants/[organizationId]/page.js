@@ -1,3 +1,4 @@
+import { ShoppingBag, Gift, ChartNoAxesCombined, Users, Utensils, BookOpen, Printer, Tags, Settings } from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -18,6 +19,18 @@ const tools = [
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
 ];
+
+const toolIcons = {
+  orders: ShoppingBag,
+  "gift-cards": Gift,
+  financials: ChartNoAxesCombined,
+  users: Users,
+  menu: Utensils,
+  "menu-book": BookOpen,
+  notices: Printer,
+  promotions: Tags,
+  store: Settings,
+};
 
 // Organization status is not the same as go-live or subscription status.
 // Keep the backend status unchanged and show an understandable owner-facing label.
@@ -198,6 +211,7 @@ export default async function RestaurantManager({ params }) {
                 ((slug === "store" || slug === "location-settings" || slug === "kiosks")
                   ? !can("store.manage") && !can("homepage.manage")
                   : managePermission && !can(managePermission));
+              const ToolIcon = toolIcons[slug];
               return (
                 <Link
                   key={slug}
@@ -205,7 +219,14 @@ export default async function RestaurantManager({ params }) {
                   className="rounded-2xl border bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-xl font-bold">{name}</h2>
+                    <div className="flex min-w-0 items-center gap-3">
+                      {ToolIcon && (
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                          <ToolIcon aria-hidden="true" size={23} strokeWidth={1.8} />
+                        </span>
+                      )}
+                      <h2 className="text-xl font-bold">{name}</h2>
+                    </div>
                     {readOnly && (
                       <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
                         Read only
