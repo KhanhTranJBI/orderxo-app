@@ -340,14 +340,15 @@ function ItemModal({
               value={f.description}
               onChange={(e) => setF({ ...f, description: e.target.value })}
             />
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="space-y-3">
               <input
-                className="field min-w-0 flex-1"
+                className="field w-full"
                 placeholder="Image URL"
                 value={f.image || ""}
                 onChange={(e) => setF((prev) => ({ ...prev, image: e.target.value }))}
               />
-              <UploadButton
+              <div className="flex justify-start">
+                <UploadButton
                 endpoint="menuImage"
                 onClientUploadComplete={(files) => {
                   const url = files?.[0]?.ufsUrl || files?.[0]?.url;
@@ -366,7 +367,9 @@ function ItemModal({
                   allowedContent: "!hidden",
                 }}
                 content={{ button: "Upload image" }}
+                className="ut-button:w-auto"
               />
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {[
@@ -764,6 +767,8 @@ function CategoryModal({ category, onClose, onSave }) {
                 placeholder="https://..."
               />
             </label>
+          </div>
+          <div className="flex justify-start">
             <UploadButton
               endpoint="menuImage"
               onClientUploadComplete={(files) => {
@@ -783,6 +788,7 @@ function CategoryModal({ category, onClose, onSave }) {
                 allowedContent: "!hidden",
               }}
               content={{ button: "Upload image" }}
+              className="ut-button:w-auto"
             />
           </div>
           {category && (
