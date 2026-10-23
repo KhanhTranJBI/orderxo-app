@@ -180,6 +180,27 @@ function ModifierEditor({ group, onClose, onSave }) {
                         onChange={(e) => update({ image: e.target.value })}
                       />
                     </label>
+                    <UploadButton
+                      endpoint="menuImage"
+                      onClientUploadComplete={(files) => {
+                        const url = files?.[0]?.ufsUrl || files?.[0]?.url;
+                        if (!url) {
+                          toast.error("Upload completed but no image URL was returned.");
+                          return;
+                        }
+                        update({ image: url });
+                        toast.success("Option image uploaded. Save the modifier to keep it.");
+                      }}
+                      onUploadError={(error) => {
+                        toast.error(error?.message || "Option image upload failed.");
+                      }}
+                      appearance={{
+                        button: "!bg-orange-600 !text-white !rounded-lg !px-3 !py-2 !text-xs !font-semibold",
+                        allowedContent: "!hidden",
+                      }}
+                      content={{ button: "Upload image" }}
+                      className="ut-button:w-auto"
+                    />
                   </div>
                   <label className="w-28 text-xs font-semibold text-slate-500">
                     Price ($)
