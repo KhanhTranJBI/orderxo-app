@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
@@ -73,6 +74,21 @@ export default async function Dashboard() {
     }),
   );
   const planByOrg = Object.fromEntries(planResults);
+  // Branding lives in restaurant settings, which may not be included in the
+  // lightweight organizations list response. Load each restaurant's own logo.
+  const logoResults = await Promise.all(
+    organizations.map(async (org) => {
+      const id = String(org._id || org.id || "");
+      const response = await backendRequest(
+        `/api/organizations/settings?organizationId=${encodeURIComponent(id)}`,
+        { authenticated: true },
+      );
+      const settings = response.status === 200 ? response.data?.settings : null;
+      const logo = settings?.branding?.logoUrl || org.branding?.logoUrl || "";
+      return [id, typeof logo === "string" && /^https?:\/\//i.test(logo.trim()) ? logo.trim() : ""];
+    }),
+  );
+  const logoByOrg = Object.fromEntries(logoResults);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
       <div className="mx-auto max-w-6xl">
@@ -129,7 +145,22 @@ export default async function Dashboard() {
               return (
                 <section key={id} className="rounded-2xl border bg-white p-6 shadow-sm">
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="text-xl font-bold">{org.name}</h2>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                        {logoByOrg[id] ? (
+                          // Remote restaurant logos can be hosted on any tenant domain.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoByOrg[id]}
+                            alt={`${org.name} logo`}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <Store aria-hidden="true" className="h-7 w-7 text-orange-600" />
+                        )}
+                      </div>
+                      <h2 className="min-w-0 break-words text-xl font-bold">{org.name}</h2>
+                    </div>
                     <span
                       className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}
                     >
