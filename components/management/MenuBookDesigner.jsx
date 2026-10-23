@@ -77,9 +77,7 @@ export default function MenuBookDesigner({ organizationId }) {
     try {
       const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
       const valid = Array.isArray(stored) ? stored.filter((v) => v && typeof v === "object") : [];
-      const sorted = [...valid].sort(
-        (a, b) => (b.updatedAt || b.id || 0) - (a.updatedAt || a.id || 0),
-      );
+      const sorted = [...valid].sort((a, b) => (b.updatedAt || b.id || 0) - (a.updatedAt || a.id || 0));
       setDrafts(sorted);
       if (sorted.length) {
         loadDraftSettings(sorted[0]);
@@ -116,21 +114,10 @@ export default function MenuBookDesigner({ organizationId }) {
       categoryLabel: category.name,
       columns: categorySettings[id(category)]?.columns || 1,
       visible: categorySettings[id(category)]?.visible !== false,
-      items: active
-        .filter((item) => id(item.category) === id(category))
-        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+      items: active.filter((item) => id(item.category) === id(category)).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
     }));
-    const uncategorized = active.filter(
-      (item) => !categories.some((category) => id(category) === id(item.category)),
-    );
-    if (uncategorized.length)
-      groups.push({
-        categoryId: "uncategorized",
-        categoryLabel: "Other",
-        columns: categorySettings.uncategorized?.columns || 1,
-        visible: categorySettings.uncategorized?.visible !== false,
-        items: uncategorized,
-      });
+    const uncategorized = active.filter((item) => !categories.some((category) => id(category) === id(item.category)));
+    if (uncategorized.length) groups.push({ categoryId: "uncategorized", categoryLabel: "Other", columns: categorySettings.uncategorized?.columns || 1, visible: categorySettings.uncategorized?.visible !== false, items: uncategorized });
     return groups;
   }, [items, categories, categorySettings]);
   const visibleGroups = categoryGroups.filter((group) => group.visible && group.items.length);
@@ -139,11 +126,7 @@ export default function MenuBookDesigner({ organizationId }) {
     const result = [];
     let page = [];
     let usedRows = 0;
-    const flush = () => {
-      if (page.length) result.push(page);
-      page = [];
-      usedRows = 0;
-    };
+    const flush = () => { if (page.length) result.push(page); page = []; usedRows = 0; };
     for (const group of visibleGroups) {
       const columns = group.columns;
       let chunk = [];
@@ -153,13 +136,9 @@ export default function MenuBookDesigner({ organizationId }) {
       };
       for (const item of group.items) {
         if (manualBreaks.includes(id(item)) && (page.length || chunk.length)) {
-          pushChunk();
-          flush();
+          pushChunk(); flush();
         }
-        if (usedRows >= perPage) {
-          pushChunk();
-          flush();
-        }
+        if (usedRows >= perPage) { pushChunk(); flush(); }
         chunk.push(item);
         if (chunk.length % columns === 1) usedRows += 1;
       }
@@ -185,27 +164,13 @@ export default function MenuBookDesigner({ organizationId }) {
       updatedAt: now,
       draftName: (() => {
         const base = (draftName || "Main Menu").trim() || "Main Menu";
-        const existing = new Set(
-          drafts
-            .filter((v) => v.id !== (activeDraftId || now))
-            .map((v) => String(v.draftName || "").toLowerCase()),
-        );
+        const existing = new Set(drafts.filter((v) => v.id !== (activeDraftId || now)).map((v) => String(v.draftName || "").toLowerCase()));
         if (!existing.has(base.toLowerCase())) return base;
         let number = 2;
         while (existing.has(`${base} (${number})`.toLowerCase())) number += 1;
         return `${base} (${number})`;
-      })(),
-      title,
-      template,
-      size,
-      orientation,
-      background,
-      logo,
-      showPhotos,
-      showDescriptions,
-      categorySettings,
-      perPage,
-      manualBreaks,
+      })(), title, template, size, orientation, background, logo,
+      showPhotos, showDescriptions, categorySettings, perPage, manualBreaks,
     };
     const next = [entry, ...drafts.filter((v) => v.id !== entry.id)].slice(0, 20);
     try {
@@ -361,32 +326,17 @@ export default function MenuBookDesigner({ organizationId }) {
               </label>
               <div className="border-t pt-3 space-y-3">
                 <strong>Categories & layouts</strong>
-                <p className="text-xs text-slate-500">
-                  Hide a whole category or choose 1, 2, or 3 columns for its printed items.
-                </p>
+                <p className="text-xs text-slate-500">Hide a whole category or choose 1, 2, or 3 columns for its printed items.</p>
                 {categoryGroups.map((group) => (
                   <div key={group.categoryId} className="rounded-lg border p-3 space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium">
-                      <input
-                        type="checkbox"
-                        checked={group.visible}
-                        onChange={(e) =>
-                          updateCategory(group.categoryId, { visible: e.target.checked })
-                        }
-                      />
+                      <input type="checkbox" checked={group.visible} onChange={(e) => updateCategory(group.categoryId, { visible: e.target.checked })} />
                       <span className="flex-1">{group.categoryLabel}</span>
                       <span className="text-xs text-slate-500">{group.items.length} items</span>
                     </label>
                     <label className="block text-xs text-slate-600">
                       Grid columns
-                      <select
-                        disabled={!group.visible}
-                        className="mt-1 w-full rounded border p-2 text-sm disabled:opacity-40"
-                        value={group.columns}
-                        onChange={(e) =>
-                          updateCategory(group.categoryId, { columns: Number(e.target.value) })
-                        }
-                      >
+                      <select disabled={!group.visible} className="mt-1 w-full rounded border p-2 text-sm disabled:opacity-40" value={group.columns} onChange={(e) => updateCategory(group.categoryId, { columns: Number(e.target.value) })}>
                         <option value={1}>1 column</option>
                         <option value={2}>2 columns</option>
                         <option value={3}>3 columns</option>
@@ -417,8 +367,8 @@ export default function MenuBookDesigner({ organizationId }) {
               ) : (
                 <>
                   <p className="mb-3 text-sm text-slate-600">
-                    {pages.length} page(s) · {visibleItemCount} item(s). Use “Start new page” below
-                    an item to insert a manual break.
+                    {pages.length} page(s) · {visibleItemCount} item(s). Use “Start new page” below an
+                    item to insert a manual break.
                   </p>
                   <div id="menu-book-print" className="space-y-6">
                     {pages.map((group, index) => (
@@ -443,67 +393,49 @@ export default function MenuBookDesigner({ organizationId }) {
                             <img
                               src={logo}
                               alt="Restaurant logo"
-                              className="max-h-20 mx-auto mb-2 object-contain"
+                              className="h-20 w-20 mx-auto mb-2 object-contain"
                             />
                           )}
-                          <h2
-                            className="text-3xl font-bold tracking-wide"
-                            style={{ color: colors.accent }}
-                          >
-                            {title}
-                          </h2>
-                          <div className="text-xs mt-2 tracking-widest uppercase">
-                            Freshly prepared · Made to order
-                          </div>
+                          {index === 0 && (
+                            <>
+                              <h2 className="text-3xl font-bold tracking-wide" style={{ color: colors.accent }}>
+                                {title}
+                              </h2>
+                              <div className="text-xs mt-2 tracking-widest uppercase">
+                                Freshly prepared · Made to order
+                              </div>
+                            </>
+                          )}
                         </header>
                         <div className="space-y-4">
                           {group.map((section, sectionIndex) => (
                             <section key={`${section.categoryId}-${sectionIndex}`} className="mb-5">
-                              <h3
-                                className="text-xl font-bold mt-5 mb-3 pb-1 border-b"
-                                style={{ color: colors.accent, borderColor: colors.accent }}
-                              >
+                              <h3 className="text-xl font-bold mt-5 mb-3 pb-1 border-b" style={{ color: colors.accent, borderColor: colors.accent }}>
                                 {section.categoryLabel}
                               </h3>
-                              <div
-                                className="grid gap-3"
-                                style={{
-                                  gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))`,
-                                }}
-                              >
+                              <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))` }}>
                                 {section.items.map((item) => (
-                                  <div key={id(item)} className="min-w-0 break-inside-avoid">
+                                  <div
+                                    key={id(item)}
+                                    className={`min-w-0 break-inside-avoid ${section.columns === 1 ? "flex items-start gap-3" : ""}`}
+                                  >
                                     {showPhotos && item.image && (
                                       <img
                                         src={item.image}
                                         alt=""
-                                        className="w-full max-h-28 object-cover rounded mb-2"
+                                        className={`${section.columns === 1 ? "w-24 h-24 shrink-0" : "w-full aspect-square mb-2"} rounded object-cover`}
+                                        style={section.columns === 1 ? { width: "1in", height: "1in" } : { aspectRatio: "1 / 1" }}
                                       />
                                     )}
-                                    <div className="flex flex-wrap justify-between gap-1 font-semibold text-sm">
-                                      <span className="min-w-0">{item.name}</span>
-                                      <span className="whitespace-nowrap">
-                                        {money(item.priceCents)}
-                                      </span>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-baseline justify-between gap-3 font-semibold text-sm">
+                                        <span className="min-w-0">{item.name}</span>
+                                        <span className="whitespace-nowrap">{money(item.priceCents)}</span>
+                                      </div>
+                                      {showDescriptions && <p className="text-xs mt-1 opacity-80">{clean(item.description)}</p>}
                                     </div>
-                                    {showDescriptions && (
-                                      <p className="text-xs mt-1 opacity-80">
-                                        {clean(item.description)}
-                                      </p>
-                                    )}
-                                    <button
-                                      className="print:hidden text-xs underline opacity-60 mt-1"
-                                      onClick={() =>
-                                        setManualBreaks((old) =>
-                                          old.includes(id(item))
-                                            ? old.filter((x) => x !== id(item))
-                                            : [...old, id(item)],
-                                        )
-                                      }
-                                    >
-                                      {manualBreaks.includes(id(item))
-                                        ? "Remove page break"
-                                        : "Start new page before this item"}
+                                    <button className="print:hidden text-xs underline opacity-60 mt-1" onClick={() => setManualBreaks((old) => old.includes(id(item)) ? old.filter((x) => x !== id(item)) : [...old, id(item)])}>
+                                      {manualBreaks.includes(id(item)) ? "Remove page break" : "Start new page before this item"}
                                     </button>
                                   </div>
                                 ))}
