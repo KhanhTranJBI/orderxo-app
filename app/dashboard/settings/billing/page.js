@@ -33,7 +33,7 @@ export default async function Billing({ searchParams }) {
           const offer = subscription.platformFeePromotion;
           const standardBps = subscription.pricing?.platformFeeBps ?? 100;
           const now = Date.now();
-          const pending = Number(offer?.durationDays) > 0 && !offer?.startsAt && !offer?.cancelledAt;
+          const pending = Number(offer?.durationMonths || offer?.durationDays) > 0 && !offer?.startsAt && !offer?.cancelledAt;
           const active = Boolean(!offer?.cancelledAt && offer?.startsAt && offer?.endsAt && now >= new Date(offer.startsAt).getTime() && now < new Date(offer.endsAt).getTime());
           const expired = Boolean(!offer?.cancelledAt && offer?.endsAt && now >= new Date(offer.endsAt).getTime());
           const daysLeft = active ? Math.max(0, Math.ceil((new Date(offer.endsAt).getTime() - now) / 86400000)) : 0;
@@ -48,7 +48,7 @@ export default async function Billing({ searchParams }) {
               <div><p className="text-sm text-slate-500">Current rate</p><p className="text-3xl font-bold">{(active ? 0 : standardBps / 100).toLocaleString("en-US")}%</p></div>
               <div><p className="text-sm text-slate-500">Standard rate</p><p className="text-3xl font-bold">{(standardBps / 100).toLocaleString("en-US")}%</p></div>
             </div>
-            {pending && <p className="mt-4 text-sm text-amber-800">Your {offer.durationDays}-day 0% promotion is awaiting invitation acceptance. If you have already accepted, please contact OrderXO support.</p>}
+            {pending && <p className="mt-4 text-sm text-amber-800">Your {offer.durationMonths ? `${offer.durationMonths}-month` : `${offer.durationDays}-day`} 0% promotion is awaiting invitation acceptance. If you have already accepted, please contact OrderXO support.</p>}
             {active && <p className="mt-4 text-sm text-green-800">Your 0% promotion ends {new Date(offer.endsAt).toLocaleDateString("en-US", { dateStyle: "long" })} ({daysLeft} days remaining). The standard rate then resumes automatically.</p>}
             {offer?.cancelledAt && <p className="mt-4 text-sm text-slate-600">Your promotion was cancelled. The standard rate applies.</p>}
             {expired && <p className="mt-4 text-sm text-slate-600">Your promotion ended {new Date(offer.endsAt).toLocaleDateString("en-US")}. The standard rate applies.</p>}
