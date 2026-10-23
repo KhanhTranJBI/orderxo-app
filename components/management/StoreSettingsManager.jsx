@@ -233,6 +233,7 @@ export default function StoreSettingsManager({ organizationId }) {
 
   const [manual, setManual] = useState(true);
   const [hours, setHours] = useState(defaultHours);
+  const [onlineOrderCutoffMinutes, setOnlineOrderCutoffMinutes] = useState(15);
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -331,6 +332,7 @@ export default function StoreSettingsManager({ organizationId }) {
 
       setUseDefault(Boolean(a.useDefault));
       setManual(c.isOpenManual !== false);
+      setOnlineOrderCutoffMinutes(c.onlineOrderCutoffMinutes ?? 15);
 
       if (Array.isArray(c.hours) && c.hours.length) {
         const map = new Map(c.hours.map((h) => [h.day, h]));
@@ -375,10 +377,11 @@ export default function StoreSettingsManager({ organizationId }) {
         selectedLocationId,
         "PATCH",
         scope === "default"
-          ? { hours }
+          ? { hours, onlineOrderCutoffMinutes }
           : {
               isOpenManual: manual,
               hours,
+              onlineOrderCutoffMinutes,
             },
       );
 
@@ -930,6 +933,29 @@ export default function StoreSettingsManager({ organizationId }) {
                         </div>
                       ))}
                     </div>
+                  </section>
+
+                  <section className="mt-4 rounded-2xl border bg-white p-6">
+                    <h2 className="text-xl font-bold">Online Ordering Cutoff</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Stop accepting online orders this many minutes before closing.
+                      {scope !== "default" && useDefault ? " This location inherits the Restaurant Default cutoff." : ""}
+                    </p>
+                    <label className="mt-4 block max-w-sm text-sm font-medium text-slate-700">
+                      Minutes before closing
+                      <select
+                        className="field mt-2 w-full"
+                        value={onlineOrderCutoffMinutes}
+                        disabled={!canManage || saving || useDefault}
+                        onChange={(e) => setOnlineOrderCutoffMinutes(Number(e.target.value))}
+                      >
+                        {[0, 10, 15, 20, 30, 45, 60].map((minutes) => (
+                          <option key={minutes} value={minutes}>
+                            {minutes === 0 ? "0 minutes — until closing" : `${minutes} minutes`}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </section>
 
                   <button
