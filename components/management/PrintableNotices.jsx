@@ -213,261 +213,264 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
               Print / Save PDF
             </button>
           </div>
-        </div>
-      </div>
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[340px_minmax(0,1fr)] print:block">
-        <aside className="space-y-4 rounded-xl border bg-white p-5 print:hidden">
-          <label className="block text-sm font-semibold">
-            Notice type
-            <select
-              className="mt-1 w-full rounded-lg border p-2"
-              value={data.type}
-              onChange={(e) => {
-                const type = TYPES.find((t) => t.id === e.target.value);
-                setData((old) => ({
-                  ...old,
-                  type: type.id,
-                  heading: type.heading,
-                  message: type.message,
-                }));
-                setDraftName(type.name);
-                setSelectedId(null);
-              }}
-            >
-              {TYPES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-semibold">
-            Saved notice name
-            <input
-              className="mt-1 w-full rounded-lg border p-2"
-              value={draftName}
-              onChange={(e) => setDraftName(e.target.value)}
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Main heading
-            <input
-              className="mt-1 w-full rounded-lg border p-2"
-              value={data.heading}
-              maxLength={100}
-              onChange={(e) => update("heading", e.target.value)}
-            />
-          </label>
-          <label className="block text-sm font-semibold">
-            Message
-            <textarea
-              className="mt-1 w-full rounded-lg border p-2"
-              rows={4}
-              value={data.message}
-              onChange={(e) => update("message", e.target.value)}
-            />
-          </label>
-          {DATE_TYPES.has(data.type) && (
-            <div className="grid grid-cols-2 gap-2">
-              <label className="text-sm font-semibold">
-                From
-                <input
-                  type="date"
+          <div className="mx-auto grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)] print:block">
+            <aside className="space-y-4 rounded-xl border bg-white p-5 print:hidden">
+              <label className="block text-sm font-semibold">
+                Notice type
+                <select
                   className="mt-1 w-full rounded-lg border p-2"
-                  value={data.start}
-                  onChange={(e) => update("start", e.target.value)}
+                  value={data.type}
+                  onChange={(e) => {
+                    const type = TYPES.find((t) => t.id === e.target.value);
+                    setData((old) => ({
+                      ...old,
+                      type: type.id,
+                      heading: type.heading,
+                      message: type.message,
+                    }));
+                    setDraftName(type.name);
+                    setSelectedId(null);
+                  }}
+                >
+                  {TYPES.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm font-semibold">
+                Saved notice name
+                <input
+                  className="mt-1 w-full rounded-lg border p-2"
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
                 />
               </label>
-              <label className="text-sm font-semibold">
-                Through
+              <label className="block text-sm font-semibold">
+                Main heading
                 <input
-                  type="date"
-                  min={data.start || undefined}
                   className="mt-1 w-full rounded-lg border p-2"
-                  value={data.end}
-                  onChange={(e) => update("end", e.target.value)}
+                  value={data.heading}
+                  maxLength={100}
+                  onChange={(e) => update("heading", e.target.value)}
                 />
               </label>
-            </div>
-          )}
-          {data.type === "early" && (
-            <label className="block text-sm font-semibold">
-              Closing time
-              <input
-                type="time"
-                className="mt-1 w-full rounded-lg border p-2"
-                value={data.time}
-                onChange={(e) => update("time", e.target.value)}
-              />
-            </label>
-          )}
-          {data.type === "hours" && (
-            <label className="block text-sm font-semibold">
-              Special hours
-              <textarea
-                className="mt-1 w-full rounded-lg border p-2"
-                rows={3}
-                placeholder="Example: Saturday: 11 AM – 3 PM"
-                value={data.hours}
-                onChange={(e) => update("hours", e.target.value)}
-              />
-            </label>
-          )}
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-sm font-semibold">
-              Phone (optional)
-              <input
-                className="mt-1 w-full rounded-lg border p-2"
-                value={data.phone}
-                onChange={(e) => update("phone", e.target.value)}
-              />
-            </label>
-            <label className="text-sm font-semibold">
-              Website (optional)
-              <input
-                className="mt-1 w-full rounded-lg border p-2"
-                value={data.website}
-                onChange={(e) => update("website", e.target.value)}
-              />
-            </label>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={data.showRestaurant}
-              onChange={(e) => update("showRestaurant", e.target.checked)}
-            />{" "}
-            Show restaurant name
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <label className="text-sm font-semibold">
-              Style
-              <select
-                className="mt-1 w-full rounded-lg border p-2"
-                value={data.style}
-                onChange={(e) => update("style", e.target.value)}
-              >
-                {Object.keys(palette).map((p) => (
-                  <option key={p} value={p}>
-                    {p[0].toUpperCase() + p.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="text-sm font-semibold">
-              Paper
-              <select
-                className="mt-1 w-full rounded-lg border p-2"
-                value={data.paper}
-                onChange={(e) => update("paper", e.target.value)}
-              >
-                <option value="letter">US Letter</option>
-                <option value="a4">A4</option>
-              </select>
-            </label>
-          </div>
-          <label className="block text-sm font-semibold">
-            Orientation
-            <select
-              className="mt-1 w-full rounded-lg border p-2"
-              value={data.orientation}
-              onChange={(e) => update("orientation", e.target.value)}
-            >
-              <option value="portrait">Portrait</option>
-              <option value="landscape">Landscape</option>
-            </select>
-          </label>
-          <div className="border-t pt-4">
-            <div className="mb-2 flex items-center justify-between">
-              <strong>Saved Notices</strong>
-              <button
-                onClick={() => {
-                  setSelectedId(null);
-                  setData(initial);
-                  setDraftName("New Notice");
-                }}
-                className="text-sm text-orange-700"
-              >
-                + New
-              </button>
-            </div>
-            <div className="max-h-52 space-y-2 overflow-y-auto">
-              {drafts.map((entry) => (
-                <button
-                  key={entry.id}
-                  onClick={() => select(entry)}
-                  className={`w-full rounded-lg border p-3 text-left text-sm ${selectedId === entry.id ? "border-orange-500 bg-orange-50 text-orange-900" : "hover:bg-slate-50"}`}
-                >
-                  {entry.name}
-                  {selectedId === entry.id && <span className="ml-2 text-xs">✓ Selected</span>}
-                </button>
-              ))}
-            </div>
-            {selectedId && (
-              <button onClick={remove} className="mt-3 text-sm text-red-600 underline">
-                Delete selected notice
-              </button>
-            )}
-          </div>
-          <p className="text-xs text-slate-500">
-            Notices are saved in this browser, not on the OrderXO server. Use your browser's Save as
-            PDF option when printing.
-          </p>
-        </aside>
-        <div className="min-w-0 overflow-x-auto print:overflow-visible">
-          <div
-            id="orderxo-notice-sheet"
-            className="relative mx-auto flex flex-col overflow-hidden border shadow-lg"
-            style={{
-              width: pageWidth,
-              height: pageHeight,
-              maxWidth: "none",
-              background: theme.bg,
-              color: theme.text,
-              padding: "0.6in",
-              boxSizing: "border-box",
-            }}
-          >
-            <div
-              className="flex h-full flex-col items-center justify-center text-center"
-              style={{ border: `5px solid ${theme.accent}`, padding: "0.45in" }}
-            >
-              {data.showRestaurant && (
-                <p
-                  className="mb-10 max-w-full break-words text-xl font-bold uppercase tracking-[0.2em]"
-                  style={{ color: theme.accent }}
-                >
-                  {restaurantName}
-                </p>
+              <label className="block text-sm font-semibold">
+                Message
+                <textarea
+                  className="mt-1 w-full rounded-lg border p-2"
+                  rows={4}
+                  value={data.message}
+                  onChange={(e) => update("message", e.target.value)}
+                />
+              </label>
+              {DATE_TYPES.has(data.type) && (
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-sm font-semibold">
+                    From
+                    <input
+                      type="date"
+                      className="mt-1 w-full rounded-lg border p-2"
+                      value={data.start}
+                      onChange={(e) => update("start", e.target.value)}
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    Through
+                    <input
+                      type="date"
+                      min={data.start || undefined}
+                      className="mt-1 w-full rounded-lg border p-2"
+                      value={data.end}
+                      onChange={(e) => update("end", e.target.value)}
+                    />
+                  </label>
+                </div>
               )}
-              <div className="mb-8 h-2 w-28 rounded-full" style={{ background: theme.accent }} />
-              <h2
-                className="max-w-full break-words text-5xl font-black uppercase leading-tight tracking-tight"
-                style={{ color: theme.text }}
-              >
-                {data.heading || "NOTICE"}
-              </h2>
-              {(dateLine || (data.type === "early" && data.time)) && (
-                <p
-                  className="mt-9 max-w-full break-words text-2xl font-extrabold"
-                  style={{ color: theme.accent }}
+              {data.type === "early" && (
+                <label className="block text-sm font-semibold">
+                  Closing time
+                  <input
+                    type="time"
+                    className="mt-1 w-full rounded-lg border p-2"
+                    value={data.time}
+                    onChange={(e) => update("time", e.target.value)}
+                  />
+                </label>
+              )}
+              {data.type === "hours" && (
+                <label className="block text-sm font-semibold">
+                  Special hours
+                  <textarea
+                    className="mt-1 w-full rounded-lg border p-2"
+                    rows={3}
+                    placeholder="Example: Saturday: 11 AM – 3 PM"
+                    value={data.hours}
+                    onChange={(e) => update("hours", e.target.value)}
+                  />
+                </label>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-sm font-semibold">
+                  Phone (optional)
+                  <input
+                    className="mt-1 w-full rounded-lg border p-2"
+                    value={data.phone}
+                    onChange={(e) => update("phone", e.target.value)}
+                  />
+                </label>
+                <label className="text-sm font-semibold">
+                  Website (optional)
+                  <input
+                    className="mt-1 w-full rounded-lg border p-2"
+                    value={data.website}
+                    onChange={(e) => update("website", e.target.value)}
+                  />
+                </label>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={data.showRestaurant}
+                  onChange={(e) => update("showRestaurant", e.target.checked)}
+                />{" "}
+                Show restaurant name
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-sm font-semibold">
+                  Style
+                  <select
+                    className="mt-1 w-full rounded-lg border p-2"
+                    value={data.style}
+                    onChange={(e) => update("style", e.target.value)}
+                  >
+                    {Object.keys(palette).map((p) => (
+                      <option key={p} value={p}>
+                        {p[0].toUpperCase() + p.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-sm font-semibold">
+                  Paper
+                  <select
+                    className="mt-1 w-full rounded-lg border p-2"
+                    value={data.paper}
+                    onChange={(e) => update("paper", e.target.value)}
+                  >
+                    <option value="letter">US Letter</option>
+                    <option value="a4">A4</option>
+                  </select>
+                </label>
+              </div>
+              <label className="block text-sm font-semibold">
+                Orientation
+                <select
+                  className="mt-1 w-full rounded-lg border p-2"
+                  value={data.orientation}
+                  onChange={(e) => update("orientation", e.target.value)}
                 >
-                  {dateLine ||
-                    `Closing at ${new Date(`2000-01-01T${data.time}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`}
-                </p>
-              )}
-              {data.hours && (
-                <p className="mt-7 whitespace-pre-line text-2xl font-semibold">{data.hours}</p>
-              )}
-              <p className="mt-10 max-w-full whitespace-pre-line break-words text-xl leading-relaxed">
-                {data.message}
+                  <option value="portrait">Portrait</option>
+                  <option value="landscape">Landscape</option>
+                </select>
+              </label>
+              <div className="border-t pt-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <strong>Saved Notices</strong>
+                  <button
+                    onClick={() => {
+                      setSelectedId(null);
+                      setData(initial);
+                      setDraftName("New Notice");
+                    }}
+                    className="text-sm text-orange-700"
+                  >
+                    + New
+                  </button>
+                </div>
+                <div className="max-h-52 space-y-2 overflow-y-auto">
+                  {drafts.map((entry) => (
+                    <button
+                      key={entry.id}
+                      onClick={() => select(entry)}
+                      className={`w-full rounded-lg border p-3 text-left text-sm ${selectedId === entry.id ? "border-orange-500 bg-orange-50 text-orange-900" : "hover:bg-slate-50"}`}
+                    >
+                      {entry.name}
+                      {selectedId === entry.id && <span className="ml-2 text-xs">✓ Selected</span>}
+                    </button>
+                  ))}
+                </div>
+                {selectedId && (
+                  <button onClick={remove} className="mt-3 text-sm text-red-600 underline">
+                    Delete selected notice
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500">
+                Notices are saved in this browser, not on the OrderXO server. Use your browser's
+                Save as PDF option when printing.
               </p>
-              <div className="mt-12 h-1 w-24" style={{ background: theme.accent }} />
-              {(data.phone || data.website) && (
-                <p className="mt-7 max-w-full break-words text-base">
-                  {[data.phone, data.website].filter(Boolean).join("  ·  ")}
-                </p>
-              )}
+            </aside>
+            <div className="min-w-0 overflow-x-auto print:overflow-visible">
+              <div
+                id="orderxo-notice-sheet"
+                className="relative mx-auto flex flex-col overflow-hidden border shadow-lg"
+                style={{
+                  width: pageWidth,
+                  height: pageHeight,
+                  maxWidth: "none",
+                  background: theme.bg,
+                  color: theme.text,
+                  padding: "0.6in",
+                  boxSizing: "border-box",
+                }}
+              >
+                <div
+                  className="flex h-full flex-col items-center justify-center text-center"
+                  style={{ border: `5px solid ${theme.accent}`, padding: "0.45in" }}
+                >
+                  {data.showRestaurant && (
+                    <p
+                      className="mb-10 max-w-full break-words text-xl font-bold uppercase tracking-[0.2em]"
+                      style={{ color: theme.accent }}
+                    >
+                      {restaurantName}
+                    </p>
+                  )}
+                  <div
+                    className="mb-8 h-2 w-28 rounded-full"
+                    style={{ background: theme.accent }}
+                  />
+                  <h2
+                    className="max-w-full break-words text-5xl font-black uppercase leading-tight tracking-tight"
+                    style={{ color: theme.text }}
+                  >
+                    {data.heading || "NOTICE"}
+                  </h2>
+                  {(dateLine || (data.type === "early" && data.time)) && (
+                    <p
+                      className="mt-9 max-w-full break-words text-2xl font-extrabold"
+                      style={{ color: theme.accent }}
+                    >
+                      {dateLine ||
+                        `Closing at ${new Date(`2000-01-01T${data.time}`).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`}
+                    </p>
+                  )}
+                  {data.hours && (
+                    <p className="mt-7 whitespace-pre-line text-2xl font-semibold">{data.hours}</p>
+                  )}
+                  <p className="mt-10 max-w-full whitespace-pre-line break-words text-xl leading-relaxed">
+                    {data.message}
+                  </p>
+                  <div className="mt-12 h-1 w-24" style={{ background: theme.accent }} />
+                  {(data.phone || data.website) && (
+                    <p className="mt-7 max-w-full break-words text-base">
+                      {[data.phone, data.website].filter(Boolean).join("  ·  ")}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
