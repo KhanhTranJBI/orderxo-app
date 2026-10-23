@@ -33,10 +33,12 @@ export default function MenuBookDesigner({ organizationId }) {
   const [logo, setLogo] = useState("");
   const [showPhotos, setShowPhotos] = useState(true);
   const [showDescriptions, setShowDescriptions] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [categorySettings, setCategorySettings] = useState({});
   const [perPage, setPerPage] = useState(6);
   const [manualBreaks, setManualBreaks] = useState([]);
   const [drafts, setDrafts] = useState([]);
+  const [activeDraftId, setActiveDraftId] = useState(null);
+  const [restoredKey, setRestoredKey] = useState(null);
   const [draftName, setDraftName] = useState("Main Menu");
   const storageKey = `orderxo:menu-books:${organizationId}:${location.locationId || "default"}`;
   const canManage = permissions.can("menu.manage");
@@ -68,48 +70,131 @@ export default function MenuBookDesigner({ organizationId }) {
   useEffect(() => {
     fetchMenu();
   }, [fetchMenu]);
+  // Restore the newest saved design for the selected restaurant location.
+  // Wait for the actual location ID so a temporary "default" key cannot override it.
   useEffect(() => {
+    if (!location.locationId) return;
     try {
-      setDrafts(JSON.parse(localStorage.getItem(storageKey) || "[]"));
+      const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const valid = Array.isArray(stored) ? stored.filter((v) => v && typeof v === "object") : [];
+      const sorted = [...valid].sort(
+        (a, b) => (b.updatedAt || b.id || 0) - (a.updatedAt || a.id || 0),
+      );
+      setDrafts(sorted);
+      if (sorted.length) {
+        loadDraftSettings(sorted[0]);
+        setActiveDraftId(sorted[0].id);
+      } else {
+        setActiveDraftId(null);
+      }
     } catch {
       setDrafts([]);
+      setActiveDraftId(null);
+      toast.error("Unable to restore saved menu book");
+    } finally {
+      setRestoredKey(storageKey);
     }
-  }, [storageKey]);
-  const ordered = useMemo(() => {
-    const active = items.filter(
-      (x) => x.isActive !== false && (selected === null || selected.includes(id(x))),
+  }, [storageKey, location.locationId]);
+  const loadDraftSettings = (v) => {
+    setDraftName(v.draftName || "Main Menu");
+    setTitle(v.title || "Restaurant Menu");
+    setTemplate(THEMES[v.template] ? v.template : "classic");
+    setSize(SIZES[v.size] ? v.size : "LETTER");
+    setOrientation(v.orientation === "landscape" ? "landscape" : "portrait");
+    setBackground(v.background || "");
+    setLogo(v.logo || "");
+    setShowPhotos(v.showPhotos !== false);
+    setShowDescriptions(v.showDescriptions !== false);
+    setCategorySettings(v.categorySettings || {});
+    setPerPage(v.perPage || 6);
+    setManualBreaks(v.manualBreaks || []);
+  };
+  const categoryGroups = useMemo(() => {
+    const active = items.filter((item) => item.isActive !== false);
+    const groups = categories.map((category) => ({
+      categoryId: id(category),
+      categoryLabel: category.name,
+      columns: categorySettings[id(category)]?.columns || 1,
+      visible: categorySettings[id(category)]?.visible !== false,
+      items: active
+        .filter((item) => id(item.category) === id(category))
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)),
+    }));
+    const uncategorized = active.filter(
+      (item) => !categories.some((category) => id(category) === id(item.category)),
     );
-    return [...active].sort((a, b) => {
-      const ca = categories.findIndex((c) => id(c) === id(a.category));
-      const cb = categories.findIndex((c) => id(c) === id(b.category));
-      return (ca < 0 ? 999 : ca) - (cb < 0 ? 999 : cb) || (a.sortOrder || 0) - (b.sortOrder || 0);
-    });
-  }, [items, categories, selected]);
+    if (uncategorized.length)
+      groups.push({
+        categoryId: "uncategorized",
+        categoryLabel: "Other",
+        columns: categorySettings.uncategorized?.columns || 1,
+        visible: categorySettings.uncategorized?.visible !== false,
+        items: uncategorized,
+      });
+    return groups;
+  }, [items, categories, categorySettings]);
+  const visibleGroups = categoryGroups.filter((group) => group.visible && group.items.length);
+  const visibleItemCount = visibleGroups.reduce((sum, group) => sum + group.items.length, 0);
   const pages = useMemo(() => {
     const result = [];
     let page = [];
-    let previous = "";
-    ordered.forEach((item) => {
-      const category = id(item.category);
-      if (page.length && (page.length >= perPage || manualBreaks.includes(id(item)))) {
-        result.push(page);
-        page = [];
-        previous = "";
+    let usedRows = 0;
+    const flush = () => {
+      if (page.length) result.push(page);
+      page = [];
+      usedRows = 0;
+    };
+    for (const group of visibleGroups) {
+      const columns = group.columns;
+      let chunk = [];
+      const pushChunk = () => {
+        if (chunk.length) page.push({ ...group, items: chunk });
+        chunk = [];
+      };
+      for (const item of group.items) {
+        if (manualBreaks.includes(id(item)) && (page.length || chunk.length)) {
+          pushChunk();
+          flush();
+        }
+        if (usedRows >= perPage) {
+          pushChunk();
+          flush();
+        }
+        chunk.push(item);
+        if (chunk.length % columns === 1) usedRows += 1;
       }
-      page.push({
-        ...item,
-        categoryLabel: categories.find((c) => id(c) === category)?.name || "Menu",
-        showCategory: previous !== category,
-      });
-      previous = category;
-    });
-    if (page.length) result.push(page);
+      pushChunk();
+    }
+    flush();
     return result.length ? result : [[]];
-  }, [ordered, categories, perPage, manualBreaks]);
+  }, [visibleGroups, perPage, manualBreaks]);
+  const updateCategory = (categoryId, patch) => {
+    setCategorySettings((current) => ({
+      ...current,
+      [categoryId]: { ...current[categoryId], ...patch },
+    }));
+  };
   const save = () => {
+    if (!location.locationId || restoredKey !== storageKey) {
+      toast.error("Wait for the restaurant menu book to finish loading");
+      return;
+    }
+    const now = Date.now();
     const entry = {
-      id: Date.now(),
-      draftName,
+      id: activeDraftId || now,
+      updatedAt: now,
+      draftName: (() => {
+        const base = (draftName || "Main Menu").trim() || "Main Menu";
+        const existing = new Set(
+          drafts
+            .filter((v) => v.id !== (activeDraftId || now))
+            .map((v) => String(v.draftName || "").toLowerCase()),
+        );
+        if (!existing.has(base.toLowerCase())) return base;
+        let number = 2;
+        while (existing.has(`${base} (${number})`.toLowerCase())) number += 1;
+        return `${base} (${number})`;
+      })(),
       title,
       template,
       size,
@@ -118,32 +203,24 @@ export default function MenuBookDesigner({ organizationId }) {
       logo,
       showPhotos,
       showDescriptions,
-      selected,
+      categorySettings,
       perPage,
       manualBreaks,
     };
-    const next = [entry, ...drafts].slice(0, 20);
+    const next = [entry, ...drafts.filter((v) => v.id !== entry.id)].slice(0, 20);
     try {
       localStorage.setItem(storageKey, JSON.stringify(next));
       setDrafts(next);
-      toast.success("Design saved in this browser");
+      setActiveDraftId(entry.id);
+      setDraftName(entry.draftName);
+      toast.success("Menu book saved. It will load automatically on refresh.");
     } catch {
       toast.error("Unable to save design");
     }
   };
   const loadDraft = (v) => {
-    setDraftName(v.draftName);
-    setTitle(v.title);
-    setTemplate(v.template);
-    setSize(v.size);
-    setOrientation(v.orientation);
-    setBackground(v.background);
-    setLogo(v.logo);
-    setShowPhotos(v.showPhotos);
-    setShowDescriptions(v.showDescriptions);
-    setSelected(v.selected);
-    setPerPage(v.perPage);
-    setManualBreaks(v.manualBreaks || []);
+    loadDraftSettings(v);
+    setActiveDraftId(v.id);
   };
   const colors = THEMES[template];
   const dims = SIZES[size];
@@ -270,7 +347,7 @@ export default function MenuBookDesigner({ organizationId }) {
                 Descriptions
               </label>
               <label className="block text-sm font-semibold">
-                Maximum items per page
+                Maximum grid rows per page
                 <input
                   type="number"
                   min="1"
@@ -282,32 +359,41 @@ export default function MenuBookDesigner({ organizationId }) {
                   }
                 />
               </label>
-              <div className="border-t pt-3">
-                <div className="flex justify-between items-center">
-                  <strong>Include items</strong>
-                  <button className="text-orange-700 text-sm" onClick={() => setSelected(null)}>
-                    All
-                  </button>
-                </div>
-                <div className="max-h-56 overflow-auto space-y-2 mt-2">
-                  {items.map((item) => (
-                    <label className="flex items-center gap-2 text-sm" key={id(item)}>
+              <div className="border-t pt-3 space-y-3">
+                <strong>Categories & layouts</strong>
+                <p className="text-xs text-slate-500">
+                  Hide a whole category or choose 1, 2, or 3 columns for its printed items.
+                </p>
+                {categoryGroups.map((group) => (
+                  <div key={group.categoryId} className="rounded-lg border p-3 space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-medium">
                       <input
                         type="checkbox"
-                        checked={selected === null || selected.includes(id(item))}
-                        onChange={(e) => {
-                          const current = selected === null ? items.map(id) : selected;
-                          setSelected(
-                            e.target.checked
-                              ? [...current, id(item)]
-                              : current.filter((x) => x !== id(item)),
-                          );
-                        }}
+                        checked={group.visible}
+                        onChange={(e) =>
+                          updateCategory(group.categoryId, { visible: e.target.checked })
+                        }
                       />
-                      {item.name}
+                      <span className="flex-1">{group.categoryLabel}</span>
+                      <span className="text-xs text-slate-500">{group.items.length} items</span>
                     </label>
-                  ))}
-                </div>
+                    <label className="block text-xs text-slate-600">
+                      Grid columns
+                      <select
+                        disabled={!group.visible}
+                        className="mt-1 w-full rounded border p-2 text-sm disabled:opacity-40"
+                        value={group.columns}
+                        onChange={(e) =>
+                          updateCategory(group.categoryId, { columns: Number(e.target.value) })
+                        }
+                      >
+                        <option value={1}>1 column</option>
+                        <option value={2}>2 columns</option>
+                        <option value={3}>3 columns</option>
+                      </select>
+                    </label>
+                  </div>
+                ))}
               </div>
               <div className="border-t pt-3">
                 <strong>Saved designs (this browser)</strong>
@@ -316,7 +402,8 @@ export default function MenuBookDesigner({ organizationId }) {
                     <button
                       key={v.id}
                       onClick={() => loadDraft(v)}
-                      className="block text-left w-full text-sm border rounded p-2 hover:bg-slate-50"
+                      className={`block text-left w-full text-sm border rounded p-2 transition-colors ${activeDraftId === v.id ? "border-orange-600 bg-orange-100 text-orange-900 font-semibold" : "hover:bg-slate-50"}`}
+                      aria-current={activeDraftId === v.id ? "true" : undefined}
                     >
                       {v.draftName}
                     </button>
@@ -330,8 +417,8 @@ export default function MenuBookDesigner({ organizationId }) {
               ) : (
                 <>
                   <p className="mb-3 text-sm text-slate-600">
-                    {pages.length} page(s) · {ordered.length} item(s). Use “Start new page” below an
-                    item to insert a manual break.
+                    {pages.length} page(s) · {visibleItemCount} item(s). Use “Start new page” below
+                    an item to insert a manual break.
                   </p>
                   <div id="menu-book-print" className="space-y-6">
                     {pages.map((group, index) => (
@@ -370,53 +457,58 @@ export default function MenuBookDesigner({ organizationId }) {
                           </div>
                         </header>
                         <div className="space-y-4">
-                          {group.map((item, i) => (
-                            <div key={id(item)}>
-                              {item.showCategory && (
-                                <h3
-                                  className="text-xl font-bold mt-5 mb-3 pb-1 border-b"
-                                  style={{ color: colors.accent, borderColor: colors.accent }}
-                                >
-                                  {item.categoryLabel}
-                                </h3>
-                              )}
-                              <div className="flex gap-3 items-start break-inside-avoid">
-                                {showPhotos && item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt=""
-                                    className="w-20 h-20 object-cover rounded"
-                                  />
-                                )}
-                                <div className="flex-1">
-                                  <div className="flex justify-between gap-3 font-semibold">
-                                    <span>{item.name}</span>
-                                    <span className="whitespace-nowrap">
-                                      {money(item.priceCents)}
-                                    </span>
-                                  </div>
-                                  {showDescriptions && (
-                                    <p className="text-sm mt-1 opacity-80">
-                                      {clean(item.description)}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              <button
-                                className="print:hidden text-xs underline opacity-60 mt-1"
-                                onClick={() =>
-                                  setManualBreaks((old) =>
-                                    old.includes(id(item))
-                                      ? old.filter((x) => x !== id(item))
-                                      : [...old, id(item)],
-                                  )
-                                }
+                          {group.map((section, sectionIndex) => (
+                            <section key={`${section.categoryId}-${sectionIndex}`} className="mb-5">
+                              <h3
+                                className="text-xl font-bold mt-5 mb-3 pb-1 border-b"
+                                style={{ color: colors.accent, borderColor: colors.accent }}
                               >
-                                {manualBreaks.includes(id(item))
-                                  ? "Remove page break"
-                                  : "Start new page before this item"}
-                              </button>
-                            </div>
+                                {section.categoryLabel}
+                              </h3>
+                              <div
+                                className="grid gap-3"
+                                style={{
+                                  gridTemplateColumns: `repeat(${section.columns}, minmax(0, 1fr))`,
+                                }}
+                              >
+                                {section.items.map((item) => (
+                                  <div key={id(item)} className="min-w-0 break-inside-avoid">
+                                    {showPhotos && item.image && (
+                                      <img
+                                        src={item.image}
+                                        alt=""
+                                        className="w-full max-h-28 object-cover rounded mb-2"
+                                      />
+                                    )}
+                                    <div className="flex flex-wrap justify-between gap-1 font-semibold text-sm">
+                                      <span className="min-w-0">{item.name}</span>
+                                      <span className="whitespace-nowrap">
+                                        {money(item.priceCents)}
+                                      </span>
+                                    </div>
+                                    {showDescriptions && (
+                                      <p className="text-xs mt-1 opacity-80">
+                                        {clean(item.description)}
+                                      </p>
+                                    )}
+                                    <button
+                                      className="print:hidden text-xs underline opacity-60 mt-1"
+                                      onClick={() =>
+                                        setManualBreaks((old) =>
+                                          old.includes(id(item))
+                                            ? old.filter((x) => x !== id(item))
+                                            : [...old, id(item)],
+                                        )
+                                      }
+                                    >
+                                      {manualBreaks.includes(id(item))
+                                        ? "Remove page break"
+                                        : "Start new page before this item"}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </section>
                           ))}
                         </div>
                         <footer className="absolute bottom-5 left-0 right-0 text-center text-xs opacity-70">
