@@ -215,11 +215,6 @@ export default function RestaurantLinksSettings({ value = {}, onChange }) {
           </div>
         ))}
       </div>
-      <LinkEditor
-        title="Legacy footer links (shown as More Links until migrated)"
-        value={value.footerLinks}
-        onChange={(links) => change("footerLinks", links)}
-      />
     </div>
   );
 }
