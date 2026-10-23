@@ -41,9 +41,6 @@ export default function MenuBookDesigner({ organizationId }) {
   const [activeDraftId, setActiveDraftId] = useState(null);
   const [restoredKey, setRestoredKey] = useState(null);
   const [draftName, setDraftName] = useState("Main Menu");
-  const [density, setDensity] = useState("balanced");
-  const [pdfBusy, setPdfBusy] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   const storageKey = `orderxo:menu-books:${organizationId}:${location.locationId || "default"}`;
   const canManage = permissions.can("menu.manage");
   const fetchMenu = useCallback(async () => {
@@ -129,7 +126,6 @@ export default function MenuBookDesigner({ organizationId }) {
     setCategorySettings(v.categorySettings || {});
     setPerPage(v.perPage || 6);
     setManualBreaks(v.manualBreaks || []);
-    setDensity(["compact", "balanced", "spacious"].includes(v.density) ? v.density : "balanced");
   };
   const categoryGroups = useMemo(() => {
     const active = items.filter((item) => item.isActive !== false);
@@ -194,7 +190,7 @@ export default function MenuBookDesigner({ organizationId }) {
         while (existing.has(`${base} (${number})`.toLowerCase())) number += 1;
         return `${base} (${number})`;
       })(), title, titleMode, template, size, orientation, background,
-      showPhotos, showDescriptions, categorySettings, perPage, manualBreaks, density,
+      showPhotos, showDescriptions, categorySettings, perPage, manualBreaks,
     };
     const next = [entry, ...drafts.filter((v) => v.id !== entry.id)].slice(0, 20);
     try {
@@ -211,32 +207,6 @@ export default function MenuBookDesigner({ organizationId }) {
     loadDraftSettings(v);
     setActiveDraftId(v.id);
   };
-  const createPdf = async (action) => {
-    if (loading || !visibleItemCount) { toast.error("There are no visible menu items to export"); return; }
-    setPdfBusy(true);
-    try {
-      const [{ pdf }, { default: MenuBookPdf }] = await Promise.all([
-        import("@react-pdf/renderer"), import("./MenuBookPdf")
-      ]);
-      const options = { size, orientation, background, colors: THEMES[template], logo,
-        title, titleMode, showPhotos, showDescriptions, density, manualBreaks };
-      const blob = await pdf(<MenuBookPdf groups={visibleGroups} options={options}/>).toBlob();
-      const url = URL.createObjectURL(blob);
-      if (action === "preview") {
-        setPdfPreviewUrl(old => { if (old) URL.revokeObjectURL(old); return url; });
-      } else {
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${(draftName || "restaurant-menu").replace(/[^a-z0-9-_]+/gi, "-")}.pdf`;
-        document.body.appendChild(link);
-        link.click(); link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 30000);
-      }
-    } catch (error) {
-      toast.error(`PDF generation failed: ${error?.message || "Unknown error"}`);
-    } finally { setPdfBusy(false); }
-  };
-  useEffect(() => () => { if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl); }, [pdfPreviewUrl]);
   const colors = THEMES[template];
   const dims = SIZES[size];
   const pageWidth = orientation === "portrait" ? dims[0] : dims[1];
@@ -264,8 +234,12 @@ export default function MenuBookDesigner({ organizationId }) {
               >
                 Save design
               </button>
-              <button disabled={pdfBusy} className="rounded-lg border px-4 py-2 disabled:opacity-50" onClick={() => createPdf("preview")}>Preview PDF</button>
-              <button disabled={pdfBusy} className="rounded-lg bg-orange-700 text-white px-4 py-2 disabled:opacity-50" onClick={() => createPdf("download")}>{pdfBusy ? "Generating PDF…" : "Download PDF"}</button>
+              <button
+                className="rounded-lg bg-orange-700 text-white px-4 py-2"
+                onClick={() => window.print()}
+              >
+                Print / Save PDF
+              </button>
             </div>
           </div>
           <div className="grid lg:grid-cols-[300px_minmax(0,1fr)] gap-6">
@@ -371,13 +345,6 @@ export default function MenuBookDesigner({ organizationId }) {
                     setPerPage(Math.max(1, Math.min(20, Number(e.target.value) || 1)))
                   }
                 />
-              </label>
-              <label className="block text-sm font-semibold">Print layout density
-                <select className="w-full border rounded p-2 mt-1" value={density} onChange={e => setDensity(e.target.value)}>
-                  <option value="compact">Compact — more items per page</option>
-                  <option value="balanced">Balanced</option>
-                  <option value="spacious">Spacious — larger text</option>
-                </select>
               </label>
               <div className="border-t pt-3 space-y-3">
                 <strong>Categories & layouts</strong>
@@ -515,19 +482,9 @@ export default function MenuBookDesigner({ organizationId }) {
               )}
             </div>
           </div>
-          {pdfPreviewUrl && <div role="dialog" aria-modal="true" aria-label="PDF preview" className="fixed inset-0 z-50 bg-black/70 p-4 flex flex-col">
-            <div className="bg-white rounded-t-xl p-3 flex justify-between items-center gap-3">
-              <strong>Print-ready PDF preview</strong>
-              <div className="flex gap-2">
-                <a className="rounded border px-3 py-2" href={pdfPreviewUrl} target="_blank" rel="noreferrer">Open / Print</a>
-                <button className="rounded bg-orange-700 text-white px-3 py-2" onClick={() => { URL.revokeObjectURL(pdfPreviewUrl); setPdfPreviewUrl(null); }}>Close</button>
-              </div>
-            </div>
-            <iframe title="Menu book PDF" src={pdfPreviewUrl} className="bg-white w-full flex-1 rounded-b-xl" />
-          </div>}
           <p className="mt-5 text-sm text-slate-500">
-            Download PDF creates a dedicated PDF using your selected paper size, category columns,
-            square photos and branding. Preview the PDF before printing. Designs are stored locally in
+            For accurate output, select the same paper size and orientation in your browser print
+            dialog, turn on background graphics, and use Save as PDF. Designs are stored locally in
             this browser; they are not yet shared across devices.
           </p>
         </div>
