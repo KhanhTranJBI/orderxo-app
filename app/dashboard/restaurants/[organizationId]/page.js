@@ -14,6 +14,7 @@ const tools = [
   ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
   ["Menu Book Designer", "menu-book", "Design, preview and print multi-page restaurant menus."],
+  ["Printable Notices", "notices", "Create door signs for closures, special hours, holidays and announcements."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
 ];
@@ -158,7 +159,7 @@ export default async function RestaurantManager({ params }) {
               const need =
                 slug === "orders"
                   ? "orders.read"
-                  : slug === "menu" || slug === "menu-book"
+                  : (slug === "menu" || slug === "menu-book")
                     ? "menu.read"
                     : slug === "promotions"
                       ? "promotions.read"
@@ -181,7 +182,7 @@ export default async function RestaurantManager({ params }) {
               const managePermission =
                 slug === "orders"
                   ? "orders.manage"
-                  : slug === "menu" || slug === "menu-book"
+                  : (slug === "menu" || slug === "menu-book")
                     ? "menu.manage"
                     : slug === "promotions"
                       ? "promotions.manage"
@@ -194,7 +195,7 @@ export default async function RestaurantManager({ params }) {
                             : null;
               const readOnly =
                 !isAdmin &&
-                (slug === "store" || slug === "location-settings" || slug === "kiosks"
+                ((slug === "store" || slug === "location-settings" || slug === "kiosks")
                   ? !can("store.manage") && !can("homepage.manage")
                   : managePermission && !can(managePermission));
               return (
