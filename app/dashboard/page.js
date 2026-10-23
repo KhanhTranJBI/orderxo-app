@@ -3,8 +3,8 @@ import { Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
-import LogoutButton from "../../components/LogoutButton";
-import EndSupportButton from "../../components/EndSupportButton";
+import OwnerAccountNavigation from "../../components/OwnerAccountNavigation";
+
 
 // Presentation only: never change the underlying organization status here.
 function getOrganizationStatus(org) {
@@ -101,7 +101,7 @@ export default async function Dashboard() {
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
           <div className="flex items-center gap-3">
-            {staffMode ? <EndSupportButton /> : <LogoutButton />}
+            <OwnerAccountNavigation staffMode={staffMode} />
             {canCreateRestaurant && (
               <Link
                 href="/restaurants/new"
