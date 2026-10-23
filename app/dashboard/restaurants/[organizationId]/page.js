@@ -1,4 +1,14 @@
-import { ShoppingBag, Gift, ChartNoAxesCombined, Users, Utensils, BookOpen, Printer, Tags, Settings } from "lucide-react";
+import {
+  ShoppingBag,
+  Gift,
+  ChartNoAxesCombined,
+  Users,
+  Utensils,
+  BookOpen,
+  Printer,
+  Tags,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,14 +20,18 @@ export const dynamic = "force-dynamic";
 
 const tools = [
   ["Orders Dashboard", "orders", "Confirm, prepare, complete, refund and review orders."],
-  ["Gift Cards Dashboard", "gift-cards", "Gift card balances and activity."],
-  ["Financials", "financials", "Transactions, refunds, reports and statements."],
-  ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Menu Manager", "menu", "Items, categories, modifiers, pricing and availability."],
-  ["Menu Book Designer", "menu-book", "Design, preview and print multi-page restaurant menus."],
-  ["Printable Notices", "notices", "Create door signs for closures, special hours, holidays and announcements."],
+  ["Financials", "financials", "Transactions, refunds, reports and statements."],
   ["Promotions", "promotions", "Discount codes, eligibility and campaign status."],
+  ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
+  ["Gift Cards Dashboard", "gift-cards", "Gift card balances and activity."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
+  [
+    "Printable Notices",
+    "notices",
+    "Create door signs for closures, special hours, holidays and announcements.",
+  ],
+  ["Menu Book Designer", "menu-book", "Design, preview and print multi-page restaurant menus."],
 ];
 
 const toolIcons = {
@@ -172,7 +186,7 @@ export default async function RestaurantManager({ params }) {
               const need =
                 slug === "orders"
                   ? "orders.read"
-                  : (slug === "menu" || slug === "menu-book")
+                  : slug === "menu" || slug === "menu-book"
                     ? "menu.read"
                     : slug === "promotions"
                       ? "promotions.read"
@@ -195,7 +209,7 @@ export default async function RestaurantManager({ params }) {
               const managePermission =
                 slug === "orders"
                   ? "orders.manage"
-                  : (slug === "menu" || slug === "menu-book")
+                  : slug === "menu" || slug === "menu-book"
                     ? "menu.manage"
                     : slug === "promotions"
                       ? "promotions.manage"
@@ -208,7 +222,7 @@ export default async function RestaurantManager({ params }) {
                             : null;
               const readOnly =
                 !isAdmin &&
-                ((slug === "store" || slug === "location-settings" || slug === "kiosks")
+                (slug === "store" || slug === "location-settings" || slug === "kiosks"
                   ? !can("store.manage") && !can("homepage.manage")
                   : managePermission && !can(managePermission));
               const ToolIcon = toolIcons[slug];
