@@ -43,6 +43,19 @@ function getOrganizationStatus(org) {
   };
 }
 
+// The owner session is checked by the existing authenticated backend request.
+// Read only the email claim for display; never use decoded claims for authorization.
+function sessionEmail(token) {
+  if (!token || token.split(".").length !== 3) return "";
+  try {
+    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
+    const value = payload.email || payload.user?.email || "";
+    return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : "";
+  } catch {
+    return "";
+  }
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
@@ -101,7 +114,7 @@ export default async function Dashboard() {
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
           <div className="flex items-center gap-3">
-            <OwnerAccountNavigation staffMode={staffMode} />
+            <OwnerAccountNavigation staffMode={staffMode} email={sessionEmail(cookies().get(staffMode ? "orderxo_support_session" : cookieName)?.value)} />
             {canCreateRestaurant && (
               <Link
                 href="/restaurants/new"
