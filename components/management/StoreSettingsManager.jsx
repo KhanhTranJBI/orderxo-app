@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  ReceiptText,
   TabletSmartphone,
   Trash2,
   X,
@@ -28,6 +29,7 @@ const STORE_TAB_HASHES = {
   homepage: "homepage-slides",
   locationDetails: "location-details",
   printing: "printing",
+  tax: "tax",
   kiosks: "kiosk-devices",
 };
 const STORE_HASH_TABS = Object.fromEntries(
@@ -170,7 +172,7 @@ export default function StoreSettingsManager({ organizationId }) {
     (candidate, currentScope) => {
       if (candidate === "homepage") return canReadHomepage;
       if (candidate === "hours" || candidate === "notices") return canReadStore;
-      if (candidate === "locationDetails" || candidate === "printing" || candidate === "kiosks") {
+      if (candidate === "locationDetails" || candidate === "printing" || candidate === "tax" || candidate === "kiosks") {
         return canReadStore && currentScope !== "default";
       }
       return false;
@@ -254,6 +256,7 @@ export default function StoreSettingsManager({ organizationId }) {
   const [printing, setPrinting] = useState(emptyPrinting);
   const [printingLoading, setPrintingLoading] = useState(false);
   const [printingSaving, setPrintingSaving] = useState(false);
+  const [taxSaving, setTaxSaving] = useState(false);
 
   const [locationDetails, setLocationDetails] = useState({
     address: { line1: "", line2: "", city: "", state: "", postalCode: "", country: "US" },
@@ -298,6 +301,7 @@ export default function StoreSettingsManager({ organizationId }) {
       if (
         deepLinkedTab &&
         ((deepLinkedTab !== "printing" &&
+          deepLinkedTab !== "tax" &&
           deepLinkedTab !== "locationDetails" &&
           deepLinkedTab !== "kiosks") ||
           canReadStore)
@@ -584,7 +588,7 @@ export default function StoreSettingsManager({ organizationId }) {
   }, [organizationId, scope, selectedLocationId]);
 
   useEffect(() => {
-    if (scope === "default" && tab === "printing") {
+    if (scope === "default" && (tab === "printing" || tab === "tax")) {
       setTab("hours");
     }
   }, [scope, tab]);
@@ -612,9 +616,7 @@ export default function StoreSettingsManager({ organizationId }) {
 
     try {
       const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
-        printing,
-        ordering: locationOrdering,
-        ...locationDetails,
+        ...(tab === "printing" ? { printing } : { ...locationDetails }),
       });
 
       setPrinting({
@@ -636,9 +638,7 @@ export default function StoreSettingsManager({ organizationId }) {
         googleMapUrl: d.settings?.googleMapUrl || "",
         pickupInstructions: d.settings?.pickupInstructions || "",
       });
-      setLocationOrdering({
-        taxRate: Number(d.settings?.ordering?.taxRate ?? locationOrdering.taxRate ?? 0),
-      });
+
 
       setMessage(`Location settings saved for ${selectedLocation?.name || "location"}.`);
 
@@ -647,6 +647,29 @@ export default function StoreSettingsManager({ organizationId }) {
       setError(e.message);
     } finally {
       setPrintingSaving(false);
+    }
+  };
+
+  const saveTax = async () => {
+    if (!canManage || !selectedLocationId) return;
+    const rate = Number(locationOrdering.taxRate);
+    if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
+      toast.error("Enter a valid sales tax rate between 0% and 100%.");
+      return;
+    }
+    setTaxSaving(true);
+    setError("");
+    try {
+      const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
+        ordering: { taxRate: rate },
+      });
+      setLocationOrdering({ taxRate: Number(d.settings?.ordering?.taxRate ?? rate) });
+      toast.success("Tax settings saved.");
+    } catch (e) {
+      toast.error(e.message || "Unable to save tax settings");
+      setError(e.message);
+    } finally {
+      setTaxSaving(false);
     }
   };
 
@@ -752,6 +775,17 @@ export default function StoreSettingsManager({ organizationId }) {
             >
               <TabletSmartphone size={18} />
               Kiosk Devices
+            </button>
+          )}
+
+          {canReadStore && scope !== "default" && (
+            <button
+              onClick={() => selectStoreTab("tax")}
+              className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
+                tab === "tax" ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <ReceiptText size={18} /> Tax Settings
             </button>
           )}
 
@@ -1033,6 +1067,43 @@ export default function StoreSettingsManager({ organizationId }) {
                 </section>
               )}
 
+              {tab === "tax" && scope !== "default" && canReadStore && (
+                <section className="mt-5 rounded-2xl border bg-white p-6">
+                  <h2 className="text-xl font-bold">Tax Settings</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Configure the sales tax rate for {selectedLocation?.name || "this location"}.
+                  </p>
+                  {printingLoading ? (
+                    <LoadingSpinner compact label="Loading tax settings…" />
+                  ) : (
+                    <div className="mt-6 max-w-sm">
+                      <label htmlFor="location-tax-rate" className="mb-2 block text-sm font-semibold">
+                        Sales tax rate (%)
+                      </label>
+                      <input
+                        id="location-tax-rate"
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.001"
+                        disabled={!canManage || taxSaving}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
+                        value={Number((locationOrdering.taxRate * 100).toFixed(3))}
+                        onChange={(e) => setLocationOrdering({ taxRate: Number(e.target.value) / 100 })}
+                      />
+                      <p className="mt-2 text-xs text-slate-500">
+                        Enter 9.2 for 9.2%. The tax rate is added at checkout for this location.
+                      </p>
+                      {canManage && (
+                        <button className="primary mt-6" disabled={taxSaving} onClick={saveTax}>
+                          {taxSaving ? "Saving…" : "Save tax settings"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+
               {(tab === "printing" || tab === "locationDetails") && scope !== "default" && (
                 <section className="mt-5 rounded-2xl border bg-white p-6">
                   <div>
@@ -1195,36 +1266,6 @@ export default function StoreSettingsManager({ organizationId }) {
                               ))}
                             </div>
                           )}
-                          {tab === "printing" && (
-                            <div className="mt-6 max-w-sm">
-                              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
-                                Sales tax rate (%)
-                              </label>
-
-                              <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.001"
-                                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
-                                value={(Number(locationOrdering.taxRate || 0) * 100).toString()}
-                                onChange={(e) =>
-                                  setLocationOrdering((current) => ({
-                                    ...current,
-                                    taxRate: Math.max(
-                                      0,
-                                      Math.min(1, Number(e.target.value || 0) / 100),
-                                    ),
-                                  }))
-                                }
-                              />
-
-                              <p className="mt-1 text-xs text-slate-500">
-                                Location-specific tax rate used by customer checkout, e.g. 9.2 for
-                                9.2%.
-                              </p>
-                            </div>
-                          )}
 
                           <button
                             disabled={printingSaving}
@@ -1235,7 +1276,7 @@ export default function StoreSettingsManager({ organizationId }) {
                               ? "Saving…"
                               : tab === "locationDetails"
                                 ? "Save location details"
-                                : "Save printing & tax"}
+                                : "Save printing settings"}
                           </button>
                         </>
                       )}
