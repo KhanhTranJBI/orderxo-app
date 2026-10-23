@@ -51,6 +51,14 @@ const defaultHours = () =>
     isClosed: false,
   }));
 
+const DEFAULT_SCHEDULING = {
+  enabled: false,
+  allowWhenClosed: true,
+  advanceDays: 7,
+  preparationMinutes: 20,
+  slotIntervalMinutes: 15,
+};
+
 const emptyPrinting = {
   enabled: false,
   provider: "none",
@@ -234,6 +242,7 @@ export default function StoreSettingsManager({ organizationId }) {
   const [manual, setManual] = useState(true);
   const [hours, setHours] = useState(defaultHours);
   const [onlineOrderCutoffMinutes, setOnlineOrderCutoffMinutes] = useState(15);
+  const [scheduledOrdering, setScheduledOrdering] = useState(DEFAULT_SCHEDULING);
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -333,6 +342,7 @@ export default function StoreSettingsManager({ organizationId }) {
       setUseDefault(Boolean(a.useDefault));
       setManual(c.isOpenManual !== false);
       setOnlineOrderCutoffMinutes(c.onlineOrderCutoffMinutes ?? 15);
+      setScheduledOrdering({ ...DEFAULT_SCHEDULING, ...(c.scheduledOrdering || {}) });
 
       if (Array.isArray(c.hours) && c.hours.length) {
         const map = new Map(c.hours.map((h) => [h.day, h]));
@@ -377,11 +387,12 @@ export default function StoreSettingsManager({ organizationId }) {
         selectedLocationId,
         "PATCH",
         scope === "default"
-          ? { hours, onlineOrderCutoffMinutes }
+          ? { hours, onlineOrderCutoffMinutes, scheduledOrdering }
           : {
               isOpenManual: manual,
               hours,
               onlineOrderCutoffMinutes,
+              scheduledOrdering,
             },
       );
 
@@ -956,6 +967,40 @@ export default function StoreSettingsManager({ organizationId }) {
                         ))}
                       </select>
                     </label>
+                  </section>
+
+                  <section className="mt-4 rounded-2xl border bg-white p-6">
+                    <h2 className="text-xl font-bold">Scheduled Pickup Orders</h2>
+                    <p className="mt-1 text-sm text-slate-500">Allow customers to order ahead for a future pickup time. Settings are saved with Store Hours.</p>
+                    {scope !== "default" && useDefault && <p className="mt-2 text-sm text-amber-700">This location inherits the Restaurant Default scheduling settings.</p>}
+                    <div className="mt-4 space-y-4">
+                      {[
+                        ["enabled", "Enable scheduled pickup", "Customers may select a future pickup slot."],
+                        ["allowWhenClosed", "Allow scheduling while closed", "Accept future pickup orders when ASAP ordering is closed."],
+                      ].map(([key, title, description]) => (
+                        <label key={key} className="flex items-start gap-3 text-sm">
+                          <input type="checkbox" className="mt-1" checked={Boolean(scheduledOrdering[key])}
+                            disabled={!canManage || saving || useDefault || (key === "allowWhenClosed" && !scheduledOrdering.enabled)}
+                            onChange={(e) => setScheduledOrdering((prev) => ({ ...prev, [key]: e.target.checked }))} />
+                          <span><strong className="block">{title}</strong><span className="text-slate-500">{description}</span></span>
+                        </label>
+                      ))}
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        {[
+                          ["advanceDays", "Order up to", [3, 7, 14, 30], "days ahead"],
+                          ["preparationMinutes", "Preparation time", [0, 15, 20, 30, 45, 60], "minutes"],
+                          ["slotIntervalMinutes", "Pickup intervals", [15, 30], "minutes"],
+                        ].map(([key, title, values, unit]) => (
+                          <label key={key} className="block text-sm font-medium text-slate-700">{title}
+                            <select className="field mt-2 w-full" value={scheduledOrdering[key]}
+                              disabled={!canManage || saving || useDefault || !scheduledOrdering.enabled}
+                              onChange={(e) => setScheduledOrdering((prev) => ({ ...prev, [key]: Number(e.target.value) }))}>
+                              {values.map((v) => <option key={v} value={v}>{v} {unit}</option>)}
+                            </select>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
                   </section>
 
                   <button
