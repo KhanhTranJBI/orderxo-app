@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { ArrowUpRight, ClipboardList, Globe, LogIn, LogOut, Store, UserRound, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function OwnerAccountNavigation({ email = "", signedIn = false, staffMode = false }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -49,12 +53,12 @@ export default function OwnerAccountNavigation({ email = "", signedIn = false, s
         className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800 hover:bg-slate-50">
         <UserRound size={21} aria-hidden="true" /> Account
       </button>
-      {open && (
-        <div className="fixed inset-0 z-[100]">
+      {mounted && open && createPortal(
+        <div className="fixed inset-0 z-[9999]" style={{ position: "fixed", inset: 0, zIndex: 9999 }}>
           <button type="button" aria-label="Close account menu" onClick={() => setOpen(false)}
             className="absolute inset-0 bg-slate-900/50" />
           <aside role="dialog" aria-modal="true" aria-label="Account and navigation"
-            className="absolute inset-y-0 right-0 flex w-full max-w-[420px] flex-col bg-white text-slate-900 shadow-2xl">
+            className="absolute inset-y-0 right-0 flex w-full max-w-[420px] flex-col overflow-hidden bg-white text-slate-900 shadow-2xl">
             <header className="flex items-start justify-between border-b border-slate-200 px-7 py-7">
               <div><h2 className="text-2xl font-bold">OrderXO Owner Portal</h2>
                 <p className="mt-1 text-slate-500">Account &amp; navigation</p></div>
@@ -91,7 +95,8 @@ export default function OwnerAccountNavigation({ email = "", signedIn = false, s
               )}
             </footer>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
