@@ -181,7 +181,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
   const printPage = () => window.print();
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <style>{`
         @media print {

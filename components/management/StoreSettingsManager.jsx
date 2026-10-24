@@ -180,7 +180,12 @@ export default function StoreSettingsManager({ organizationId }) {
     (candidate, currentScope) => {
       if (candidate === "homepage") return canReadHomepage;
       if (candidate === "hours" || candidate === "notices") return canReadStore;
-      if (candidate === "locationDetails" || candidate === "printing" || candidate === "tax" || candidate === "kiosks") {
+      if (
+        candidate === "locationDetails" ||
+        candidate === "printing" ||
+        candidate === "tax" ||
+        candidate === "kiosks"
+      ) {
         return canReadStore && currentScope !== "default";
       }
       return false;
@@ -653,7 +658,6 @@ export default function StoreSettingsManager({ organizationId }) {
         pickupInstructions: d.settings?.pickupInstructions || "",
       });
 
-
       setMessage(`Location settings saved for ${selectedLocation?.name || "location"}.`);
 
       setTimeout(() => setMessage(""), 2500);
@@ -689,7 +693,7 @@ export default function StoreSettingsManager({ organizationId }) {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
         </p>
@@ -796,7 +800,9 @@ export default function StoreSettingsManager({ organizationId }) {
             <button
               onClick={() => selectStoreTab("tax")}
               className={`flex items-center gap-2 border-b-[3px] px-2 py-4 text-base font-semibold transition-colors ${
-                tab === "tax" ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500 hover:text-slate-800"
+                tab === "tax"
+                  ? "border-orange-600 text-orange-600"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
               <ReceiptText size={18} /> Tax Settings
@@ -950,7 +956,9 @@ export default function StoreSettingsManager({ organizationId }) {
                     <h2 className="text-xl font-bold">Online Ordering Cutoff</h2>
                     <p className="mt-1 text-sm text-slate-500">
                       Stop accepting online orders this many minutes before closing.
-                      {scope !== "default" && useDefault ? " This location inherits the Restaurant Default cutoff." : ""}
+                      {scope !== "default" && useDefault
+                        ? " This location inherits the Restaurant Default cutoff."
+                        : ""}
                     </p>
                     <label className="mt-4 block max-w-sm text-sm font-medium text-slate-700">
                       Minutes before closing
@@ -971,31 +979,80 @@ export default function StoreSettingsManager({ organizationId }) {
 
                   <section className="mt-4 rounded-2xl border bg-white p-6">
                     <h2 className="text-xl font-bold">Scheduled Pickup Orders</h2>
-                    <p className="mt-1 text-sm text-slate-500">Allow customers to order ahead for a future pickup time. Settings are saved with Store Hours.</p>
-                    {scope !== "default" && useDefault && <p className="mt-2 text-sm text-amber-700">This location inherits the Restaurant Default scheduling settings.</p>}
+                    <p className="mt-1 text-sm text-slate-500">
+                      Allow customers to order ahead for a future pickup time. Settings are saved
+                      with Store Hours.
+                    </p>
+                    {scope !== "default" && useDefault && (
+                      <p className="mt-2 text-sm text-amber-700">
+                        This location inherits the Restaurant Default scheduling settings.
+                      </p>
+                    )}
                     <div className="mt-4 space-y-4">
                       {[
-                        ["enabled", "Enable scheduled pickup", "Customers may select a future pickup slot."],
-                        ["allowWhenClosed", "Allow scheduling while closed", "Accept future pickup orders when ASAP ordering is closed."],
+                        [
+                          "enabled",
+                          "Enable scheduled pickup",
+                          "Customers may select a future pickup slot.",
+                        ],
+                        [
+                          "allowWhenClosed",
+                          "Allow scheduling while closed",
+                          "Accept future pickup orders when ASAP ordering is closed.",
+                        ],
                       ].map(([key, title, description]) => (
                         <label key={key} className="flex items-start gap-3 text-sm">
-                          <input type="checkbox" className="mt-1" checked={Boolean(scheduledOrdering[key])}
-                            disabled={!canManage || saving || useDefault || (key === "allowWhenClosed" && !scheduledOrdering.enabled)}
-                            onChange={(e) => setScheduledOrdering((prev) => ({ ...prev, [key]: e.target.checked }))} />
-                          <span><strong className="block">{title}</strong><span className="text-slate-500">{description}</span></span>
+                          <input
+                            type="checkbox"
+                            className="mt-1"
+                            checked={Boolean(scheduledOrdering[key])}
+                            disabled={
+                              !canManage ||
+                              saving ||
+                              useDefault ||
+                              (key === "allowWhenClosed" && !scheduledOrdering.enabled)
+                            }
+                            onChange={(e) =>
+                              setScheduledOrdering((prev) => ({ ...prev, [key]: e.target.checked }))
+                            }
+                          />
+                          <span>
+                            <strong className="block">{title}</strong>
+                            <span className="text-slate-500">{description}</span>
+                          </span>
                         </label>
                       ))}
                       <div className="grid gap-4 sm:grid-cols-3">
                         {[
                           ["advanceDays", "Order up to", [3, 7, 14, 30], "days ahead"],
-                          ["preparationMinutes", "Preparation time", [0, 15, 20, 30, 45, 60], "minutes"],
+                          [
+                            "preparationMinutes",
+                            "Preparation time",
+                            [0, 15, 20, 30, 45, 60],
+                            "minutes",
+                          ],
                           ["slotIntervalMinutes", "Pickup intervals", [15, 30], "minutes"],
                         ].map(([key, title, values, unit]) => (
-                          <label key={key} className="block text-sm font-medium text-slate-700">{title}
-                            <select className="field mt-2 w-full" value={scheduledOrdering[key]}
-                              disabled={!canManage || saving || useDefault || !scheduledOrdering.enabled}
-                              onChange={(e) => setScheduledOrdering((prev) => ({ ...prev, [key]: Number(e.target.value) }))}>
-                              {values.map((v) => <option key={v} value={v}>{v} {unit}</option>)}
+                          <label key={key} className="block text-sm font-medium text-slate-700">
+                            {title}
+                            <select
+                              className="field mt-2 w-full"
+                              value={scheduledOrdering[key]}
+                              disabled={
+                                !canManage || saving || useDefault || !scheduledOrdering.enabled
+                              }
+                              onChange={(e) =>
+                                setScheduledOrdering((prev) => ({
+                                  ...prev,
+                                  [key]: Number(e.target.value),
+                                }))
+                              }
+                            >
+                              {values.map((v) => (
+                                <option key={v} value={v}>
+                                  {v} {unit}
+                                </option>
+                              ))}
                             </select>
                           </label>
                         ))}
@@ -1148,7 +1205,10 @@ export default function StoreSettingsManager({ organizationId }) {
                     <LoadingSpinner compact label="Loading tax settings…" />
                   ) : (
                     <div className="mt-6 max-w-sm">
-                      <label htmlFor="location-tax-rate" className="mb-2 block text-sm font-semibold">
+                      <label
+                        htmlFor="location-tax-rate"
+                        className="mb-2 block text-sm font-semibold"
+                      >
                         Sales tax rate (%)
                       </label>
                       <input
@@ -1160,7 +1220,9 @@ export default function StoreSettingsManager({ organizationId }) {
                         disabled={!canManage || taxSaving}
                         className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm"
                         value={Number((locationOrdering.taxRate * 100).toFixed(3))}
-                        onChange={(e) => setLocationOrdering({ taxRate: Number(e.target.value) / 100 })}
+                        onChange={(e) =>
+                          setLocationOrdering({ taxRate: Number(e.target.value) / 100 })
+                        }
                       />
                       <p className="mt-2 text-xs text-slate-500">
                         Enter 9.2 for 9.2%. The tax rate is added at checkout for this location.

@@ -195,7 +195,8 @@ function ModifierEditor({ group, onClose, onSave }) {
                         toast.error(error?.message || "Option image upload failed.");
                       }}
                       appearance={{
-                        button: "!bg-orange-600 !text-white !rounded-lg !px-3 !py-2 !text-xs !font-semibold",
+                        button:
+                          "!bg-orange-600 !text-white !rounded-lg !px-3 !py-2 !text-xs !font-semibold",
                         allowedContent: "!hidden",
                       }}
                       content={{ button: "Upload image" }}
@@ -370,26 +371,27 @@ function ItemModal({
               />
               <div className="flex justify-start">
                 <UploadButton
-                endpoint="menuImage"
-                onClientUploadComplete={(files) => {
-                  const url = files?.[0]?.ufsUrl || files?.[0]?.url;
-                  if (!url) {
-                    toast.error("Upload completed but no image URL was returned.");
-                    return;
-                  }
-                  setF((prev) => ({ ...prev, image: url }));
-                  toast.success("Image uploaded. Save the menu item to keep the change.");
-                }}
-                onUploadError={(error) => {
-                  toast.error(error?.message || "Image upload failed.");
-                }}
-                appearance={{
-                  button: "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
-                  allowedContent: "!hidden",
-                }}
-                content={{ button: "Upload image" }}
-                className="ut-button:w-auto"
-              />
+                  endpoint="menuImage"
+                  onClientUploadComplete={(files) => {
+                    const url = files?.[0]?.ufsUrl || files?.[0]?.url;
+                    if (!url) {
+                      toast.error("Upload completed but no image URL was returned.");
+                      return;
+                    }
+                    setF((prev) => ({ ...prev, image: url }));
+                    toast.success("Image uploaded. Save the menu item to keep the change.");
+                  }}
+                  onUploadError={(error) => {
+                    toast.error(error?.message || "Image upload failed.");
+                  }}
+                  appearance={{
+                    button:
+                      "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
+                    allowedContent: "!hidden",
+                  }}
+                  content={{ button: "Upload image" }}
+                  className="ut-button:w-auto"
+                />
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -805,7 +807,8 @@ function CategoryModal({ category, onClose, onSave }) {
                 toast.error(error?.message || "Category image upload failed.");
               }}
               appearance={{
-                button: "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
+                button:
+                  "!bg-orange-600 !text-white !rounded-lg !px-4 !py-2 !text-sm !font-semibold",
                 allowedContent: "!hidden",
               }}
               content={{ button: "Upload image" }}
@@ -1082,7 +1085,7 @@ export default function MenuManager({ organizationId }) {
   };
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
         </p>

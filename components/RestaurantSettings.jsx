@@ -10,7 +10,18 @@ import { ownerFetch } from "../lib/ownerFetch";
 import Link from "next/link";
 import RestaurantLinksSettings from "./RestaurantLinksSettings";
 import { useEffect, useState } from "react";
-import { Settings, Link2, Palette, House, Star, Gift, Mail, Megaphone, Search, ShoppingCart } from "lucide-react";
+import {
+  Settings,
+  Link2,
+  Palette,
+  House,
+  Star,
+  Gift,
+  Mail,
+  Megaphone,
+  Search,
+  ShoppingCart,
+} from "lucide-react";
 
 const TABS = [
   "General",
@@ -755,7 +766,7 @@ export default function RestaurantSettings({
 
   if (!organizationId)
     return (
-      <main className="mx-auto max-w-6xl p-8">
+      <main className="mx-auto max-w-8xl p-8">
         <p className="mt-6">Select a restaurant from your dashboard.</p>
       </main>
     );
@@ -763,7 +774,7 @@ export default function RestaurantSettings({
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
@@ -795,14 +806,16 @@ export default function RestaurantSettings({
           <div className="flex min-w-max gap-1">
             {TABS.map((name) => {
               const TabIcon = TAB_ICONS[name];
-              return <button
-                key={name}
-                onClick={() => selectTab(name)}
-                className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold ${tab === name ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
-              >
-                <TabIcon size={18} aria-hidden="true" className="shrink-0" />
-                {name}
-              </button>;
+              return (
+                <button
+                  key={name}
+                  onClick={() => selectTab(name)}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold ${tab === name ? "border-orange-600 text-orange-700" : "border-transparent text-slate-500 hover:text-slate-900"}`}
+                >
+                  <TabIcon size={18} aria-hidden="true" className="shrink-0" />
+                  {name}
+                </button>
+              );
             })}
           </div>
         </div>

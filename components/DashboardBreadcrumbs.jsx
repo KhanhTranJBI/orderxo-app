@@ -22,7 +22,7 @@ export default function DashboardBreadcrumbs() {
       aria-label="Dashboard navigation"
       className="bg-slate-50 px-4 pt-5 text-sm font-semibold text-orange-600"
     >
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="mx-auto flex max-w-8xl flex-wrap items-center gap-x-3 gap-y-2">
         <Link href="/dashboard" className="hover:text-orange-800 hover:underline">
           Dashboard
         </Link>

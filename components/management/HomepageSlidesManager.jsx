@@ -372,7 +372,7 @@ export default function HomepageSlidesManager({
     <div
       className={embedded ? "text-slate-900" : "min-h-screen bg-slate-50 px-4 py-10 text-slate-900"}
     >
-      <div className={embedded ? "" : "mx-auto max-w-6xl"}>
+      <div className={embedded ? "" : "mx-auto max-w-8xl"}>
         {!embedded && (
           <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
             OrderXO Manager

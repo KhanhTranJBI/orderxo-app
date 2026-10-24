@@ -7,7 +7,7 @@ export default function LocationPageShell({ organizationId, title, description, 
   const access = useRestaurantPermissions(organizationId);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
