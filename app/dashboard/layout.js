@@ -30,8 +30,8 @@ export default function DashboardLayout({ children }) {
 
   return (
     <>
-      <div className="sticky top-0 z-30 bg-slate-50/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-8xl justify-end">
+      <div className="sticky top-0 z-30 bg-slate-50/95 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-8xl px-2 xl:px-16 justify-end">
           <OwnerAccountNavigation email={email} signedIn={signedIn} staffMode={staffMode} />
         </div>
       </div>
