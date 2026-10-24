@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import DashboardBreadcrumbs from "../../components/DashboardBreadcrumbs";
 import OwnerAccountNavigation from "../../components/OwnerAccountNavigation";
-import { cookieName } from "../../lib/backend";
+import { backendRequest, cookieName } from "../../lib/backend";
 
 function sessionEmail(token) {
   if (!token || token.split(".").length !== 3) return "";
@@ -18,7 +18,7 @@ function sessionEmail(token) {
   }
 }
 
-export default function DashboardLayout({ children }) {
+export default async function DashboardLayout({ children }) {
   const cookieStore = cookies();
   const ownerToken = cookieStore.get(cookieName)?.value;
   const supportToken = cookieStore.get("orderxo_support_session")?.value;
@@ -28,6 +28,13 @@ export default function DashboardLayout({ children }) {
   const signedIn = Boolean(ownerToken || supportToken);
   const email = sessionEmail(staffMode ? supportToken : ownerToken);
 
+  const orgResult = signedIn
+    ? await backendRequest("/api/organizations", { authenticated: true })
+    : null;
+  const organizations = Array.isArray(orgResult?.data?.organizations)
+    ? orgResult.data.organizations
+    : [];
+
   return (
     <>
       <div className="sticky top-0 z-30 bg-slate-50/95 py-3 backdrop-blur">
@@ -35,7 +42,7 @@ export default function DashboardLayout({ children }) {
           <OwnerAccountNavigation email={email} signedIn={signedIn} staffMode={staffMode} />
         </div>
       </div>
-      <DashboardBreadcrumbs />
+      <DashboardBreadcrumbs organizations={organizations} />
       {children}
     </>
   );
