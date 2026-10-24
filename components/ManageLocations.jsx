@@ -41,11 +41,15 @@ export default function ManageLocations({ organizationId, locations, owner }) {
         {locations.map((l) => (
           <div
             key={String(l._id || l.id)}
-            className="flex min-w-0 flex-col justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:border-orange-400/40 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none"
+            className="flex min-w-0 flex-col justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
           >
             <div>
               <div className="break-words text-lg font-bold text-slate-900">{l.name}</div>
-              <div className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${l.status === "archived" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{l.status || "active"}</div>
+              <div
+                className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${l.status === "archived" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}
+              >
+                {l.status || "active"}
+              </div>
             </div>
             {owner && (
               <div className="flex flex-wrap gap-2">
