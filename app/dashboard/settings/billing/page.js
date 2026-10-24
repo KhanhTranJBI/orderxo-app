@@ -15,7 +15,7 @@ export default async function Billing({ searchParams }) {
   if (result?.status === 401) redirect("/login");
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <h1 className="mt-6 text-3xl font-bold">Billing & Subscription</h1>
         {id && (
           <Link

@@ -8,7 +8,11 @@ function sessionEmail(token) {
   try {
     const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     const data = JSON.parse(Buffer.from(payload, "base64").toString("utf8"));
-    return typeof data.email === "string" ? data.email : (typeof data.user?.email === "string" ? data.user.email : "");
+    return typeof data.email === "string"
+      ? data.email
+      : typeof data.user?.email === "string"
+        ? data.user.email
+        : "";
   } catch {
     return "";
   }
@@ -18,14 +22,16 @@ export default function DashboardLayout({ children }) {
   const cookieStore = cookies();
   const ownerToken = cookieStore.get(cookieName)?.value;
   const supportToken = cookieStore.get("orderxo_support_session")?.value;
-  const staffMode = Boolean(supportToken && (!ownerToken || cookieStore.get("orderxo_staff_ui")?.value === "1"));
+  const staffMode = Boolean(
+    supportToken && (!ownerToken || cookieStore.get("orderxo_staff_ui")?.value === "1"),
+  );
   const signedIn = Boolean(ownerToken || supportToken);
   const email = sessionEmail(staffMode ? supportToken : ownerToken);
 
   return (
     <>
       <div className="sticky top-0 z-30 bg-slate-50/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl justify-end">
+        <div className="mx-auto flex w-full max-w-8xl justify-end">
           <OwnerAccountNavigation email={email} signedIn={signedIn} staffMode={staffMode} />
         </div>
       </div>

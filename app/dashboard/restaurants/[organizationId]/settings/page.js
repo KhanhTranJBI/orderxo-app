@@ -27,7 +27,7 @@ export default async function RestaurantSettingsPage({ params }) {
       {staffMode && (
         <div className="bg-slate-50 px-4 pt-6">
           <div
-            className="mx-auto max-w-6xl rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
+            className="mx-auto max-w-8xl rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
             role="status"
           >
             <strong>OrderXO Staff Mode</strong> — You are using the restaurant&apos;s existing

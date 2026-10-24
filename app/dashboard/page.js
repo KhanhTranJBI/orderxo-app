@@ -3,8 +3,6 @@ import { Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
-import LogoutButton from "../../components/LogoutButton";
-import EndSupportButton from "../../components/EndSupportButton";
 
 // Presentation only: never change the underlying organization status here.
 function getOrganizationStatus(org) {
@@ -91,7 +89,7 @@ export default async function Dashboard() {
   const logoByOrg = Object.fromEntries(logoResults);
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-8xl">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
@@ -101,7 +99,6 @@ export default async function Dashboard() {
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
           <div className="flex items-center gap-3">
-            
             {canCreateRestaurant && (
               <Link
                 href="/restaurants/new"
@@ -128,7 +125,7 @@ export default async function Dashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {organizations.map((org) => {
               const id = String(org._id || org.id || "");
               const displayStatus = getOrganizationStatus(org);

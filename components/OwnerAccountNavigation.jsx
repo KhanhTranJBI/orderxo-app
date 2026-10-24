@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { ArrowUpRight, ClipboardList, LogIn, LogOut, Store, UserRound, X } from "lucide-react";
+import { ChevronRight, ArrowUpRight, ClipboardList, LogIn, LogOut, Store, UserRound, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function OwnerAccountNavigation({ email = "", signedIn = false, staffMode = false }) {
@@ -80,10 +80,10 @@ export default function OwnerAccountNavigation({ email = "", signedIn = false, s
                 {email && <p className="break-all text-sm text-slate-500">{email}</p>}</div>
             </div>
             <nav className="flex-1 space-y-1 overflow-y-auto px-5 py-5">
-              <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-4 rounded-xl px-4 py-4 font-semibold hover:bg-slate-50">
-                <Store size={23}/><span className="flex-1">Your restaurants</span><ArrowUpRight size={19}/></Link>
+              <Link href="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-4 rounded-2xl border border-slate-200 px-4 py-4 font-semibold hover:bg-slate-50">
+                <Store size={23}/><span className="flex-1">Your restaurants</span><ChevronRight size={19}/></Link>
               <a href="https://orders.orderxo.com" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-4 rounded-xl px-4 py-4 font-semibold hover:bg-slate-50">
+                className="flex items-center gap-4 rounded-2xl border border-slate-200 px-4 py-4 font-semibold hover:bg-slate-50">
                 <ClipboardList size={23}/><span className="flex-1">OrderXO Operations</span><ArrowUpRight size={19}/></a>
 
             </nav>
