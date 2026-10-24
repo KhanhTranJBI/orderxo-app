@@ -24,7 +24,9 @@ export default function DomainsManager({ organization, locations }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
-  const origin = `https://${custom || hostname}`;
+  // Use the custom domain only after the domain-status API confirms verification.
+  // While status is loading or verification fails, links remain on OrderXO.
+  const origin = `https://${domainInfo?.verified === true && clean(domainInfo?.domain) === clean(custom) ? clean(custom) : hostname}`;
 
   const copy = async (value) => {
     try {
