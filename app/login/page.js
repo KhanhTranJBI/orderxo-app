@@ -6,8 +6,8 @@ export default function Page({ searchParams }) {
 
   return (
     <OwnerShell
-      title="Welcome back"
-      description="Enter your owner email and we'll send you a secure sign-in link."
+      title="OrderXO Owner Portal"
+      description="Sign in to manage your restaurants, websites, locations, and subscription."
     >
       {sessionExpired && (
         <div

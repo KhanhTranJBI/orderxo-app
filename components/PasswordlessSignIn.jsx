@@ -48,7 +48,7 @@ export default function PasswordlessSignIn() {
       }
       className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-800 hover:bg-slate-50"
     >
-      Continue with Google
+      Sign in with Google
     </button>
   );
 
@@ -57,7 +57,7 @@ export default function PasswordlessSignIn() {
       <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-900">
         <h2 className="font-semibold">Check your email</h2>
         <p className="mt-1 text-sm">
-          If an OrderXO owner account exists for <strong>{email}</strong>, we sent a secure one-time
+          If an OrderXO Owner Portal account exists for <strong>{email}</strong>, we sent a secure one-time
           sign-in link.
         </p>
       </div>
@@ -67,8 +67,9 @@ export default function PasswordlessSignIn() {
     </div>
   ) : (
     <form onSubmit={submit} className="space-y-4">
+      <p className="text-sm font-semibold text-slate-800">Sign in to your owner account</p>
       <label className="block text-sm font-medium text-slate-700">
-        Email
+        Owner email address
         <input
           required
           type="email"
@@ -84,7 +85,7 @@ export default function PasswordlessSignIn() {
         disabled={busy}
         className="w-full rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white disabled:opacity-60"
       >
-        {busy ? "Sending…" : "Email me a sign-in link"}
+        {busy ? "Sending…" : "Send owner sign-in link"}
       </button>
       <div className="flex items-center gap-3 text-xs text-slate-400">
         <span className="h-px flex-1 bg-slate-200" />
@@ -93,7 +94,7 @@ export default function PasswordlessSignIn() {
       </div>
       {googleButton}
       <p className="text-center text-xs text-slate-500">
-        No password required. The sign-in link is one-time and expires shortly.
+        For restaurant owners and authorized managers. No password required; email links are one-time and expire shortly.
       </p>
     </form>
   );
