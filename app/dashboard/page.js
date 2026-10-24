@@ -3,8 +3,8 @@ import { Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
-import OwnerAccountNavigation from "../../components/OwnerAccountNavigation";
-
+import LogoutButton from "../../components/LogoutButton";
+import EndSupportButton from "../../components/EndSupportButton";
 
 // Presentation only: never change the underlying organization status here.
 function getOrganizationStatus(org) {
@@ -41,19 +41,6 @@ function getOrganizationStatus(org) {
     className: "bg-slate-100 text-slate-700 ring-slate-200",
     kind: "unknown",
   };
-}
-
-// The owner session is checked by the existing authenticated backend request.
-// Read only the email claim for display; never use decoded claims for authorization.
-function sessionEmail(token) {
-  if (!token || token.split(".").length !== 3) return "";
-  try {
-    const payload = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8"));
-    const value = payload.email || payload.user?.email || "";
-    return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : "";
-  } catch {
-    return "";
-  }
 }
 
 export const dynamic = "force-dynamic";
@@ -113,8 +100,8 @@ export default async function Dashboard() {
             <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
             <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
           </div>
-          <div className="flex flex-col items-end gap-3">
-            <OwnerAccountNavigation staffMode={staffMode} email={sessionEmail(cookies().get(staffMode ? "orderxo_support_session" : cookieName)?.value)} />
+          <div className="flex items-center gap-3">
+            
             {canCreateRestaurant && (
               <Link
                 href="/restaurants/new"
