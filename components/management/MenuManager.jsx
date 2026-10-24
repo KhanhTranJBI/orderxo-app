@@ -1084,7 +1084,7 @@ export default function MenuManager({ organizationId }) {
     );
   };
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
       <div className="mx-auto max-w-8xl">
         <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
           OrderXO Manager
@@ -1139,7 +1139,7 @@ export default function MenuManager({ organizationId }) {
         ) : loc.locationId && !loc.error ? (
           <>
             {!canManage && (
-              <div className="mt-6 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+              <div className="mt-6 rounded-xl border mx-auto max-w-8xl px-2 xl:px-16 py-3 text-sm font-semibold text-slate-600">
                 Read only — you can view menu items and modifiers, but editing, reordering,
                 activation changes and location customization are disabled.
               </div>

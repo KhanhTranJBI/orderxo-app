@@ -25,7 +25,7 @@ export default async function RestaurantSettingsPage({ params }) {
   return (
     <>
       {staffMode && (
-        <div className="bg-slate-50 px-4 pt-6">
+        <div className="mx-auto max-w-8xl px-2 xl:px-16 pt-6">
           <div
             className="mx-auto max-w-8xl rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-950"
             role="status"

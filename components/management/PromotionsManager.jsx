@@ -55,7 +55,7 @@ function Promos({ organizationId, locationId, canManage }) {
   return (
     <section className="mt-8">
       {!canManage && (
-        <div className="mb-6 rounded-xl border bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+        <div className="mb-6 rounded-xl border mx-auto max-w-8xl px-2 xl:px-16 py-3 text-sm font-semibold text-slate-600">
           Read only — you can view promotions, but you cannot create, edit, activate or deactivate
           them.
         </div>

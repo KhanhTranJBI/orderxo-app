@@ -41,7 +41,7 @@ export default function ManageLocations({ organizationId, locations, owner }) {
         {locations.map((l) => (
           <div
             key={String(l._id || l.id)}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-slate-50 px-4 py-3"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border mx-auto max-w-8xl px-2 xl:px-16 py-3"
           >
             <div>
               <div className="font-semibold text-slate-900">{l.name}</div>

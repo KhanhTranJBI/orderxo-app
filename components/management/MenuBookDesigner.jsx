@@ -249,7 +249,7 @@ export default function MenuBookDesigner({ organizationId }) {
   const pageWidth = orientation === "portrait" ? dims[0] : dims[1];
   const pageHeight = orientation === "portrait" ? dims[1] : dims[0];
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
       <div className="mx-auto max-w-8xl">
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
           <style>{`@media print { @page { margin: 0; } body * { visibility: hidden !important; } #menu-book-print, #menu-book-print * { visibility: visible !important; } #menu-book-print { position: absolute !important; inset: 0; width: 100%; display: block !important; } .menu-book-sheet { box-shadow: none !important; border: 0 !important; margin: 0 !important; break-after: page; page-break-after: always; print-color-adjust: exact; -webkit-print-color-adjust: exact; } .menu-book-sheet:last-child { break-after: auto; page-break-after: auto; } }`}</style>

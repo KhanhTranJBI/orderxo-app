@@ -370,7 +370,11 @@ export default function HomepageSlidesManager({
   };
   return (
     <div
-      className={embedded ? "text-slate-900" : "min-h-screen bg-slate-50 px-4 py-10 text-slate-900"}
+      className={
+        embedded
+          ? "text-slate-900"
+          : "min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900"
+      }
     >
       <div className={embedded ? "" : "mx-auto max-w-8xl"}>
         {!embedded && (

@@ -16,19 +16,17 @@ export default async function Page() {
     organizations.length === 0 || organizations.some((org) => org.role === "owner");
   if (!canCreateRestaurant) redirect("/dashboard");
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto max-w-xl">
-        <div className="mt-6 rounded-2xl border bg-white p-7 shadow-sm">
-          <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
-            OrderXO Owner Portal
-          </p>
-          <h1 className="mt-1 text-3xl font-bold">Add restaurant</h1>
-          <p className="mb-7 mt-2 text-slate-600">
-            Create another restaurant under your owner account. You can configure its website,
-            domain and billing next.
-          </p>
-          <OwnerForm mode="onboarding" />
-        </div>
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10">
+      <div className="mt-6 rounded-2xl border bg-white p-7 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
+          OrderXO Owner Portal
+        </p>
+        <h1 className="mt-1 text-3xl font-bold">Add restaurant</h1>
+        <p className="mb-7 mt-2 text-slate-600">
+          Create another restaurant under your owner account. You can configure its website, domain
+          and billing next.
+        </p>
+        <OwnerForm mode="onboarding" />
       </div>
     </main>
   );

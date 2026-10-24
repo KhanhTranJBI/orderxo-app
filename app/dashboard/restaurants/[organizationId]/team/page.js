@@ -161,153 +161,151 @@ export default function Team() {
     load();
   };
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
-      <div className="mx-auto max-w-8xl">
-        <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
-          OrderXO Manager
-        </p>
-        <h1 className="text-3xl font-bold">Admins & Managers</h1>
-        <p className="mt-1 text-slate-500">
-          Admins can access every location. Managers only access assigned locations and permissions.
-        </p>
-        {!planLoading && !canManageTeam && (
-          <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-6 text-center text-orange-950">
-            <h2 className="text-xl font-bold">🔒 Admins & Managers · Pro</h2>
-            <p className="mt-2 text-sm text-orange-900">
-              {planError ||
-                "Team management is available on Pro. You can review existing members and invitations, but cannot invite, edit or save changes on your current plan. Your data is preserved."}
-            </p>
-            <Link
-              className="mt-4 inline-block rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
-              href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}
-            >
-              View plans & upgrade
-            </Link>
-          </div>
-        )}
-        {msg && (
-          <p className="mt-4 rounded-xl bg-orange-50 px-4 py-3 text-sm text-orange-800">{msg}</p>
-        )}
-        <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_420px]">
-          <section className="rounded-2xl border bg-white p-5">
-            <h2 className="text-lg font-bold">Team</h2>
-            {teamLoading && <p className="mt-4 text-sm text-slate-500">Loading team members…</p>}
-            {!teamLoading &&
-              !msg &&
-              (team.members || []).length === 0 &&
-              (team.invitations || []).length === 0 && (
-                <p className="mt-4 text-sm text-slate-500">
-                  No team records found. Check that the restaurant owner has an OrganizationMember
-                  record.
-                </p>
-              )}
-            <div className="mt-4 divide-y">
-              {(team.members || []).map((m) => (
-                <div key={m._id} className="flex items-center justify-between gap-4 py-4">
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold">{m.userId?.name || m.userId?.email}</p>
-                    <p className="truncate text-sm text-slate-500">{m.userId?.email}</p>
-                    {m.role === "manager" && (
-                      <p className="mt-1 text-xs text-slate-400">
-                        {(m.locationIds || []).length} location(s) · {(m.permissions || []).length}{" "}
-                        permission(s)
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold capitalize">
-                      {isProtectedOwner(m) ? "Owner" : m.role}
-                    </span>
-                    {isProtectedOwner(m) ? (
-                      <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-50 px-3 text-xs font-semibold text-slate-500">
-                        <LockKeyhole size={14} /> Primary owner · Protected
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={!canManageTeam || planLoading}
-                        onClick={() => openEdit(m)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                      >
-                        <Pencil size={15} /> Edit
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {(team.invitations || []).map((i) => (
-                <div key={i._id} className="flex items-center justify-between py-4">
-                  <div>
-                    <p className="font-semibold">{i.email}</p>
-                    <p className="text-sm text-slate-500">Invitation pending</p>
-                  </div>
-                  <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold capitalize text-orange-700">
-                    {i.role}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-          <section className="rounded-2xl border bg-white p-5">
-            <h2 className="text-lg font-bold">Invite team member</h2>
-            <fieldset disabled={!canManageTeam || planLoading} className="disabled:opacity-60">
-              <input
-                className="field mt-4"
-                placeholder="Email address"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-              <label className="mt-4 block text-sm font-semibold">Role</label>
-              <select
-                className="field mt-1"
-                value={form.role}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    role: e.target.value,
-                    locationIds: e.target.value === "admin" ? [] : form.locationIds,
-                  })
-                }
-              >
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
-              {form.role === "manager" && (
-                <>
-                  <p className="mt-4 text-sm font-semibold">Locations</p>
-                  <div className="mt-2 space-y-2">
-                    {locations.map((l) => (
-                      <label key={l._id || l.id} className="flex gap-2">
-                        <input
-                          type="checkbox"
-                          checked={form.locationIds.includes(l._id || l.id)}
-                          onChange={() => toggle(setForm, "locationIds", l._id || l.id)}
-                        />
-                        {l.name}
-                      </label>
-                    ))}
-                  </div>
-                  <p className="mt-4 text-sm font-semibold">Permissions</p>
-                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                    {PERMS.map(([p, label]) => (
-                      <label key={p} className="flex gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={form.permissions.includes(p)}
-                          onChange={() => toggle(setForm, "permissions", p)}
-                        />
-                        {label}
-                      </label>
-                    ))}
-                  </div>
-                </>
-              )}
-              <button className="primary mt-5 w-full" onClick={invite}>
-                Send invitation
-              </button>
-            </fieldset>
-          </section>
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10">
+      <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-orange-600">
+        OrderXO Manager
+      </p>
+      <h1 className="text-3xl font-bold">Admins & Managers</h1>
+      <p className="mt-1 text-slate-500">
+        Admins can access every location. Managers only access assigned locations and permissions.
+      </p>
+      {!planLoading && !canManageTeam && (
+        <div className="mt-6 rounded-2xl border border-orange-200 bg-orange-50 p-6 text-center text-orange-950">
+          <h2 className="text-xl font-bold">🔒 Admins & Managers · Pro</h2>
+          <p className="mt-2 text-sm text-orange-900">
+            {planError ||
+              "Team management is available on Pro. You can review existing members and invitations, but cannot invite, edit or save changes on your current plan. Your data is preserved."}
+          </p>
+          <Link
+            className="mt-4 inline-block rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+            href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}`}
+          >
+            View plans & upgrade
+          </Link>
         </div>
+      )}
+      {msg && (
+        <p className="mt-4 rounded-xl bg-orange-50 px-4 py-3 text-sm text-orange-800">{msg}</p>
+      )}
+      <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_420px]">
+        <section className="rounded-2xl border bg-white p-5">
+          <h2 className="text-lg font-bold">Team</h2>
+          {teamLoading && <p className="mt-4 text-sm text-slate-500">Loading team members…</p>}
+          {!teamLoading &&
+            !msg &&
+            (team.members || []).length === 0 &&
+            (team.invitations || []).length === 0 && (
+              <p className="mt-4 text-sm text-slate-500">
+                No team records found. Check that the restaurant owner has an OrganizationMember
+                record.
+              </p>
+            )}
+          <div className="mt-4 divide-y">
+            {(team.members || []).map((m) => (
+              <div key={m._id} className="flex items-center justify-between gap-4 py-4">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{m.userId?.name || m.userId?.email}</p>
+                  <p className="truncate text-sm text-slate-500">{m.userId?.email}</p>
+                  {m.role === "manager" && (
+                    <p className="mt-1 text-xs text-slate-400">
+                      {(m.locationIds || []).length} location(s) · {(m.permissions || []).length}{" "}
+                      permission(s)
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold capitalize">
+                    {isProtectedOwner(m) ? "Owner" : m.role}
+                  </span>
+                  {isProtectedOwner(m) ? (
+                    <span className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-50 px-3 text-xs font-semibold text-slate-500">
+                      <LockKeyhole size={14} /> Primary owner · Protected
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!canManageTeam || planLoading}
+                      onClick={() => openEdit(m)}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Pencil size={15} /> Edit
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {(team.invitations || []).map((i) => (
+              <div key={i._id} className="flex items-center justify-between py-4">
+                <div>
+                  <p className="font-semibold">{i.email}</p>
+                  <p className="text-sm text-slate-500">Invitation pending</p>
+                </div>
+                <span className="rounded-full bg-orange-50 px-3 py-1 text-sm font-semibold capitalize text-orange-700">
+                  {i.role}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="rounded-2xl border bg-white p-5">
+          <h2 className="text-lg font-bold">Invite team member</h2>
+          <fieldset disabled={!canManageTeam || planLoading} className="disabled:opacity-60">
+            <input
+              className="field mt-4"
+              placeholder="Email address"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            <label className="mt-4 block text-sm font-semibold">Role</label>
+            <select
+              className="field mt-1"
+              value={form.role}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  role: e.target.value,
+                  locationIds: e.target.value === "admin" ? [] : form.locationIds,
+                })
+              }
+            >
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+            {form.role === "manager" && (
+              <>
+                <p className="mt-4 text-sm font-semibold">Locations</p>
+                <div className="mt-2 space-y-2">
+                  {locations.map((l) => (
+                    <label key={l._id || l.id} className="flex gap-2">
+                      <input
+                        type="checkbox"
+                        checked={form.locationIds.includes(l._id || l.id)}
+                        onChange={() => toggle(setForm, "locationIds", l._id || l.id)}
+                      />
+                      {l.name}
+                    </label>
+                  ))}
+                </div>
+                <p className="mt-4 text-sm font-semibold">Permissions</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {PERMS.map(([p, label]) => (
+                    <label key={p} className="flex gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.permissions.includes(p)}
+                        onChange={() => toggle(setForm, "permissions", p)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+            <button className="primary mt-5 w-full" onClick={invite}>
+              Send invitation
+            </button>
+          </fieldset>
+        </section>
       </div>
       {editing && canManageTeam && !planLoading && (
         <div

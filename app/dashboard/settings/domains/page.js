@@ -33,17 +33,15 @@ export default async function DomainsPage({ searchParams }) {
       </main>
     );
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
-      <div className="mx-auto max-w-8xl">
-        <h1 className="mt-5 text-3xl font-bold">Websites & domains</h1>
-        <p className="mt-2 text-slate-600">
-          {organization.name} · Manage your OrderXO address and custom domain
-        </p>
-        <DomainsManager
-          organization={organization}
-          locations={Array.isArray(locs.data.locations) ? locs.data.locations : []}
-        />
-      </div>
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
+      <h1 className="mt-5 text-3xl font-bold">Websites & domains</h1>
+      <p className="mt-2 text-slate-600">
+        {organization.name} · Manage your OrderXO address and custom domain
+      </p>
+      <DomainsManager
+        organization={organization}
+        locations={Array.isArray(locs.data.locations) ? locs.data.locations : []}
+      />
     </main>
   );
 }

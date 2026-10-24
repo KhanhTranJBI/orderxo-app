@@ -39,7 +39,7 @@ export default function AcceptTeam() {
   }, [q, router]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-20">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-20">
       <div className="mx-auto max-w-lg rounded-2xl border bg-white p-8 text-center shadow-sm">
         <h1 className="text-2xl font-bold">OrderXO Team Invitation</h1>
         <p className="mt-3 text-slate-600">{msg}</p>

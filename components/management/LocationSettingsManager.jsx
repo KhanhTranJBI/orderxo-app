@@ -99,7 +99,7 @@ export default function LocationSettingsManager({ organizationId }) {
     }
   }
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
       <div className="mx-auto max-w-8xl">
         <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
           <div>

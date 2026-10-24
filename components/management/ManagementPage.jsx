@@ -10,7 +10,7 @@ const labels = {
 };
 export default function ManagementPage({ organizationId, section }) {
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10">
       <div className="mx-auto max-w-8xl">
         <div className="mt-6 rounded-2xl border bg-white p-8 shadow-sm">
           <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">

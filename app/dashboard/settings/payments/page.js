@@ -20,7 +20,7 @@ export default async function Payments({ searchParams }) {
       ? data.data
       : [];
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
       <div className="mx-auto max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold">Payments</h1>
         {searchParams?.connect && (

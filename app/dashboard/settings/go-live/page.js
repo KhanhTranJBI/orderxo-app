@@ -20,7 +20,7 @@ export default async function GoLivePage({ searchParams }) {
   if (result?.status === 401) redirect("/login");
   const locations = Array.isArray(result?.data?.locations) ? result.data.locations : [];
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
       <div className="mx-auto max-w-3xl space-y-6">
         <h1 className="text-3xl font-bold">Get ready to go live</h1>
         {staffMode && (

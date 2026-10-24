@@ -118,7 +118,7 @@ export default function ManageUsersManager({ organizationId }) {
   ];
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
+    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-8 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-8xl">
         <div className="mt-5">
           <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
