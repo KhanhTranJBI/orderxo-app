@@ -24,8 +24,10 @@ export default function DashboardLayout({ children }) {
 
   return (
     <>
-      <div className="sticky top-0 z-30 flex justify-end bg-slate-50/95 px-4 py-3 backdrop-blur">
-        <OwnerAccountNavigation email={email} signedIn={signedIn} staffMode={staffMode} />
+      <div className="sticky top-0 z-30 bg-slate-50/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-6xl justify-end">
+          <OwnerAccountNavigation email={email} signedIn={signedIn} staffMode={staffMode} />
+        </div>
       </div>
       <DashboardBreadcrumbs />
       {children}
