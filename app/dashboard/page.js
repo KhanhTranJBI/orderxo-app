@@ -3,6 +3,8 @@ import { Store } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
+import LogoutButton from "../../components/LogoutButton";
+import EndSupportButton from "../../components/EndSupportButton";
 
 // Presentation only: never change the underlying organization status here.
 function getOrganizationStatus(org) {
@@ -88,195 +90,198 @@ export default async function Dashboard() {
   );
   const logoByOrg = Object.fromEntries(logoResults);
   return (
-    <main className="min-h-screen mx-auto max-w-8xl px-2 xl:px-16 py-10 text-slate-900">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
-            {staffMode ? "OrderXO Staff Mode" : "OrderXO Owner Portal"}
-          </p>
-          <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
-          <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
+    <main className="min-h-screen bg-slate-50 px-4 py-10 text-slate-900">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wider text-orange-600">
+              {staffMode ? "OrderXO Staff Mode" : "OrderXO Owner Portal"}
+            </p>
+            <h1 className="mt-1 text-3xl font-bold">Your restaurants</h1>
+            <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {staffMode ? <EndSupportButton /> : <LogoutButton />}
+            {canCreateRestaurant && (
+              <Link
+                href="/restaurants/new"
+                className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+              >
+                Add restaurant
+              </Link>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {canCreateRestaurant && (
+        {result.status !== 200 ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
+            Unable to load restaurants. Please try again later.
+          </div>
+        ) : organizations.length === 0 ? (
+          <div className="rounded-2xl border bg-white p-8 shadow-sm">
+            <h2 className="text-xl font-semibold">Welcome to OrderXO</h2>
+            <p className="mt-2 text-slate-600">Create your first restaurant to begin setup.</p>
             <Link
               href="/restaurants/new"
-              className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white hover:bg-orange-700"
+              className="mt-5 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white"
             >
-              Add restaurant
+              Set up restaurant
             </Link>
-          )}
-        </div>
-      </div>
-      {result.status !== 200 ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
-          Unable to load restaurants. Please try again later.
-        </div>
-      ) : organizations.length === 0 ? (
-        <div className="rounded-2xl border bg-white p-8 shadow-sm">
-          <h2 className="text-xl font-semibold">Welcome to OrderXO</h2>
-          <p className="mt-2 text-slate-600">Create your first restaurant to begin setup.</p>
-          <Link
-            href="/restaurants/new"
-            className="mt-5 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white"
-          >
-            Set up restaurant
-          </Link>
-        </div>
-      ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {organizations.map((org) => {
-            const id = String(org._id || org.id || "");
-            const displayStatus = getOrganizationStatus(org);
-            const isOwner = org.role === "owner";
-            const proTeam = planByOrg[id] === "pro";
-            const isAdmin = isOwner || org.role === "admin";
-            const roleLabel = isOwner
-              ? "Owner"
-              : org.role === "admin"
-                ? "Admin"
-                : org.role === "manager"
-                  ? "Manager"
-                  : org.role || "Member";
-            return (
-              <section key={id} className="rounded-2xl border bg-white p-6 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                      {logoByOrg[id] ? (
-                        // Remote restaurant logos can be hosted on any tenant domain.
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={logoByOrg[id]}
-                          alt={`${org.name} logo`}
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <Store aria-hidden="true" className="h-7 w-7 text-orange-600" />
+          </div>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {organizations.map((org) => {
+              const id = String(org._id || org.id || "");
+              const displayStatus = getOrganizationStatus(org);
+              const isOwner = org.role === "owner";
+              const proTeam = planByOrg[id] === "pro";
+              const isAdmin = isOwner || org.role === "admin";
+              const roleLabel = isOwner
+                ? "Owner"
+                : org.role === "admin"
+                  ? "Admin"
+                  : org.role === "manager"
+                    ? "Manager"
+                    : org.role || "Member";
+              return (
+                <section key={id} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:border-orange-400/40 hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+                        {logoByOrg[id] ? (
+                          // Remote restaurant logos can be hosted on any tenant domain.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoByOrg[id]}
+                            alt={`${org.name} logo`}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <Store aria-hidden="true" className="h-7 w-7 text-orange-600" />
+                        )}
+                      </div>
+                      <h2 className="min-w-0 break-words text-xl font-bold">{org.name}</h2>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}
+                    >
+                      {displayStatus.label}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
+                  {displayStatus.kind === "setup" && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                      <p className="font-semibold">Finish setting up your restaurant</p>
+                      <p className="mt-1">
+                        Complete the go-live checklist, connect Stripe, and confirm your
+                        subscription before accepting online orders.
+                      </p>
+                      {(isAdmin || staffMode) && (
+                        <Link
+                          href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
+                          className="mt-3 inline-block font-semibold underline"
+                        >
+                          Continue setup
+                        </Link>
                       )}
                     </div>
-                    <h2 className="min-w-0 break-words text-xl font-bold">{org.name}</h2>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ring-1 ${displayStatus.className}`}
-                  >
-                    {displayStatus.label}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
-                {displayStatus.kind === "setup" && (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-semibold">Finish setting up your restaurant</p>
-                    <p className="mt-1">
-                      Complete the go-live checklist, connect Stripe, and confirm your subscription
-                      before accepting online orders.
-                    </p>
-                    {(isAdmin || staffMode) && (
-                      <Link
-                        href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
-                        className="mt-3 inline-block font-semibold underline"
-                      >
-                        Continue setup
-                      </Link>
-                    )}
-                  </div>
-                )}
-                {displayStatus.kind === "restricted" && (
-                  <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
-                    <p className="font-semibold">Your restaurant account needs attention</p>
-                    <p className="mt-1">
-                      {org.suspensionReason === "subscription_canceled"
-                        ? "Your OrderXO subscription ended. Reactivate your plan to restore service."
-                        : org.suspensionReason === "billing_unpaid"
-                          ? "There is a billing issue with your subscription. Update your billing details to restore service."
-                          : "This restaurant is currently restricted. Review billing or contact OrderXO support for assistance."}
-                    </p>
-                    {isAdmin && (
-                      <Link
-                        href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-                        className="mt-3 inline-block font-semibold underline"
-                      >
-                        Review billing & subscription
-                      </Link>
-                    )}
-                  </div>
-                )}
-                {displayStatus.kind === "inactive" && (
-                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                    This restaurant is inactive. Contact OrderXO support if you need to restore
-                    access.
-                  </div>
-                )}
-                {displayStatus.kind === "unknown" && (
-                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                    We couldn't determine this restaurant's status. Contact OrderXO support if this
-                    persists.
-                  </div>
-                )}
-                {(isAdmin || staffMode) && (
-                  <Link
-                    href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
-                    className="mt-4 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100"
-                  >
-                    <span className="font-bold text-orange-900">
-                      Restaurant setup & go-live checklist →
-                    </span>
-                    <p className="mt-1 text-sm text-orange-800">
-                      {staffMode
-                        ? "Review progress and finish permitted setup tasks. Activation requires owner approval."
-                        : "Check required steps, connect Stripe, and activate online ordering."}
-                    </p>
-                  </Link>
-                )}
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <Link
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
-                    href={`/dashboard/restaurants/${encodeURIComponent(id)}`}
-                  >
-                    Manage restaurant
-                  </Link>
-                  {staffMode && (
+                  )}
+                  {displayStatus.kind === "restricted" && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
+                      <p className="font-semibold">Your restaurant account needs attention</p>
+                      <p className="mt-1">
+                        {org.suspensionReason === "subscription_canceled"
+                          ? "Your OrderXO subscription ended. Reactivate your plan to restore service."
+                          : org.suspensionReason === "billing_unpaid"
+                            ? "There is a billing issue with your subscription. Update your billing details to restore service."
+                            : "This restaurant is currently restricted. Review billing or contact OrderXO support for assistance."}
+                      </p>
+                      {isAdmin && (
+                        <Link
+                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                          className="mt-3 inline-block font-semibold underline"
+                        >
+                          Review billing & subscription
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                  {displayStatus.kind === "inactive" && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      This restaurant is inactive. Contact OrderXO support if you need to restore
+                      access.
+                    </div>
+                  )}
+                  {displayStatus.kind === "unknown" && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                      We couldn't determine this restaurant's status. Contact OrderXO support if
+                      this persists.
+                    </div>
+                  )}
+                  {(isAdmin || staffMode) && (
                     <Link
-                      className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                      href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
+                      href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
+                      className="mt-4 block rounded-xl border border-orange-200 bg-orange-50 p-4 hover:bg-orange-100"
                     >
-                      Restaurant settings
+                      <span className="font-bold text-orange-900">
+                        Restaurant setup & go-live checklist →
+                      </span>
+                      <p className="mt-1 text-sm text-orange-800">
+                        {staffMode
+                          ? "Review progress and finish permitted setup tasks. Activation requires owner approval."
+                          : "Check required steps, connect Stripe, and activate online ordering."}
+                      </p>
                     </Link>
                   )}
-                  {isAdmin && (
-                    <>
-                      <Link
-                        className={`rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50 ${!proTeam ? "border-orange-200 bg-orange-50 text-orange-800" : ""}`}
-                        href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
-                      >
-                        {proTeam ? "Admins & Managers" : "🔒 Admins & Managers · Pro"}
-                      </Link>
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <Link
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                      href={`/dashboard/restaurants/${encodeURIComponent(id)}`}
+                    >
+                      Manage restaurant
+                    </Link>
+                    {staffMode && (
                       <Link
                         className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                         href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
                       >
                         Restaurant settings
                       </Link>
-                      <Link
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                        href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
-                      >
-                        Websites & domains
-                      </Link>
-                      <Link
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                        href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
-                      >
-                        Billing & subscription
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
+                    )}
+                    {isAdmin && (
+                      <>
+                        <Link
+                          className={`rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50 ${!proTeam ? "border-orange-200 bg-orange-50 text-orange-800" : ""}`}
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
+                        >
+                          {proTeam ? "Admins & Managers" : "🔒 Admins & Managers · Pro"}
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
+                        >
+                          Restaurant settings
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
+                        >
+                          Websites & domains
+                        </Link>
+                        <Link
+                          className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                          href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                        >
+                          Billing & subscription
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
