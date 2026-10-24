@@ -100,7 +100,7 @@ export default async function Dashboard() {
           <p className="mt-2 text-slate-600">Manage your restaurant websites and subscription.</p>
         </div>
         <div className="flex items-center gap-3">
-          {staffMode ? <EndSupportButton /> : <LogoutButton />}
+          {staffMode ? <EndSupportButton /> : null}
           {canCreateRestaurant && (
             <Link
               href="/restaurants/new"
