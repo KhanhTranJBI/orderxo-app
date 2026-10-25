@@ -1,5 +1,7 @@
 "use client";
 
+import ImageUploadButton from "./ui/ImageUploadButton";
+
 const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
 const socialFields = [
   ["facebook", "Facebook"],
@@ -55,6 +57,7 @@ function LinkEditor({ title, value = [], onChange, allowImages = false }) {
                 value={link.imageUrl || ""}
                 onChange={(e) => edit(index, "imageUrl", e.target.value)}
               />
+              <ImageUploadButton onUploaded={(url) => edit(index, "imageUrl", url)} />
               <span className="block text-xs text-slate-500">
                 Use a publicly accessible HTTPS image URL. Appears before the link name.
               </span>

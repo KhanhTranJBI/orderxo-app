@@ -3,6 +3,7 @@
 import { toast } from "react-toastify";
 import { useEffect, useMemo, useRef, useState } from "react";
 import HomepageSlidesManager from "./management/HomepageSlidesManager";
+import ImageUploadButton from "./ui/ImageUploadButton";
 import {
   Plus,
   Trash2,
@@ -824,7 +825,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                 {active.type !== "slideshow" && textField("Heading", "title")}
                 {active.type !== "slideshow" && textField("Description", "subtitle", true)}
                 {["hero", "about"].includes(active.type) &&
-                  textField("Main image URL", "imageUrl", false, "https://... or /images/...")}
+                  <div>{textField("Main image URL", "imageUrl", false, "https://... or /images/...")}<ImageUploadButton onUploaded={(url) => edit(active.id, "imageUrl", url)} /></div>}
                 {["gallery", "featuredMenu", "newItems"].includes(active.type) && (
                   <label className="block text-xs font-semibold text-slate-600">
                     {active.type === "gallery" ? "Gallery images" : "Optional preview images"} (one

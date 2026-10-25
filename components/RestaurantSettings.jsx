@@ -2,6 +2,7 @@
 import { toast } from "react-toastify";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import PrintableOrderingQR from "./PrintableOrderingQR";
+import ImageUploadButton from "./ui/ImageUploadButton";
 
 import HomepageBuilder from "./HomepageBuilder";
 import LocalSeoAssistant from "./LocalSeoAssistant";
@@ -869,6 +870,7 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "logoUrl", e.target.value)}
                     placeholder="https://..."
                   />
+                  <ImageUploadButton onUploaded={(url) => setOrgPart("branding", "logoUrl", url)} label="Upload logo" />
                 </Field>
                 <Field label="Favicon URL (browser tab icon)">
                   <input
@@ -877,6 +879,7 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "faviconUrl", e.target.value)}
                     placeholder="https://.../favicon.png (falls back to logo)"
                   />
+                  <ImageUploadButton onUploaded={(url) => setOrgPart("branding", "faviconUrl", url)} label="Upload favicon" />
                 </Field>
               </div>
             </div>
