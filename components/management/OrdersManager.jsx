@@ -489,6 +489,45 @@ function cartSubtotalCents(cart) {
   }
   return null;
 }
+// Prefer structured refund line records. Legacy free-text reasons are only
+// matched when they unambiguously identify a single line item.
+function refundedLineStatus(order, item, index) {
+  const quantity = Math.max(1, Number(item.quantity) || 1);
+  const refunds = Array.isArray(order.refunds) ? order.refunds : [];
+  let refundedQuantity = 0;
+  let identified = false;
+  for (const refund of refunds) {
+    const lines = Array.isArray(refund.refundedItems) ? refund.refundedItems : [];
+    if (lines.length) {
+      for (const line of lines) {
+        if (Number(line.itemIndex) === index || (line.itemId && item._id && String(line.itemId) === String(item._id))) {
+          identified = true;
+          refundedQuantity += Math.max(0, Number(line.quantity) || 0);
+        }
+      }
+      continue;
+    }
+    const reason = String(refund.reason || '').trim().toLowerCase();
+    const name = String(item.name || '').trim().toLowerCase();
+    const matchingItems = (order.items || []).filter((candidate) =>
+      String(candidate.name || '').trim().toLowerCase() === name
+    );
+    if (name && matchingItems.length === 1 &&
+        (reason === `refund ${name}` || reason === `refunded ${name}`) &&
+        Number(refund.amountCents) > 0) {
+      identified = true;
+      refundedQuantity += quantity;
+    }
+  }
+  return { identified, quantity: Math.min(quantity, refundedQuantity), full: identified && refundedQuantity >= quantity };
+}
+function refundTotalCents(order) {
+  const direct = Number(order.refundedAmountCents);
+  if (Number.isFinite(direct) && direct >= 0) return direct;
+  const history = Array.isArray(order.refunds) ? order.refunds : [];
+  if (history.length) return history.reduce((sum, refund) => sum + Math.max(0, Number(refund.amountCents) || 0), 0);
+  return Math.max(0, Math.round(Number(order.refunded || 0) * 100));
+}
 function OrderItems({ items, isCart = false }) {
   return (
     <div className="mt-4 space-y-3 border-t pt-4">
@@ -1402,6 +1441,12 @@ export function OrderHistoryDetails({
     ["🥡", "Picked up", order.pickedAt || order.completedAt],
     ["✖", "Cancelled", order.cancelledAt],
   ].filter(([, , value]) => Boolean(value));
+  const refundedCents = refundTotalCents(order);
+  const chargedCents = Number(order.amountChargedCents ?? order.totalAmountCents ?? 0);
+  const refundHistory = Array.isArray(order.refunds) ? order.refunds : [];
+  const unidentifiedRefund = refundedCents > 0 && !(order.items || []).some((item, index) =>
+    refundedLineStatus(order, item, index).identified
+  );
   const cents = (value) => Number(value || 0);
   const line = (label, value, style = "") => (
     <div
@@ -1520,28 +1565,33 @@ export function OrderHistoryDetails({
             )}
           </div>
           <div className="mt-7 divide-y divide-slate-200">
-            {(order.items || []).map((item, index) => (
-              <div key={index} className="flex items-start gap-4 py-5">
-                {item.image ? (
-                  <img
-                    src={item.image}
-                    alt=""
-                    className="h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20"
-                  />
-                ) : (
-                  <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100 sm:h-20 sm:w-20" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-slate-900">
-                    {item.quantity || 1}× {item.name || `Item ${index + 1}`}
-                  </p>
-                  <ModifierSelections item={item} />
+            {(order.items || []).map((item, index) => {
+              const refund = refundedLineStatus(order, item, index);
+              const affected = refund.identified && refund.quantity > 0;
+              return (
+                <div key={item._id || index} className={`flex items-start gap-4 py-5 ${affected ? 'rounded-xl bg-red-50 px-3' : ''}`}>
+                  {item.image ? (
+                    <img src={item.image} alt="" className={`h-16 w-16 shrink-0 rounded-lg object-cover sm:h-20 sm:w-20 ${refund.full ? 'opacity-50' : ''}`} />
+                  ) : (
+                    <div className="h-16 w-16 shrink-0 rounded-lg bg-slate-100 sm:h-20 sm:w-20" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className={`font-bold ${refund.full ? 'text-slate-500 line-through decoration-red-500 decoration-2' : 'text-slate-900'}`}>
+                      {item.quantity || 1}× {item.name || `Item ${index + 1}`}
+                    </p>
+                    <ModifierSelections item={item} />
+                    {affected && (
+                      <span className="mt-2 inline-block rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+                        {refund.full ? 'REFUNDED — DO NOT PREPARE' : `${refund.quantity} OF ${item.quantity || 1} REFUNDED`}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`shrink-0 font-bold ${refund.full ? 'text-slate-400 line-through decoration-red-500' : 'text-orange-600'}`}>
+                    {usd(item.totalPriceCents ?? Math.round(Number(item.totalPrice || 0) * 100))}
+                  </span>
                 </div>
-                <span className="shrink-0 font-bold text-orange-600">
-                  {usd(item.totalPriceCents ?? Math.round(Number(item.totalPrice || 0) * 100))}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <SpecialInstructions instructions={order.specialInstructions} className="mt-5" />
           <div className="mt-7">
@@ -1561,14 +1611,12 @@ export function OrderHistoryDetails({
               order.amountChargedCents ?? order.totalAmountCents,
               "text-orange-600",
             )}
-            {(cents(order.refundedAmountCents) > 0 || Number(order.refunded || 0) > 0) &&
-              line(
-                "Refunded",
-                cents(order.refundedAmountCents)
-                  ? -cents(order.refundedAmountCents)
-                  : -Math.round(Number(order.refunded) * 100),
-                "text-red-600",
-              )}
+            {refundedCents > 0 && (
+              <>
+                {line('Refunded', -refundedCents, 'font-semibold text-red-600')}
+                {line('Net paid after refunds', Math.max(0, chargedCents - refundedCents), 'font-bold text-slate-900')}
+              </>
+            )}
             {Number(order.pointsEarned || order.loyaltyPointsEarned || 0) > 0 && (
               <div className="flex justify-between py-3 text-sm sm:text-base">
                 <span className="text-slate-500">Loyalty Points Earned</span>
@@ -1578,6 +1626,34 @@ export function OrderHistoryDetails({
               </div>
             )}
           </div>
+          {refundedCents > 0 && (
+            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
+              <h3 className="font-bold text-red-800">Refund information</h3>
+              <p className="mt-1 text-sm text-red-800">Total refunded: {usd(refundedCents)} · Net paid: {usd(Math.max(0, chargedCents - refundedCents))}</p>
+              {unidentifiedRefund && (
+                <p className="mt-2 text-sm text-red-700">Refund recorded, but the refunded item cannot be reliably identified from the available history. Verify before preparing.</p>
+              )}
+              {refundHistory.length > 0 ? (
+                <div className="mt-3 space-y-3">
+                  {refundHistory.map((refund, index) => (
+                    <div key={refund._id || refund.stripeRefundId || index} className="rounded-lg border border-red-100 bg-white p-3 text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold text-red-700">Refund #{index + 1}: {usd(refund.amountCents)}</span>
+                        <span className="text-slate-500">{refund.createdAt ? historyDate(refund.createdAt, {year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'}) : 'Date unavailable'}</span>
+                      </div>
+                      {refund.reason && <p className="mt-1 text-slate-700">Reason: {refund.reason}</p>}
+                      {Array.isArray(refund.refundedItems) && refund.refundedItems.length > 0 && (
+                        <p className="mt-1 text-slate-600">Items: {refund.refundedItems.map((entry) => {
+                          const item = order.items?.[entry.itemIndex] || (order.items || []).find((candidate) => entry.itemId && String(candidate._id) === String(entry.itemId));
+                          return `${entry.quantity || 1}× ${item?.name || 'Unknown item'}`;
+                        }).join(', ')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="mt-2 text-sm text-slate-600">Detailed refund history is unavailable for this order.</p>}
+            </div>
+          )}
           {canManage && order.status === "completed" && (
             <div className="mt-6 border-t pt-5">
               <button
