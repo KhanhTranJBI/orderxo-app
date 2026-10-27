@@ -727,7 +727,7 @@ export default function RestaurantSettings({
         body: JSON.stringify({
           organizationId,
           businessStartYear: org.businessStartYear,
-          branding: entitlements.appearanceCustomization
+          branding: (staffMode && staffPermissions.includes("setup:settings")) || entitlements.appearanceCustomization
             ? org.branding
             : { logoUrl: org.branding.logoUrl, faviconUrl: org.branding.faviconUrl },
           website: org.website,
@@ -741,6 +741,15 @@ export default function RestaurantSettings({
           notifications: org.notifications,
         }),
       });
+      if (!data?.settings) throw new Error("Settings response missing; please reload and verify your changes.");
+      if (tab === "Appearance" && ((staffMode && staffPermissions.includes("setup:settings")) || entitlements.appearanceCustomization)) {
+        for (const [key, value] of Object.entries(org.branding)) {
+          if (key.endsWith("Color") && typeof value === "string" &&
+              data.settings.branding?.[key]?.toLowerCase() !== value.toLowerCase()) {
+            throw new Error(`Appearance setting ${key} was not saved. Please retry.`);
+          }
+        }
+      }
       setOrg(mergeOrg(data.settings));
       setMessage("Restaurant settings saved.");
     } catch (e) {
