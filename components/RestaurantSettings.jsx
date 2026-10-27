@@ -5,7 +5,6 @@ import PrintableOrderingQR from "./PrintableOrderingQR";
 import ImageUploadButton from "./ui/ImageUploadButton";
 
 import HomepageBuilder from "./HomepageBuilder";
-import LocalSeoAssistant from "./LocalSeoAssistant";
 import { ownerFetch } from "../lib/ownerFetch";
 
 import Link from "next/link";
@@ -26,41 +25,38 @@ import {
 
 const TABS = [
   "General",
-  "Social & Links",
+  "Nav & Footer Links",
   "Appearance",
   "Homepage",
   "Loyalty",
   "Gift Cards",
   "Email",
   "Marketing Automations",
-  "Google Reviews & SEO",
-  "Ordering",
+    "Ordering",
 ];
 
 const TAB_ICONS = {
   General: Settings,
-  "Social & Links": Link2,
+  "Nav & Footer Links": Link2,
   Appearance: Palette,
   Homepage: House,
   Loyalty: Star,
   "Gift Cards": Gift,
   Email: Mail,
   "Marketing Automations": Megaphone,
-  "Google Reviews & SEO": Search,
   Ordering: ShoppingCart,
 };
 
 // Stable, shareable URL fragments for Restaurant Settings tabs.
 const TAB_HASHES = {
   General: "general",
-  "Social & Links": "social-links",
+  "Nav & Footer Links": "social-links",
   Appearance: "appearance",
   Homepage: "homepage",
   Loyalty: "loyalty",
   "Gift Cards": "gift-cards",
   Email: "email",
   "Marketing Automations": "marketing-automations",
-  "Google Reviews & SEO": "google-reviews-seo",
   Ordering: "ordering",
 };
 const HASH_TABS = Object.fromEntries(
@@ -607,17 +603,6 @@ export default function RestaurantSettings({
       );
     }
   };
-  const [focusGoogleReviewLink, setFocusGoogleReviewLink] = useState(false);
-  useEffect(() => {
-    if (tab !== "Social & Links" || !focusGoogleReviewLink) return;
-    const id = window.requestAnimationFrame(() => {
-      const field = document.getElementById("google-review-link");
-      field?.scrollIntoView({ behavior: "smooth", block: "center" });
-      field?.focus({ preventScroll: true });
-      setFocusGoogleReviewLink(false);
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, [tab, focusGoogleReviewLink]);
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -945,7 +930,7 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          {tab === "Social & Links" && (
+          {tab === "Nav & Footer Links" && (
             <RestaurantLinksSettings
               value={org.website}
               onChange={(website) => setOrg((old) => ({ ...old, website }))}
@@ -1409,21 +1394,6 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          {tab === "Google Reviews & SEO" && (
-            <LocalSeoAssistant
-              restaurantName={org.name}
-              logoUrl={org.branding?.logoUrl}
-              websiteUrl={org.website?.url || org.website?.domain || ""}
-              contactEmail={org.contactEmail}
-              locationAddress={org.address?.line1 || ""}
-              googleMapsUrl={org.googleMapUrl || ""}
-              googleReviewUrl={org.website?.social?.googleReview || ""}
-              onEditReviewLink={() => {
-                setFocusGoogleReviewLink(true);
-                selectTab("Social & Links");
-              }}
-            />
-          )}
           {tab === "Ordering" && (
             <div className="space-y-7">
               <div>
@@ -1654,7 +1624,7 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          {tab !== "Homepage" && tab !== "Google Reviews & SEO" && (
+          {tab !== "Homepage" && (
             <div className="mt-8 border-t pt-6">
               <button
                 disabled={

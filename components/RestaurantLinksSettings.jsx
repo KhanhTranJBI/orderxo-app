@@ -3,16 +3,6 @@
 import ImageUploadButton from "./ui/ImageUploadButton";
 
 const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
-const socialFields = [
-  ["facebook", "Facebook"],
-  ["instagram", "Instagram"],
-  ["google", "Google Business Profile"],
-  ["googleReview", "Google Review Link"],
-  ["yelp", "Yelp"],
-  ["tiktok", "TikTok"],
-  ["youtube", "YouTube"],
-];
-
 function LinkEditor({ title, value = [], onChange, allowImages = false }) {
   const links = Array.isArray(value) ? value : [];
   const edit = (index, key, val) =>
@@ -98,42 +88,10 @@ function LinkEditor({ title, value = [], onChange, allowImages = false }) {
 }
 
 export default function RestaurantLinksSettings({ value = {}, onChange }) {
-  const social = value.social || {};
   const change = (key, val) => onChange({ ...value, [key]: val });
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-xl font-bold">Social & website links</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Shared across all locations. Use full https:// URLs. Empty links are hidden on the
-          storefront.
-        </p>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        {socialFields.map(([key, label]) => (
-          <label key={key} className="space-y-1 text-sm font-medium">
-            {label}
-            <input
-              id={key === "googleReview" ? "google-review-link" : undefined}
-              className={input}
-              value={social[key] || ""}
-              placeholder="https://..."
-              onChange={(e) => change("social", { ...social, [key]: e.target.value })}
-            />
-            {key === "googleReview" && (
-              <span className="block text-xs font-normal text-slate-500">
-                Paste the direct Write a Review link from Google Business Profile. Used in Order
-                Completed emails.
-              </span>
-            )}
-            {key === "google" && (
-              <span className="block text-xs font-normal text-slate-500">
-                Your public Google Business Profile link, separate from the review link.
-              </span>
-            )}
-          </label>
-        ))}
-      </div>
+      <div><h2 className="text-xl font-bold">Navigation &amp; Footer Links</h2><p className="mt-1 text-sm text-slate-500">Shared across all locations. Manage social links in Store Settings.</p></div>
       <LinkEditor
         title="Navigation links (DoorDash, delivery, etc.)"
         allowImages

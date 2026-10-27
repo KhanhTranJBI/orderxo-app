@@ -22,8 +22,12 @@ import useRestaurantLocation from "./useRestaurantLocation";
 import useRestaurantPermissions from "./useRestaurantPermissions";
 import HomepageSlidesManager from "./HomepageSlidesManager";
 import KioskManager from "./KioskManager";
+import StoreSocialLinks from "./StoreSocialLinks";
+import LocalSeoAssistant from "../LocalSeoAssistant";
 
 const STORE_TAB_HASHES = {
+  social: "social-links",
+  reviews: "google-reviews-seo",
   hours: "store-hours",
   notices: "notices",
   homepage: "homepage-slides",
@@ -158,6 +162,17 @@ function localInput(v) {
   )}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+function StoreReviews({ organizationId, locationId, location, onEdit }) {
+  const [reviewUrl,setReviewUrl] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    const query = new URLSearchParams({ organizationId, ...(locationId ? { locationId } : {}) });
+    ownerFetch(`/api/owner/locations/social-links?${query}`).then(r => r.json()).then(d => { if (!cancelled) setReviewUrl(d.effective?.googleReview || ""); }).catch(() => {});
+    return () => { cancelled = true; };
+  },[organizationId,locationId]);
+  return <LocalSeoAssistant restaurantName={location?.name || "Restaurant"} locationAddress={location?.address?.line1 || ""} googleReviewUrl={reviewUrl} onEditReviewLink={onEdit} />;
+}
+
 export default function StoreSettingsManager({ organizationId }) {
   const loc = useRestaurantLocation(organizationId);
   const searchParams = useSearchParams();
@@ -179,6 +194,7 @@ export default function StoreSettingsManager({ organizationId }) {
   const isAllowedTab = useCallback(
     (candidate, currentScope) => {
       if (candidate === "homepage") return canReadHomepage;
+      if (candidate === "social" || candidate === "reviews") return canReadStore;
       if (candidate === "hours" || candidate === "notices") return canReadStore;
       if (
         candidate === "locationDetails" ||
@@ -773,6 +789,8 @@ export default function StoreSettingsManager({ organizationId }) {
             </button>
           )}
 
+          {canReadStore && <button onClick={() => selectStoreTab("social")} className={`border-b-[3px] px-2 py-4 text-base font-semibold ${tab === "social" ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500"}`}>Social &amp; Links</button>}
+          {canReadStore && <button onClick={() => selectStoreTab("reviews")} className={`border-b-[3px] px-2 py-4 text-base font-semibold ${tab === "reviews" ? "border-orange-600 text-orange-600" : "border-transparent text-slate-500"}`}>Google Reviews &amp; Local SEO</button>}
           {canReadStore && scope !== "default" && (
             <button
               onClick={() => selectStoreTab("locationDetails")}
@@ -829,6 +847,8 @@ export default function StoreSettingsManager({ organizationId }) {
         ) : (
           (scope === "default" || selectedLocationId) && (
             <>
+              {tab === "social" && canReadStore && <StoreSocialLinks organizationId={organizationId} locationId={selectedLocationId} canManage={canManage} />}
+              {tab === "reviews" && canReadStore && <StoreReviews organizationId={organizationId} locationId={selectedLocationId} location={selectedLocation} onEdit={() => selectStoreTab("social")} />}
               {tab === "kiosks" && scope !== "default" && canReadStore && (
                 <KioskManager
                   organizationId={organizationId}
