@@ -1432,6 +1432,8 @@ export function OrderHistoryDetails({
   onRefunded,
 }) {
   const [refundOpen, setRefundOpen] = useState(false);
+  const completedAt = order.completedAt || order.pickedAt;
+  const refundWithinWindow = !!completedAt && Number.isFinite(new Date(completedAt).getTime()) && Date.now() - new Date(completedAt).getTime() <= 24 * 60 * 60 * 1000 && Date.now() >= new Date(completedAt).getTime();
   const count = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 1), 0);
   const status = String(order.status || "pending").toLowerCase();
   const timeline = [
@@ -1654,7 +1656,7 @@ export function OrderHistoryDetails({
               ) : <p className="mt-2 text-sm text-slate-600">Detailed refund history is unavailable for this order.</p>}
             </div>
           )}
-          {canManage && order.status === "completed" && (
+          {canManage && order.status === "completed" && refundWithinWindow && refundTotalCents(order) < Math.max(0, Number(order.amountPaidCents || order.amountChargedCents || 0) + Number(order.giftCard?.amountUsedCents || 0) - Number(order.onlineServiceFeeCents || 0)) && (
             <div className="mt-6 border-t pt-5">
               <button
                 type="button"
@@ -1696,13 +1698,13 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
   };
   const items = order.items || [];
   const itemCents = items.reduce(
-    (sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0),
+    (sum, item, i) => sum + (selected[i] ? Number(item.discountedSubtotalCents ?? item.taxableSubtotalCents ?? item.totalPriceCents ?? 0) + Number(item.taxCents || 0) : 0),
     0,
   );
-  const alreadyRefunded = Number(order.refundedAmountCents || 0);
+  const alreadyRefunded = refundTotalCents(order);
   const remaining = Math.max(
     0,
-    Number(order.totalAmountCents || 0) -
+    Number(order.amountPaidCents || order.amountChargedCents || order.totalAmountCents || 0) + Number(order.giftCard?.amountUsedCents || 0) -
       alreadyRefunded -
       Number(order.onlineServiceFeeCents || 0),
   );
@@ -1730,6 +1732,8 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           locationId,
           orderId: order._id,
           amountCents: cents,
+          refundMode: mode === "item" ? "items" : "amount",
+          ...(mode === "item" ? { refundedItems: Object.keys(selected).filter((i) => selected[i]).map((i) => ({ itemIndex: Number(i) })) } : {}),
           reason: reason.trim(),
         }),
       });
@@ -1773,19 +1777,21 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
         </div>
         {mode === "item" ? (
           <div className="mt-4 max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
-            {items.map((item, i) => (
-              <label key={i} className="flex items-center justify-between gap-3 text-sm">
+            {items.map((item, i) => {
+              const refunded = refundedLineStatus(order, item, i).full;
+              return <label key={i} className={`flex items-center justify-between gap-3 text-sm ${refunded ? 'opacity-50' : ''}`}>
                 <span>
                   <input
                     type="checkbox"
-                    checked={!!selected[i]}
+                    checked={!!selected[i] && !refunded}
+                    disabled={refunded}
                     onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))}
                   />{" "}
-                  {item.quantity || 1}× {item.name}
+                  <span className={refunded ? 'line-through' : ''}>{item.quantity || 1}× {item.name}</span>{refunded && <span className="ml-2 text-red-600">Refunded</span>}
                 </span>
                 <span>{usd(item.totalPriceCents)}</span>
-              </label>
-            ))}
+              </label>;
+            })}
             <p className="font-semibold">Selected subtotal: {usd(itemCents)}</p>
           </div>
         ) : (
@@ -1811,8 +1817,7 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           />
         </label>
         <p className="mt-3 text-xs text-amber-700">
-          Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous
-          item refunds need backend reconciliation.
+          Item refunds use the verified checkout tax and discount snapshot. For older orders without a verified snapshot, use a reviewed custom amount.
         </p>
 
         <div className="mt-5 flex justify-end gap-3">
