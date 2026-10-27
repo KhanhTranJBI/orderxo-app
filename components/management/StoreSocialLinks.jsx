@@ -28,7 +28,7 @@ export default function StoreSocialLinks({ organizationId, locationId, canManage
     } catch(e) { toast.error(e.message); } finally { setBusy(false); }
   };
   if (!data) return <p className="text-sm text-slate-500">Loading social links…</p>;
-  return <section className="rounded-xl border bg-white p-6 space-y-5">
+  return <section className="mt-4 space-y-5 rounded-2xl border border-slate-200 bg-white p-6">
     <h2 className="text-xl font-bold">Social &amp; Links</h2>
     <p className="text-sm text-slate-500">{locationId ? "Override a link for this branch, inherit the restaurant default, or hide it for this branch." : "Default social links used by all branches unless overridden."}</p>
     <div className="grid gap-5 md:grid-cols-2">{FIELDS.map(([key,label]) => {

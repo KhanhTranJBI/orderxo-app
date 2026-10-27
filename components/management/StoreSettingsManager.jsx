@@ -170,7 +170,11 @@ function StoreReviews({ organizationId, locationId, location, onEdit }) {
     ownerFetch(`/api/owner/locations/social-links?${query}`).then(r => r.json()).then(d => { if (!cancelled) setReviewUrl(d.effective?.googleReview || ""); }).catch(() => {});
     return () => { cancelled = true; };
   },[organizationId,locationId]);
-  return <LocalSeoAssistant restaurantName={location?.name || "Restaurant"} locationAddress={location?.address?.line1 || ""} googleReviewUrl={reviewUrl} onEditReviewLink={onEdit} />;
+  return (
+    <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
+      <LocalSeoAssistant restaurantName={location?.name || "Restaurant"} locationAddress={location?.address?.line1 || ""} googleReviewUrl={reviewUrl} onEditReviewLink={onEdit} />
+    </section>
+  );
 }
 
 export default function StoreSettingsManager({ organizationId }) {
