@@ -101,7 +101,7 @@ export default function OwnerAccountNavigation({
             >
               <header className="flex items-start justify-between border-b border-slate-200 px-7 py-7">
                 <div>
-                  <h2 className="text-2xl font-bold">OrderXO Owner Portal</h2>
+                  <h2 className="text-2xl font-bold">{staffMode ? "OrderXO Staff Portal" : "OrderXO Owner Portal"}</h2>
                   <p className="mt-1 text-slate-500">Account &amp; navigation</p>
                 </div>
                 <button
@@ -115,11 +115,15 @@ export default function OwnerAccountNavigation({
               </header>
               <div className="flex items-center gap-4 border-b border-slate-200 px-7 py-7">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-orange-50 font-bold text-2xl text-orange-600">
-                  {email?.charAt(0)?.toUpperCase() || "U"}
+                  {email?.charAt(0)?.toUpperCase() || (staffMode ? "S" : "U")}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-lg font-bold">{signedIn ? "Signed in" : "Not signed in"}</p>
-                  {email && <p className="break-all text-sm text-slate-500">{email}</p>}
+                  <p className="text-lg font-bold">{staffMode ? "Staff support session" : signedIn ? "Signed in" : "Not signed in"}</p>
+                  {email ? (
+                    <p className="break-all text-sm text-slate-500">{email}</p>
+                  ) : staffMode ? (
+                    <p className="text-sm text-slate-500">Staff email unavailable in this session</p>
+                  ) : null}
                 </div>
               </div>
               <nav className="flex-1 space-y-1 overflow-y-auto px-5 py-5">

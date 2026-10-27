@@ -12,7 +12,11 @@ function sessionEmail(token) {
       ? data.email
       : typeof data.user?.email === "string"
         ? data.user.email
-        : "";
+        : typeof data.staffEmail === "string"
+          ? data.staffEmail
+          : typeof data.staff?.email === "string"
+            ? data.staff.email
+            : "";
   } catch {
     return "";
   }
