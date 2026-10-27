@@ -1695,18 +1695,31 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
     if (typeof value === "string" && value.trim()) toast.error(value);
   };
   const items = order.items || [];
-  const itemCents = items.reduce(
-    (sum, item, i) => sum + (selected[i] ? Number(item.totalPriceCents || 0) : 0),
-    0,
-  );
-  const alreadyRefunded = Number(order.refundedAmountCents || 0);
-  const remaining = Math.max(
-    0,
-    Number(order.totalAmountCents || 0) -
-      alreadyRefunded -
-      Number(order.onlineServiceFeeCents || 0),
-  );
-  const cents = mode === "item" ? itemCents : Math.round(Number(amount) * 100);
+  const selectedIndexes = items.map((_, i) => i).filter((i) => selected[i] && !refundedLineStatus(order, items[i], i).quantity);
+  const itemCents = selectedIndexes.reduce((sum, i) => sum + Number(items[i].totalPriceCents || 0), 0);
+  const missingTaxSnapshots = selectedIndexes.some((i) => {
+    const item = items[i];
+    return typeof item.taxable !== "boolean" ||
+      !Number.isSafeInteger(item.taxCents) ||
+      !(Number.isSafeInteger(item.discountedSubtotalCents) ||
+        (item.taxable === true && Number.isSafeInteger(item.taxableSubtotalCents)));
+  });
+  const taxCents = selectedIndexes.reduce((sum, i) => sum + Number(items[i].taxCents || 0), 0);
+  const discountedCents = selectedIndexes.reduce((sum, i) => {
+    const item = items[i];
+    return sum + (Number.isSafeInteger(item.discountedSubtotalCents)
+      ? item.discountedSubtotalCents : (item.taxable === true ? item.taxableSubtotalCents : 0));
+  }, 0);
+  const alreadyRefunded = refundTotalCents(order);
+  const remaining = Math.max(0,
+    Number(order.amountPaidCents ?? order.totalAmountCents ?? 0) +
+    Number(order.giftCard?.amountUsedCents || 0) -
+    alreadyRefunded - Number(order.onlineServiceFeeCents || 0));
+  const cents = mode === "item" ? discountedCents + taxCents : Math.round(Number(amount) * 100);
+  const validReason = reason.trim().length >= 3;
+  const validAmount = Number.isSafeInteger(cents) && cents > 0 && cents <= remaining;
+  const canSubmit = !busy && validReason && validAmount &&
+    (mode !== "item" || (selectedIndexes.length > 0 && !missingTaxSnapshots));
   const submit = async () => {
     if (!Number.isSafeInteger(cents) || cents <= 0 || cents > remaining) {
       setError(
@@ -1714,8 +1727,12 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
       );
       return;
     }
-    if (!reason.trim()) {
-      setError("Please enter a reason for the refund.");
+    if (!validReason) {
+      setError("Please enter a refund reason (at least 3 characters).");
+      return;
+    }
+    if (mode === "item" && missingTaxSnapshots) {
+      setError("Verified item tax/discount snapshot unavailable. Use a reviewed custom refund.");
       return;
     }
     setBusy(true);
@@ -1731,6 +1748,14 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           orderId: order._id,
           amountCents: cents,
           reason: reason.trim(),
+          ...(mode === "item" ? {
+            refundMode: "items",
+            refundedItems: selectedIndexes.map((itemIndex) => ({
+              itemIndex,
+              ...(items[itemIndex]?._id != null ? { itemId: String(items[itemIndex]._id) } : {}),
+              quantity: Number(items[itemIndex].quantity || 1),
+            })),
+          } : {}),
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -1773,20 +1798,27 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
         </div>
         {mode === "item" ? (
           <div className="mt-4 max-h-48 space-y-2 overflow-auto rounded-lg border p-3">
-            {items.map((item, i) => (
-              <label key={i} className="flex items-center justify-between gap-3 text-sm">
-                <span>
-                  <input
-                    type="checkbox"
-                    checked={!!selected[i]}
-                    onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))}
-                  />{" "}
-                  {item.quantity || 1}× {item.name}
-                </span>
-                <span>{usd(item.totalPriceCents)}</span>
-              </label>
-            ))}
-            <p className="font-semibold">Selected subtotal: {usd(itemCents)}</p>
+            {items.map((item, i) => {
+              const refunded = refundedLineStatus(order, item, i).quantity > 0;
+              return (
+                <label key={item._id || i} className={`flex items-center justify-between gap-3 text-sm ${refunded ? "cursor-not-allowed opacity-50" : ""}`}>
+                  <span>
+                    <input type="checkbox" disabled={refunded} checked={!refunded && !!selected[i]}
+                      onChange={(e) => setSelected((prev) => ({ ...prev, [i]: e.target.checked }))} />{" "}
+                    <span className={refunded ? "line-through" : ""}>{item.quantity || 1}× {item.name}</span>
+                    {refunded && <span className="ml-2 text-xs font-bold text-red-700">REFUNDED</span>}
+                  </span>
+                  <span>{usd(item.totalPriceCents)}</span>
+                </label>
+              );
+            })}
+            <div className="space-y-1 border-t pt-2 text-sm">
+              <p>Original selected subtotal: {usd(itemCents)}</p>
+              <p>Item discount: {usd(Math.max(0, itemCents - discountedCents))}</p>
+              <p>Tax refund: {usd(taxCents)}</p>
+              <p className="font-semibold">Total refund: {usd(cents)}</p>
+              {missingTaxSnapshots && <p className="text-red-700">Verified item tax/discount snapshot unavailable. Use a reviewed custom refund.</p>}
+            </div>
           </div>
         ) : (
           <label className="mt-4 block text-sm font-medium">
@@ -1802,17 +1834,20 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
           </label>
         )}
         <label className="mt-4 block text-sm font-medium">
-          Reason
+          Reason (required)
           <input
             value={reason}
+            required
+            minLength={3}
+            maxLength={500}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Missing item, missing add-on, etc."
             className="mt-1 w-full rounded-lg border p-3"
           />
         </label>
         <p className="mt-3 text-xs text-amber-700">
-          Item selection refunds the stored line subtotal. Tax, discounts, gift cards and previous
-          item refunds need backend reconciliation.
+          Selected-item refunds include saved item tax and discounts. The server must independently
+          recalculate and validate these amounts from the original checkout snapshot.
         </p>
 
         <div className="mt-5 flex justify-end gap-3">
@@ -1820,7 +1855,7 @@ function CompletedOrderRefund({ order, organizationId, locationId, onClose, onRe
             Back
           </button>
           <button
-            disabled={busy}
+            disabled={!canSubmit}
             onClick={submit}
             className="rounded-xl bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
           >
