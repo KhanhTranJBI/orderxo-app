@@ -397,6 +397,7 @@ function AppearanceColor({ label, value, fallback, onChange }) {
 }
 
 function AppearancePreview({ branding, restaurantName }) {
+  const [activePreviewCategory, setActivePreviewCategory] = useState("Appetizer");
   const b = branding;
   const c = (key) => (HEX_COLOR.test(b[key] || "") ? b[key] : emptyOrg.branding[key]);
   return (
@@ -425,6 +426,28 @@ function AppearancePreview({ branding, restaurantName }) {
         <p className="mt-1 text-sm" style={{ color: c("bodyTextColor") }}>
           Made fresh at your selected location.
         </p>
+        <div
+          className="mt-4 flex flex-wrap items-center gap-5 rounded-xl px-4 pt-3 shadow-sm"
+          style={{ backgroundColor: c("menuCategoryBackgroundColor") }}
+          aria-label="Menu category bar preview"
+        >
+          {["Appetizer", "Pho", "Drinks"].map((category) => {
+            const active = activePreviewCategory === category;
+            const color = c(active ? "menuCategoryActiveColor" : "menuCategoryInactiveColor");
+            return (
+              <button
+                key={category}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setActivePreviewCategory(category)}
+                className="flex flex-col items-center gap-2 border-b-[3px] px-1 pb-3 text-sm font-semibold transition-colors"
+                style={{ color, borderBottomColor: active ? color : "transparent" }}
+              >
+                {category}
+              </button>
+            );
+          })}
+        </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {["Signature bowl", "Fresh favorites"].map((name, i) => (
             <div
