@@ -461,7 +461,7 @@ function AppearancePreview({ branding, restaurantName }) {
             >
               <div
                 className="flex h-20 items-center justify-center text-3xl"
-                style={{ background: c("secondaryColor") }}
+                style={{ background: c("itemBackgroundColor") }}
               >
                 {i ? "🥗" : "🍲"}
               </div>
@@ -517,7 +517,7 @@ function AppearancePreview({ branding, restaurantName }) {
                 )}
                 <span
                   className="h-14 w-14 rounded-full border"
-                  style={{ background: c("secondaryColor"), borderColor: c("borderColor") }}
+                  style={{ background: c("itemBackgroundColor"), borderColor: c("borderColor") }}
                 />
                 {option.name}
               </div>
