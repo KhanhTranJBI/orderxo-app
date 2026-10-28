@@ -81,6 +81,9 @@ const emptyOrg = {
     activeLinkColor: "#f97316",
     announcementBackgroundColor: "#f97316",
     announcementTextColor: "#ffffff",
+    menuCategoryBarBackgroundColor: "#ffffff",
+    menuCategoryActiveColor: "#f97316",
+    menuCategoryInactiveColor: "#6b7280",
     cardBackgroundColor: "#ffffff",
     cardTextColor: "#111827",
     borderColor: "#e5e7eb",
@@ -292,6 +295,15 @@ const APPEARANCE_GROUPS = [
     fields: [
       ["announcementBackgroundColor", "Background"],
       ["announcementTextColor", "Text"],
+    ],
+  },
+  {
+    title: "Menu Category Bar",
+    description: "Background and active/inactive category text and indicator colors.",
+    fields: [
+      ["menuCategoryBarBackgroundColor", "Background"],
+      ["menuCategoryActiveColor", "Active category"],
+      ["menuCategoryInactiveColor", "Inactive category"],
     ],
   },
   {
