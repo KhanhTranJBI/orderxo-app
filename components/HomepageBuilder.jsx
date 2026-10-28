@@ -839,6 +839,39 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                     />
                   </label>
                 )}
+                {active.type === "gallery" && (
+                  <div className="space-y-3">
+                    <ImageUploadButton
+                      label="Upload gallery image"
+                      onUploaded={(url) => {
+                        const current = draft.sections.find((section) => section.id === active.id);
+                        const next = [...(current?.images || []), url];
+                        setMultilineDrafts((old) => ({ ...old, [`${active.id}:images`]: next.join("\n") }));
+                        edit(active.id, "images", next);
+                      }}
+                    />
+                    {active.images?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {active.images.map((url, index) => (
+                          <div key={`${url}-${index}`} className="relative overflow-hidden rounded-lg border border-slate-200">
+                            <img src={url} alt={`Gallery image ${index + 1}`} className="h-24 w-full object-cover" />
+                            <button
+                              type="button"
+                              aria-label={`Remove gallery image ${index + 1}`}
+                              onClick={() => {
+                                const next = active.images.filter((_, i) => i !== index);
+                                setMultilineDrafts((old) => ({ ...old, [`${active.id}:images`]: next.join("\n") }));
+                                edit(active.id, "images", next);
+                              }}
+                              className="absolute right-1 top-1 rounded-full bg-white/95 p-1 text-red-600 shadow hover:bg-red-50"
+                            ><Trash2 size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500">Save draft or publish homepage to keep gallery changes.</p>
+                  </div>
+                )}
                 {active.type === "slideshow" && (
                   <div className="space-y-3">
                     <p className="text-sm text-slate-600">

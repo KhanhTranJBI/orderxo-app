@@ -8,8 +8,10 @@ export const ourFileRouter = {
       const jar = cookies();
       const owner = jar.get("orderxo_owner_session")?.value;
       const staff = jar.get("orderxo_support_session")?.value;
-      const staffMode = jar.get("orderxo_staff_ui")?.value === "1";
-      if ((!staffMode && !owner) || (staffMode && !staff)) {
+      const staffMode = Boolean(
+        staff && (!owner || jar.get("orderxo_staff_ui")?.value === "1"),
+      );
+      if (!owner && !staff) {
         throw new UploadThingError("You must be signed in to upload images");
       }
       return { uploader: staffMode ? "staff" : "owner" };
