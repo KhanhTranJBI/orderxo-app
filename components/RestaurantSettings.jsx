@@ -428,7 +428,7 @@ function AppearancePreview({ branding, restaurantName }) {
         </p>
         <div
           className="mt-4 flex flex-wrap items-center gap-5 rounded-xl px-4 pt-3 shadow-sm"
-          style={{ backgroundColor: c("menuCategoryBackgroundColor") }}
+          style={{ backgroundColor: c("menuCategoryBarBackgroundColor") }}
           aria-label="Menu category bar preview"
         >
           {["Appetizer", "Pho", "Drinks"].map((category) => {
