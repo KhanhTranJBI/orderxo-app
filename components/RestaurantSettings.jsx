@@ -21,6 +21,10 @@ import {
   Megaphone,
   Search,
   ShoppingCart,
+  Instagram,
+  Facebook,
+  MapPin,
+  Phone,
 } from "lucide-react";
 
 const TABS = [
@@ -97,6 +101,8 @@ const emptyOrg = {
     footerTextColor: "#ffffff",
     footerLinkColor: "#fdba74",
     footerLinkHoverColor: "#F97316",
+    footerIconColor: "#fdba74",
+    footerIconHoverColor: "#F97316",
     successColor: "#15803d",
     errorColor: "#dc2626",
     warningColor: "#d97706",
@@ -352,8 +358,10 @@ const APPEARANCE_GROUPS = [
     fields: [
       ["footerBackgroundColor", "Background"],
       ["footerTextColor", "Text"],
-      ["footerLinkColor", "Links"],
-      ["footerLinkHoverColor", "Link & social icon hover"],
+      ["footerLinkColor", "Link color"],
+      ["footerLinkHoverColor", "Link hover color"],
+      ["footerIconColor", "Icon color"],
+      ["footerIconHoverColor", "Icon hover color"],
     ],
   },
   {
@@ -549,37 +557,42 @@ function AppearancePreview({ branding, restaurantName }) {
         </div>
       </div>
       <div
-        className="flex justify-between gap-3 px-5 py-4 text-xs"
+        className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 text-xs"
         style={{ background: c("footerBackgroundColor"), color: c("footerTextColor") }}
       >
         <span>© {restaurantName || "Your Restaurant"}</span>
-        <span className="group flex gap-3">
-          <span
-            className="cursor-pointer transition-colors"
-            style={{ color: c("footerLinkColor") }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = c("footerLinkHoverColor");
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = c("footerLinkColor");
-            }}
-          >
-            Privacy · Contact
-          </span>
-          <span
-            className="cursor-pointer transition-colors"
-            style={{ color: c("footerLinkColor") }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = c("footerLinkHoverColor");
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = c("footerLinkColor");
-            }}
-            aria-label="Social icon preview"
-          >
-            ◎
-          </span>
-        </span>
+        <div className="flex flex-wrap items-center gap-4">
+          {["Privacy", "Contact"].map((label) => (
+            <span
+              key={label}
+              tabIndex={0}
+              className="cursor-pointer transition-colors"
+              style={{ color: c("footerLinkColor") }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}
+              onFocus={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }}
+              onBlur={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}
+            >
+              {label}
+            </span>
+          ))}
+          {[Instagram, Facebook, MapPin, Phone].map((Icon, index) => (
+            <span
+              key={index}
+              tabIndex={0}
+              role="img"
+              aria-label={["Instagram icon preview", "Facebook icon preview", "Location icon preview", "Phone icon preview"][index]}
+              className="inline-flex cursor-pointer items-center transition-colors"
+              style={{ color: c("footerIconColor") }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = c("footerIconHoverColor"); }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = c("footerIconColor"); }}
+              onFocus={(e) => { e.currentTarget.style.color = c("footerIconHoverColor"); }}
+              onBlur={(e) => { e.currentTarget.style.color = c("footerIconColor"); }}
+            >
+              <Icon size={17} aria-hidden="true" />
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
