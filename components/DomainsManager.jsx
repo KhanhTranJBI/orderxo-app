@@ -20,6 +20,7 @@ export default function DomainsManager({ organization, locations }) {
   const [custom, setCustom] = useState(organization.customDomain || "");
   const [draft, setDraft] = useState(organization.customDomain || "");
   const [domainInfo, setDomainInfo] = useState(null);
+  const [billing, setBilling] = useState(null);
   const [modal, setModal] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,9 +58,34 @@ export default function DomainsManager({ organization, locations }) {
     },
     [organizationId],
   );
-  useEffect(() => {
-    getInfo(true);
-  }, [getInfo]);
+  const refreshBilling = useCallback(async () => {
+    try {
+      const r = await ownerFetch(`/api/owner/domains/billing?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Unable to load domain billing");
+      setBilling(data);
+    } catch (e) { toast.error(e.message); }
+  }, [organizationId]);
+  useEffect(() => { getInfo(true); refreshBilling(); }, [getInfo, refreshBilling]);
+  const startCheckout = async () => {
+    setBusy(true);
+    try {
+      const r = await ownerFetch("/api/owner/domains/billing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId }) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Unable to start checkout");
+      window.location.assign(data.url);
+    } catch (e) { toast.error(e.message); setBusy(false); }
+  };
+  const cancelAddon = async () => {
+    setBusy(true);
+    try {
+      const r = await ownerFetch("/api/owner/domains/billing", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId }) });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || "Unable to cancel subscription");
+      await refreshBilling();
+      toast.success("Custom domain subscription will end at the billing period end");
+    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
+  };
 
   const save = async () => {
     const domain = clean(draft);
@@ -152,6 +178,13 @@ export default function DomainsManager({ organization, locations }) {
           <button className={btn} onClick={() => copy(`https://${hostname}`)}>
             Copy
           </button>
+        </div>
+        <div className="mt-5 border-t pt-5">
+          <p className="font-semibold">Custom domain billing</p>
+          <p className="mt-1 text-sm text-slate-600">{billing?.included ? "Included in your restaurant subscription" : billing?.entitled ? "Custom domain subscription active" : billing?.price ? `$${(billing.price.monthlyPriceCents / 100).toFixed(2)}/month · Cancel anytime` : "Custom domain pricing is not available yet"}</p>
+          {!billing?.entitled && billing?.price && <button className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={busy} onClick={startCheckout}>Subscribe to custom domain</button>}
+          {billing?.status === "active" && !billing?.included && !billing?.cancelAtPeriodEnd && <button className={`${btn} mt-3`} disabled={busy} onClick={cancelAddon}>Cancel domain subscription at period end</button>}
+          {billing?.cancelAtPeriodEnd && <p className="mt-2 text-sm text-amber-700">Subscription scheduled to cancel at period end.</p>}
         </div>
         <div className="mt-5 border-t pt-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
