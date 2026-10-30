@@ -56,7 +56,7 @@ function Sortable({ id, children }) {
   );
 }
 
-function ModifierEditor({ group, onClose, onSave }) {
+function ModifierEditor({ group, onClose, onSave, organizationId }) {
   const [f, setF] = useState(
     group
       ? {
@@ -275,6 +275,7 @@ function ItemModal({
   onClose,
   onSave,
   onSaveGroup,
+  organizationId,
 }) {
   const [f, setF] = useState(() => ({
     name: item?.name || "",
@@ -550,6 +551,7 @@ function ItemModal({
       </div>
       {editGroup && (
         <ModifierEditor
+          organizationId={organizationId}
           group={editGroup._id ? editGroup : null}
           onClose={() => setEditGroup(null)}
           onSave={async (g) => {
@@ -681,7 +683,7 @@ function LocationItemOverrideModal({ item, locationName, onClose, onSave, onRese
   );
 }
 
-function CategoryModal({ category, onClose, onSave }) {
+function CategoryModal({ category, onClose, onSave, organizationId }) {
   const slugify = (v) =>
     v
       .toLowerCase()
@@ -1508,6 +1510,7 @@ export default function MenuManager({ organizationId }) {
         ) : null}
         {(editing?.item || newFor) && (
           <ItemModal
+            organizationId={organizationId}
             item={editing?.item}
             categoryId={editing?.categoryId || newFor}
             categories={categories}
@@ -1523,6 +1526,7 @@ export default function MenuManager({ organizationId }) {
         )}{" "}
         {editing?.group && (
           <ModifierEditor
+            organizationId={organizationId}
             group={editing.group._id ? editing.group : null}
             onClose={() => setEditing(null)}
             onSave={async (g) => {
@@ -1567,6 +1571,7 @@ export default function MenuManager({ organizationId }) {
         )}
         {categoryModal && (
           <CategoryModal
+            organizationId={organizationId}
             category={categoryModal.category || null}
             onClose={() => setCategoryModal(null)}
             onSave={async (data) => {
