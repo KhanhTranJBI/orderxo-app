@@ -1,13 +1,13 @@
 "use client";
 
-import { UploadButton } from "@uploadthing/react";
+import PlanImageUploadButton from "./PlanImageUploadButton";
 import { toast } from "react-toastify";
 
 /** Upload a single image and write its public URL into the associated form field. */
-export default function ImageUploadButton({ onUploaded, label = "Upload image" }) {
+export default function ImageUploadButton({ onUploaded, organizationId, label = "Upload image" }) {
   return (
     <div className="mt-2 flex justify-start">
-      <UploadButton
+      <PlanImageUploadButton organizationId={organizationId}
         endpoint="menuImage"
         onClientUploadComplete={(files) => {
           const url = files?.[0]?.ufsUrl || files?.[0]?.url || files?.[0]?.serverData?.url;

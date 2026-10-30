@@ -825,7 +825,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                 {active.type !== "slideshow" && textField("Heading", "title")}
                 {active.type !== "slideshow" && textField("Description", "subtitle", true)}
                 {["hero", "about"].includes(active.type) &&
-                  <div>{textField("Main image URL", "imageUrl", false, "https://... or /images/...")}<ImageUploadButton onUploaded={(url) => edit(active.id, "imageUrl", url)} /></div>}
+                  <div>{textField("Main image URL", "imageUrl", false, "https://... or /images/...")}<ImageUploadButton organizationId={organizationId} onUploaded={(url) => edit(active.id, "imageUrl", url)} /></div>}
                 {["gallery", "featuredMenu", "newItems"].includes(active.type) && (
                   <label className="block text-xs font-semibold text-slate-600">
                     {active.type === "gallery" ? "Gallery images" : "Optional preview images"} (one
@@ -878,7 +878,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                       Manage restaurant default slides or customize slides for each location. This
                       is the same slide manager used in Store Settings.
                     </p>
-                    <HomepageSlidesManager
+                    <HomepageSlidesManager organizationId={organizationId}
                       organizationId={organizationId}
                       embedded
                       onSlidesChange={setPreviewSlides}

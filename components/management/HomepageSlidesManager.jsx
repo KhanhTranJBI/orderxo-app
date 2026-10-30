@@ -203,7 +203,13 @@ function SlideModal({ slide, onClose, onSaved, organizationId, locationId }) {
                 placeholder={placeholder}
                 onChange={(e) => setForm((old) => ({ ...old, [key]: e.target.value }))}
               />
-              {key === "image" && <ImageUploadButton onUploaded={(url) => setForm((old) => ({ ...old, image: url }))} label="Upload hero image" />}
+              {key === "image" && (
+                <ImageUploadButton
+                  organizationId={organizationId}
+                  onUploaded={(url) => setForm((old) => ({ ...old, image: url }))}
+                  label="Upload hero image"
+                />
+              )}
             </label>
           ))}
           <label className="flex items-center gap-2 text-sm font-semibold">

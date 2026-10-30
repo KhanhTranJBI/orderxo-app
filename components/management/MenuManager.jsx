@@ -1,6 +1,6 @@
 "use client";
 import { toast } from "react-toastify";
-import { UploadButton } from "@uploadthing/react";
+import UploadButton from "../ui/PlanImageUploadButton";
 import LoadingSpinner from "../ui/LoadingSpinner";
 
 import { ownerFetch } from "../../lib/ownerFetch";
@@ -180,7 +180,7 @@ function ModifierEditor({ group, onClose, onSave }) {
                         onChange={(e) => update({ image: e.target.value })}
                       />
                     </label>
-                    <UploadButton
+                    <UploadButton organizationId={organizationId}
                       endpoint="menuImage"
                       onClientUploadComplete={(files) => {
                         const url = files?.[0]?.ufsUrl || files?.[0]?.url;
@@ -370,7 +370,7 @@ function ItemModal({
                 onChange={(e) => setF((prev) => ({ ...prev, image: e.target.value }))}
               />
               <div className="flex justify-start">
-                <UploadButton
+                <UploadButton organizationId={organizationId}
                   endpoint="menuImage"
                   onClientUploadComplete={(files) => {
                     const url = files?.[0]?.ufsUrl || files?.[0]?.url;
@@ -792,7 +792,7 @@ function CategoryModal({ category, onClose, onSave }) {
             </label>
           </div>
           <div className="flex justify-start">
-            <UploadButton
+            <UploadButton organizationId={organizationId}
               endpoint="menuImage"
               onClientUploadComplete={(files) => {
                 const url = files?.[0]?.ufsUrl || files?.[0]?.url;

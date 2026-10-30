@@ -912,7 +912,7 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "logoUrl", e.target.value)}
                     placeholder="https://..."
                   />
-                  <ImageUploadButton onUploaded={(url) => setOrgPart("branding", "logoUrl", url)} label="Upload logo" />
+                  <ImageUploadButton organizationId={organizationId} onUploaded={(url) => setOrgPart("branding", "logoUrl", url)} label="Upload logo" />
                 </Field>
                 <Field label="Favicon URL (browser tab icon)">
                   <input
@@ -921,7 +921,7 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "faviconUrl", e.target.value)}
                     placeholder="https://.../favicon.png (falls back to logo)"
                   />
-                  <ImageUploadButton onUploaded={(url) => setOrgPart("branding", "faviconUrl", url)} label="Upload favicon" />
+                  <ImageUploadButton organizationId={organizationId} onUploaded={(url) => setOrgPart("branding", "faviconUrl", url)} label="Upload favicon" />
                 </Field>
               </div>
             </div>
@@ -988,7 +988,7 @@ export default function RestaurantSettings({
           )}
 
           {tab === "Nav & Footer Links" && (
-            <RestaurantLinksSettings
+            <RestaurantLinksSettings organizationId={organizationId}
               value={org.website}
               onChange={(website) => setOrg((old) => ({ ...old, website }))}
             />
