@@ -143,19 +143,13 @@ export default function DomainsManager({ organization, locations }) {
       ? "Verified & active"
       : domainInfo?.status === "not_registered"
         ? "Setup required"
-        : domainInfo?.status === "ownership_required" ? "Ownership verification required" : "Waiting for DNS verification";
+        : domainInfo?.status === "ownership_required" ? "Ownership verification required" : domainInfo?.status === "pending_registration" ? "Preparing domain setup" : "Waiting for DNS verification";
   const dns = domainInfo?.dns;
   const records = Array.isArray(domainInfo?.verification) ? domainInfo.verification : [];
-  const dnsHints = [
-    ...((dns?.recommendedCNAME || []).map?.((r) => ({
-      label: "CNAME",
-      value: typeof r === "string" ? r : JSON.stringify(r),
-    })) || []),
-    ...((dns?.recommendedIPv4 || []).map?.((r) => ({
-      label: "A / IPv4",
-      value: typeof r === "string" ? r : JSON.stringify(r),
-    })) || []),
-  ];
+  const dnsHints = Array.isArray(domainInfo?.dnsRecords) ? domainInfo.dnsRecords : [];
+  const ownershipReady = records.some((r) => r?.name && r?.value);
+  const dnsReady = dnsHints.some((r) => r?.name && r?.value);
+  const pendingSetup = domainInfo?.status === "pending_registration" || (!ownershipReady && !dnsReady && !verified);
   return (
     <div className="mt-8 space-y-5">
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -318,7 +312,7 @@ export default function DomainsManager({ organization, locations }) {
                     ? "Continue with new domain"
                     : "Continue to DNS setup"}
               </button>
-              {custom && (
+              {custom && dnsReady && domainInfo?.canVerifyDns && (
                 <button className={btn} disabled={checking || busy} onClick={() => getInfo()}>
                   {checking ? "Checking…" : "Verify DNS"}
                 </button>
@@ -337,8 +331,8 @@ export default function DomainsManager({ organization, locations }) {
                 {domainInfo?.status === "ownership_required" && (
                   <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                     <p className="font-semibold">Verify domain ownership</p>
-                    <p className="mt-1">{records.length ? "Add the TXT record shown below at your DNS provider, then verify ownership." : "OrderXO support must finish registering this domain before a verification record can be provided."}</p>
-                    {records.length > 0 && <button type="button" className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={checking || busy} onClick={verifyOwnership}>{checking ? "Verifying…" : "Verify ownership"}</button>}
+                    <p className="mt-1">{ownershipReady ? "Add the TXT record shown below, then verify ownership." : "No DNS changes are required yet. OrderXO is preparing your domain."}</p>
+                    {ownershipReady && domainInfo?.canVerifyOwnership && <button type="button" className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={checking || busy} onClick={verifyOwnership}>{checking ? "Verifying…" : "Verify ownership"}</button>}
                   </div>
                 )}
                 {dns && (
@@ -346,16 +340,27 @@ export default function DomainsManager({ organization, locations }) {
                     DNS configuration: {dns.configured ? "Valid" : "Not yet confirmed"}
                   </p>
                 )}
-                {!verified && (
+                {!verified && !pendingSetup && (
                   <p className="mt-2 text-sm text-slate-600">
                     Sign in to your domain provider and add the records below. DNS changes may take time to propagate. Then click Verify DNS.
                   </p>
                 )}
+                {pendingSetup && (
+                  <div className="mt-3 rounded-lg border bg-white p-3 text-sm">
+                    <p className="font-semibold">Preparing domain setup</p>
+                    <p className="mt-1 text-slate-600">DNS records are not available yet. Do not change your DNS settings. OrderXO may need to resolve an existing domain assignment.</p>
+                    <button type="button" className={`${btn} mt-3`} disabled={busy || checking} onClick={save}>{busy ? "Retrying…" : "Retry setup"}</button>
+                  </div>
+                )}
                 {domainInfo?.status !== "ownership_required" && dnsHints.map((r, i) => (
                   <div key={i} className="mt-3 rounded-lg border bg-white p-3 text-sm">
-                    <span className="font-semibold">{r.label}</span>
+                    <span className="font-semibold">{r.type} record</span>
                     <div className="mt-1 flex items-center justify-between gap-2">
-                      <code className="break-all">{r.value}</code>
+                      <code className="break-all">Name: {r.name}</code>
+                      <button type="button" aria-label="Copy DNS name" onClick={() => copy(r.name)}><Copy size={16} /></button>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <code className="break-all">Value: {r.value}</code>
                       <button aria-label="Copy record" onClick={() => copy(r.value)}>
                         <Copy size={16} />
                       </button>
@@ -366,10 +371,10 @@ export default function DomainsManager({ organization, locations }) {
                   <div key={i} className="mt-3 rounded-lg border bg-white p-3 text-sm">
                     <div className="font-semibold">{r.type || "Verification"} record</div>
                     <p className="mt-1 break-all">
-                      Name: <code>{r.domain || r.name || "See Vercel"}</code>
+                      Name: <code>{r.name}</code>
                     </p>
                     <p className="mt-1 break-all">
-                      Value: <code>{r.value || "See Vercel"}</code>
+                      Value: <code>{r.value}</code>
                     </p>
                     {r.name && <button className="mt-2 mr-4 text-orange-700" onClick={() => copy(r.name)}>Copy name</button>}
                     {r.value && <button className="mt-2 text-orange-700" onClick={() => copy(r.value)}>Copy value</button>}
