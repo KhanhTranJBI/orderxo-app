@@ -3,7 +3,7 @@
 import ImageUploadButton from "./ui/ImageUploadButton";
 
 const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
-function LinkEditor({ title, value = [], onChange, allowImages = false }) {
+function LinkEditor({ title, value = [], onChange, allowImages = false, organizationId }) {
   const links = Array.isArray(value) ? value : [];
   const edit = (index, key, val) =>
     onChange(links.map((item, i) => (i === index ? { ...item, [key]: val } : item)));
@@ -47,7 +47,10 @@ function LinkEditor({ title, value = [], onChange, allowImages = false }) {
                 value={link.imageUrl || ""}
                 onChange={(e) => edit(index, "imageUrl", e.target.value)}
               />
-              <ImageUploadButton organizationId={organizationId} onUploaded={(url) => edit(index, "imageUrl", url)} />
+              <ImageUploadButton
+                organizationId={organizationId}
+                onUploaded={(url) => edit(index, "imageUrl", url)}
+              />
               <span className="block text-xs text-slate-500">
                 Use a publicly accessible HTTPS image URL. Appears before the link name.
               </span>
@@ -91,12 +94,18 @@ export default function RestaurantLinksSettings({ value = {}, onChange, organiza
   const change = (key, val) => onChange({ ...value, [key]: val });
   return (
     <div className="space-y-8">
-      <div><h2 className="text-xl font-bold">Navigation &amp; Footer Links</h2><p className="mt-1 text-sm text-slate-500">Shared across all locations. Manage social links in Store Settings.</p></div>
+      <div>
+        <h2 className="text-xl font-bold">Navigation &amp; Footer Links</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Shared across all locations. Manage social links in Store Settings.
+        </p>
+      </div>
       <LinkEditor
         title="Navigation links (DoorDash, delivery, etc.)"
         allowImages
         value={value.navigationLinks}
         onChange={(links) => change("navigationLinks", links)}
+        organizationId={organizationId}
       />
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
@@ -172,6 +181,7 @@ export default function RestaurantLinksSettings({ value = {}, onChange, organiza
                   value.footerGroups.map((g, i) => (i === index ? { ...g, links } : g)),
                 )
               }
+              organizationId={organizationId}
             />
           </div>
         ))}
