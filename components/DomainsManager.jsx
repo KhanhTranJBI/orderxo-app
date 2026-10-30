@@ -21,6 +21,7 @@ export default function DomainsManager({ organization, locations }) {
   const [draft, setDraft] = useState(organization.customDomain || "");
   const [domainInfo, setDomainInfo] = useState(null);
   const [billing, setBilling] = useState(null);
+  const [storage, setStorage] = useState(null);
   const [modal, setModal] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -66,7 +67,13 @@ export default function DomainsManager({ organization, locations }) {
       setBilling(data);
     } catch (e) { toast.error(e.message); }
   }, [organizationId]);
-  useEffect(() => { getInfo(true); refreshBilling(); }, [getInfo, refreshBilling]);
+  const refreshStorage = useCallback(async () => {
+    try {
+      const r = await ownerFetch(`/api/owner/website-plus/uploads?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" });
+      if (r.ok) setStorage(await r.json());
+    } catch { /* Keep billing usable if storage service is unavailable. */ }
+  }, [organizationId]);
+  useEffect(() => { getInfo(true); refreshBilling(); refreshStorage(); }, [getInfo, refreshBilling, refreshStorage]);
   const startCheckout = async () => {
     setBusy(true);
     try {
@@ -83,7 +90,7 @@ export default function DomainsManager({ organization, locations }) {
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "Unable to cancel subscription");
       await refreshBilling();
-      toast.success("Custom domain subscription will end at the billing period end");
+      toast.success("Website Plus will end at the billing period end");
     } catch (e) { toast.error(e.message); } finally { setBusy(false); }
   };
 
@@ -180,10 +187,23 @@ export default function DomainsManager({ organization, locations }) {
           </button>
         </div>
         <div className="mt-5 border-t pt-5">
-          <p className="font-semibold">Custom domain billing</p>
-          <p className="mt-1 text-sm text-slate-600">{billing?.included ? "Included in your restaurant subscription" : billing?.entitled ? "Custom domain subscription active" : billing?.price ? `$${(billing.price.monthlyPriceCents / 100).toFixed(2)}/month · Cancel anytime` : "Custom domain pricing is not available yet"}</p>
-          {!billing?.entitled && billing?.price && <button className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={busy} onClick={startCheckout}>Subscribe to custom domain</button>}
-          {billing?.status === "active" && !billing?.included && !billing?.cancelAtPeriodEnd && <button className={`${btn} mt-3`} disabled={busy} onClick={cancelAddon}>Cancel domain subscription at period end</button>}
+          {storage && (
+            <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="font-semibold">Image storage</p>
+              <p className="mt-1 text-sm text-slate-600">
+                Storage Used: {(Number(storage.usedBytes || 0) / 1048576).toFixed(1)} MB
+                {storage.limitBytes ? ` / ${(storage.limitBytes / 1048576).toFixed(0)} MB` : " · No Website Plus quota"}
+              </p>
+              {storage.limitBytes && <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow={Math.min(100, Math.round(100 * Number(storage.usedBytes || 0) / storage.limitBytes))} aria-valuemin={0} aria-valuemax={100}>
+                <div className="h-full bg-orange-500" style={{ width: `${Math.min(100, 100 * Number(storage.usedBytes || 0) / storage.limitBytes)}%` }} />
+              </div>}
+              {Number(storage.reservedBytes || 0) > 0 && <p className="mt-1 text-xs text-slate-500">Uploads in progress: {(storage.reservedBytes / 1048576).toFixed(1)} MB</p>}
+            </div>
+          )}
+          <p className="font-semibold">Website Plus billing</p>
+          <p className="mt-1 text-sm text-slate-600">{billing?.included ? "Included in your restaurant subscription" : billing?.entitled ? "Website Plus active" : billing?.price ? `$${(billing.price.monthlyPriceCents / 100).toFixed(2)}/month · Cancel anytime` : "Website Plus pricing is not available yet"}</p>
+          {!billing?.entitled && billing?.price && <button className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={busy} onClick={startCheckout}>Upgrade to Website Plus</button>}
+          {billing?.status === "active" && !billing?.included && !billing?.cancelAtPeriodEnd && <button className={`${btn} mt-3`} disabled={busy} onClick={cancelAddon}>Cancel Website Plus at period end</button>}
           {billing?.cancelAtPeriodEnd && <p className="mt-2 text-sm text-amber-700">Subscription scheduled to cancel at period end.</p>}
         </div>
         <div className="mt-5 border-t pt-5">

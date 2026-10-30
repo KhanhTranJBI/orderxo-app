@@ -45,14 +45,15 @@ export const ourFileRouter = {
         uploadId: reservation.data.uploadId };
     })
     .onUploadComplete(async ({ file, metadata }) => {
-      const result = await backendRequest(
-        `/api/website-plus/uploads?organizationId=${encodeURIComponent(metadata.organizationId)}`,
-        { method: "POST", authenticated: true, body: {
-          organizationId: metadata.organizationId, action: "complete",
-          uploadId: metadata.uploadId, fileKey: file.key,
-        } },
-      );
-      if (result.status !== 200) throw new UploadThingError("Upload quota could not be finalized.");
+      const secret = process.env.ORDERXO_UPLOAD_CALLBACK_SECRET;
+      const base = process.env.ORDERXO_ADMIN_API_URL;
+      if (!secret || !base) throw new UploadThingError("Upload callback is not configured");
+      const response = await fetch(`${base.replace(/\/$/, "")}/api/website-plus/internal-finalize`, {
+        method: "POST", headers: { "Content-Type": "application/json", "x-orderxo-upload-secret": secret },
+        body: JSON.stringify({ organizationId: metadata.organizationId, uploadId: metadata.uploadId,
+          action: "complete", fileKey: file.key }), cache: "no-store",
+      });
+      if (!response.ok) throw new UploadThingError("Unable to finalize upload storage");
       return { url: file.ufsUrl || file.url };
     }),
 };
