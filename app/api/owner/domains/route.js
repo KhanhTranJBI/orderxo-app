@@ -8,3 +8,7 @@ export async function PATCH(req) {
 export async function DELETE(req) {
   return proxy(req, "/api/domains", true);
 }
+
+export async function POST(req) {
+  return proxy(req, "/api/domains", true);
+}

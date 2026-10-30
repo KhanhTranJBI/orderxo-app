@@ -100,6 +100,20 @@ export default function DomainsManager({ organization, locations }) {
       setBusy(false);
     }
   };
+  const verifyOwnership = async () => {
+    setChecking(true);
+    try {
+      const response = await ownerFetch("/api/owner/domains", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, domain: custom }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Unable to verify ownership");
+      setDomainInfo(data);
+      toast[data.verified ? "success" : "info"](data.message || (data.verified ? "Domain connected" : "Verification is still pending"));
+    } catch (error) { toast.error(error.message); }
+    finally { setChecking(false); }
+  };
   const remove = async () => {
     setBusy(true);
     try {
@@ -129,7 +143,7 @@ export default function DomainsManager({ organization, locations }) {
       ? "Verified & active"
       : domainInfo?.status === "not_registered"
         ? "Setup required"
-        : "Waiting for DNS verification";
+        : domainInfo?.status === "ownership_required" ? "Ownership verification required" : "Waiting for DNS verification";
   const dns = domainInfo?.dns;
   const records = Array.isArray(domainInfo?.verification) ? domainInfo.verification : [];
   const dnsHints = [
@@ -320,6 +334,13 @@ export default function DomainsManager({ organization, locations }) {
                   )}
                   {statusText}
                 </div>
+                {domainInfo?.status === "ownership_required" && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    <p className="font-semibold">Verify domain ownership</p>
+                    <p className="mt-1">{records.length ? "Add the TXT record shown below at your DNS provider, then verify ownership." : "OrderXO support must finish registering this domain before a verification record can be provided."}</p>
+                    {records.length > 0 && <button type="button" className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={checking || busy} onClick={verifyOwnership}>{checking ? "Verifying…" : "Verify ownership"}</button>}
+                  </div>
+                )}
                 {dns && (
                   <p className="mt-2 text-sm text-slate-600">
                     DNS configuration: {dns.configured ? "Valid" : "Not yet confirmed"}
@@ -330,7 +351,7 @@ export default function DomainsManager({ organization, locations }) {
                     Sign in to your domain provider and add the records below. DNS changes may take time to propagate. Then click Verify DNS.
                   </p>
                 )}
-                {dnsHints.map((r, i) => (
+                {domainInfo?.status !== "ownership_required" && dnsHints.map((r, i) => (
                   <div key={i} className="mt-3 rounded-lg border bg-white p-3 text-sm">
                     <span className="font-semibold">{r.label}</span>
                     <div className="mt-1 flex items-center justify-between gap-2">
