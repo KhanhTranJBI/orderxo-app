@@ -23,20 +23,12 @@ export const ourFileRouter = {
       if (!/^[a-f0-9]{24}$/i.test(String(organizationId || ""))) {
         throw new UploadThingError("Select a restaurant before uploading.");
       }
-      let subscription;
-      try {
-        const result = await backendRequest(
-          `/api/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`,
-          { method: "GET", authenticated: true },
-        );
-        if (result.status !== 200) throw new Error("Subscription lookup failed");
-        subscription = result.data?.subscription;
-      } catch {
-        throw new UploadThingError("Unable to verify upload eligibility. Please try again.");
-      }
-      const plan = String(subscription?.plan || subscription?.tier || "").toLowerCase();
-      if (!["starter", "growth", "pro"].includes(plan)) {
-        throw new UploadThingError("Image uploads are not available on the Free Website plan.");
+      const result = await backendRequest(
+        `/api/website-plus/entitlement?organizationId=${encodeURIComponent(organizationId)}`,
+        { method: "GET", authenticated: true },
+      );
+      if (result.status !== 200 || !result.data?.canUpload) {
+        throw new UploadThingError("An active Website Plus or paid OrderXO plan is required for uploads.");
       }
       return { uploader: staffMode ? "staff" : "owner" };
     })

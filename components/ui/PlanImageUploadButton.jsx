@@ -8,11 +8,10 @@ export default function PlanImageUploadButton({ organizationId, ...props }) {
     let active = true;
     setAllowed(false);
     if (!organizationId) return;
-    fetch(`/api/owner/subscriptions/current?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" })
+    fetch(`/api/owner/website-plus/entitlement?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" })
       .then(async r => { if (!r.ok) throw Error(); return r.json(); })
       .then(data => {
-        const plan = String(data.subscription?.plan || data.subscription?.tier || "").toLowerCase();
-        if (active) setAllowed(["starter","growth","pro"].includes(plan));
+        if (active) setAllowed(data.canUpload === true);
       })
       .catch(() => { if (active) setAllowed(false); });
     return () => { active = false; };
