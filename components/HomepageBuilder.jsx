@@ -113,6 +113,7 @@ const makeSection = (type) => ({
   itemIds: [],
   buttonText: type === "cta" ? "Order online" : "Explore menu",
   buttonUrl: "/menu",
+  buttonStyle: { useGlobal: true },
   reviewUrl: "",
   googlePlaceId: "",
   layout: "default",
@@ -256,12 +257,40 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
       {s.subtitle && <p className="mt-2 text-sm leading-relaxed opacity-75">{s.subtitle}</p>}
     </>
   );
+  const buttonSettings = s.buttonStyle || {};
+  const globalButtons = {
+    background: branding?.buttonBackgroundColor || accent,
+    text: branding?.buttonTextColor || "#ffffff",
+    hoverBackground: branding?.buttonHoverColor || "#ea580c",
+    hoverText: branding?.buttonHoverTextColor || "#ffffff",
+  };
+  const effectiveButton = buttonSettings.useGlobal === false
+    ? {
+        background: buttonSettings.background || globalButtons.background,
+        text: buttonSettings.text || globalButtons.text,
+        hoverBackground: buttonSettings.hoverBackground || globalButtons.hoverBackground,
+        hoverText: buttonSettings.hoverText || globalButtons.hoverText,
+      }
+    : globalButtons;
   const button = (
     <a
       href={validUrl(s.buttonUrl) ? s.buttonUrl || "/menu" : "/menu"}
       onClick={(e) => e.preventDefault()}
-      className="mt-5 inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white"
-      style={{ backgroundColor: accent }}
+      className="mt-5 inline-flex rounded-full px-5 py-2.5 text-sm font-semibold transition-colors"
+      style={{
+        backgroundColor: effectiveButton.background,
+        color: effectiveButton.text,
+        "--section-button-hover-bg": effectiveButton.hoverBackground,
+        "--section-button-hover-text": effectiveButton.hoverText,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = effectiveButton.hoverBackground;
+        e.currentTarget.style.color = effectiveButton.hoverText;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = effectiveButton.background;
+        e.currentTarget.style.color = effectiveButton.text;
+      }}
     >
       {s.buttonText || "Order online"}
     </a>
@@ -925,6 +954,40 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                       onChange={(e) => edit(active.id, "overlay", Number(e.target.value))}
                     />
                   </label>
+                )}
+                {["hero", "about", "featured", "cta", "newItems", "fanFavourites", "googleReviews"].includes(active.type) && (
+                  <div className="rounded-xl border border-slate-200 p-3">
+                    <label className="flex items-center gap-2 text-sm font-semibold">
+                      <input type="checkbox"
+                        checked={active.buttonStyle?.useGlobal !== false}
+                        onChange={(e) => edit(active.id, "buttonStyle", { ...(active.buttonStyle || {}), useGlobal: e.target.checked })} />
+                      Use global button colors
+                    </label>
+                    {active.buttonStyle?.useGlobal === false && (
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {[
+                          ["background", "Background", branding?.buttonBackgroundColor || "#f97316"],
+                          ["text", "Text", branding?.buttonTextColor || "#ffffff"],
+                          ["hoverBackground", "Hover background", branding?.buttonHoverColor || "#ea580c"],
+                          ["hoverText", "Hover text", branding?.buttonHoverTextColor || "#ffffff"],
+                        ].map(([key, label, fallback]) => (
+                          <label key={key} className="text-xs font-medium text-slate-600">
+                            {label}
+                            <div className="mt-1 flex items-center gap-2">
+                              <input type="color" aria-label={`${label} color`}
+                                value={/^#[0-9a-f]{6}$/i.test(active.buttonStyle?.[key] || "") ? active.buttonStyle[key] : fallback}
+                                onChange={(e) => edit(active.id, "buttonStyle", { ...active.buttonStyle, [key]: e.target.value.toUpperCase() })}
+                                className="h-9 w-9 shrink-0 cursor-pointer rounded border" />
+                              <input type="text" aria-label={`${label} hex`} maxLength={7}
+                                value={active.buttonStyle?.[key] || ""} placeholder={fallback}
+                                onChange={(e) => edit(active.id, "buttonStyle", { ...active.buttonStyle, [key]: e.target.value.toUpperCase() })}
+                                className="w-full min-w-0 rounded border px-2 py-2 font-mono text-xs" />
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   {["backgroundColor", "textColor"].map((key) => (

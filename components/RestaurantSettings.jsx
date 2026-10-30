@@ -94,6 +94,7 @@ const emptyOrg = {
     buttonBackgroundColor: "#f97316",
     buttonTextColor: "#ffffff",
     buttonHoverColor: "#ea580c",
+    buttonHoverTextColor: "#ffffff",
     inputBackgroundColor: "#ffffff",
     inputTextColor: "#111827",
     inputBorderColor: "#cbd5e1",
@@ -340,7 +341,8 @@ const APPEARANCE_GROUPS = [
     fields: [
       ["buttonBackgroundColor", "Background"],
       ["buttonTextColor", "Text"],
-      ["buttonHoverColor", "Hover"],
+      ["buttonHoverColor", "Hover background"],
+      ["buttonHoverTextColor", "Hover text"],
     ],
   },
   {
