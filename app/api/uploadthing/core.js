@@ -7,7 +7,7 @@ const f = createUploadthing();
 export const ourFileRouter = {
   menuImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .input(z.object({ organizationId: z.string() }))
-    .middleware(async ({ input }) => {
+    .middleware(async ({ input, files }) => {
       const jar = cookies();
       const owner = jar.get("orderxo_owner_session")?.value;
       const staff = jar.get("orderxo_support_session")?.value;
@@ -30,7 +30,29 @@ export const ourFileRouter = {
       if (result.status !== 200 || !result.data?.canUpload) {
         throw new UploadThingError("An active Website Plus or paid OrderXO plan is required for uploads.");
       }
-      return { uploader: staffMode ? "staff" : "owner" };
+      const bytes = Number(files?.[0]?.size);
+      if (!Number.isSafeInteger(bytes) || bytes <= 0) {
+        throw new UploadThingError("Unable to determine upload size.");
+      }
+      const reservation = await backendRequest(
+        `/api/website-plus/uploads?organizationId=${encodeURIComponent(organizationId)}`,
+        { method: "POST", authenticated: true, body: { organizationId, action: "reserve", bytes } },
+      );
+      if (reservation.status !== 200 || !reservation.data?.uploadId) {
+        throw new UploadThingError(reservation.data?.error || "Unable to reserve upload storage.");
+      }
+      return { uploader: staffMode ? "staff" : "owner", organizationId,
+        uploadId: reservation.data.uploadId };
     })
-    .onUploadComplete(async ({ file }) => ({ url: file.ufsUrl || file.url })),
+    .onUploadComplete(async ({ file, metadata }) => {
+      const result = await backendRequest(
+        `/api/website-plus/uploads?organizationId=${encodeURIComponent(metadata.organizationId)}`,
+        { method: "POST", authenticated: true, body: {
+          organizationId: metadata.organizationId, action: "complete",
+          uploadId: metadata.uploadId, fileKey: file.key,
+        } },
+      );
+      if (result.status !== 200) throw new UploadThingError("Upload quota could not be finalized.");
+      return { url: file.ufsUrl || file.url };
+    }),
 };
