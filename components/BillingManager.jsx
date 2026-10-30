@@ -1,6 +1,6 @@
 "use client";
 import { ownerFetch } from "../lib/ownerFetch";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -19,6 +19,30 @@ export default function BillingManager({
   initialAddLocation = false,
 }) {
   const router = useRouter();
+  const [plus, setPlus] = useState(null);
+  const [plusBusy, setPlusBusy] = useState(false);
+  const [confirmPlusCancel, setConfirmPlusCancel] = useState(false);
+  const loadPlus = useCallback(async () => {
+    try {
+      const r = await ownerFetch(`/api/owner/domains/billing?organizationId=${encodeURIComponent(organizationId)}`, { cache: "no-store" });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || "Unable to load Website Plus");
+      setPlus(d);
+    } catch (e) { toast.error(e.message); }
+  }, [organizationId]);
+  useEffect(() => { loadPlus(); }, [loadPlus]);
+  async function plusAction(method) {
+    setPlusBusy(true);
+    try {
+      const r = await ownerFetch("/api/owner/domains/billing", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Unable to update Website Plus");
+      if (method === "POST") { if (!d.url) throw new Error("Checkout URL unavailable"); window.location.assign(d.url); return; }
+      setConfirmPlusCancel(false);
+      await loadPlus();
+      toast.success(method === "PATCH" ? "Website Plus will renew normally" : "Website Plus will end at the billing period end");
+    } catch (e) { toast.error(e.message); } finally { setPlusBusy(false); }
+  }
   const [billingSnapshot, setBillingSnapshot] = useState(null);
   const billing = billingSnapshot || locationBilling;
   const [busy, setBusy] = useState("");
@@ -554,6 +578,28 @@ export default function BillingManager({
           </div>
         </div>
       )}
+      <section id="website-plus" className="rounded-2xl border bg-white p-6 shadow-sm scroll-mt-24">
+        <h2 className="text-lg font-bold">Website Plus</h2>
+        <p className="mt-2 text-sm text-slate-600">Custom domain and image uploads with 100 MB storage · $5/month when purchased separately.</p>
+        <p className="mt-3 font-medium">{plus?.included ? "Included with your restaurant plan" : plus?.cancelAtPeriodEnd ? "Cancellation scheduled" : plus?.entitled ? "Active" : "Not subscribed"}</p>
+        {plus?.cancelAtPeriodEnd && <p className="mt-2 text-sm text-amber-700">Your benefits remain active until {plus.currentPeriodEnd ? new Date(plus.currentPeriodEnd).toLocaleDateString() : "the end of the billing period"}.</p>}
+        <div className="mt-4 flex flex-wrap gap-3">
+          {!plus?.included && !plus?.entitled && plus?.price && <button disabled={plusBusy} onClick={() => plusAction("POST")} className="rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Upgrade to Website Plus</button>}
+          {!plus?.included && plus?.entitled && !plus?.cancelAtPeriodEnd && <button disabled={plusBusy} onClick={() => setConfirmPlusCancel(true)} className="rounded-xl border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 disabled:opacity-50">Cancel Website Plus</button>}
+          {!plus?.included && plus?.cancelAtPeriodEnd && <button disabled={plusBusy} onClick={() => plusAction("PATCH")} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Resume Website Plus</button>}
+          <a href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(organizationId)}`} className="rounded-xl border px-4 py-2 text-sm font-semibold">Manage domain &amp; storage</a>
+        </div>
+      </section>
+      {confirmPlusCancel && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation">
+        <div role="dialog" aria-modal="true" aria-labelledby="plus-cancel-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+          <h3 id="plus-cancel-title" className="text-xl font-bold">Cancel Website Plus?</h3>
+          <p className="mt-3 text-sm text-slate-600">Website Plus remains active until {plus?.currentPeriodEnd ? new Date(plus.currentPeriodEnd).toLocaleDateString() : "your current billing period ends"}. After that, your custom domain and new image uploads will require an eligible plan. Existing images are not deleted immediately. Your free OrderXO address remains available.</p>
+          <div className="mt-6 flex justify-end gap-3">
+            <button disabled={plusBusy} onClick={() => setConfirmPlusCancel(false)} className="rounded-xl border px-4 py-2 font-semibold">Keep Website Plus</button>
+            <button disabled={plusBusy} onClick={() => plusAction("DELETE")} className="rounded-xl bg-red-600 px-4 py-2 font-semibold text-white disabled:opacity-50">{plusBusy ? "Cancelling…" : "Confirm cancellation"}</button>
+          </div>
+        </div>
+      </div>}
       {active && (
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Subscription cancellation</h2>

@@ -2,14 +2,14 @@
 import { ownerFetch } from "../lib/ownerFetch";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { CheckCircle2, AlertTriangle, Globe, RefreshCw, X, Copy, ExternalLink } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Globe, RefreshCw, X, Copy } from "lucide-react";
 
 const clean = (s) =>
   String(s || "")
     .trim()
     .toLowerCase()
     .replace(/^https?:\/\//, "")
-    .replace(/\/$/, "")
+    .replace(/\/.*$/, "")
     .replace(/\.$/, "");
 const btn =
   "rounded-xl border px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
@@ -74,26 +74,6 @@ export default function DomainsManager({ organization, locations }) {
     } catch { /* Keep billing usable if storage service is unavailable. */ }
   }, [organizationId]);
   useEffect(() => { getInfo(true); refreshBilling(); refreshStorage(); }, [getInfo, refreshBilling, refreshStorage]);
-  const startCheckout = async () => {
-    setBusy(true);
-    try {
-      const r = await ownerFetch("/api/owner/domains/billing", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId }) });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Unable to start checkout");
-      window.location.assign(data.url);
-    } catch (e) { toast.error(e.message); setBusy(false); }
-  };
-  const cancelAddon = async () => {
-    setBusy(true);
-    try {
-      const r = await ownerFetch("/api/owner/domains/billing", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ organizationId }) });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Unable to cancel subscription");
-      await refreshBilling();
-      toast.success("Website Plus will end at the billing period end");
-    } catch (e) { toast.error(e.message); } finally { setBusy(false); }
-  };
-
   const save = async () => {
     const domain = clean(draft);
     if (!domain) return toast.error("Enter a domain, such as www.myrestaurant.com");
@@ -148,8 +128,8 @@ export default function DomainsManager({ organization, locations }) {
     : verified
       ? "Verified & active"
       : domainInfo?.status === "not_registered"
-        ? "Not registered with Vercel"
-        : "Pending verification";
+        ? "Setup required"
+        : "Waiting for DNS verification";
   const dns = domainInfo?.dns;
   const records = Array.isArray(domainInfo?.verification) ? domainInfo.verification : [];
   const dnsHints = [
@@ -200,11 +180,8 @@ export default function DomainsManager({ organization, locations }) {
               {Number(storage.reservedBytes || 0) > 0 && <p className="mt-1 text-xs text-slate-500">Uploads in progress: {(storage.reservedBytes / 1048576).toFixed(1)} MB</p>}
             </div>
           )}
-          <p className="font-semibold">Website Plus billing</p>
-          <p className="mt-1 text-sm text-slate-600">{billing?.included ? "Included in your restaurant subscription" : billing?.entitled ? "Website Plus active" : billing?.price ? `$${(billing.price.monthlyPriceCents / 100).toFixed(2)}/month · Cancel anytime` : "Website Plus pricing is not available yet"}</p>
-          {!billing?.entitled && billing?.price && <button className={`${btn} mt-3 border-orange-600 bg-orange-600 text-white`} disabled={busy} onClick={startCheckout}>Upgrade to Website Plus</button>}
-          {billing?.status === "active" && !billing?.included && !billing?.cancelAtPeriodEnd && <button className={`${btn} mt-3`} disabled={busy} onClick={cancelAddon}>Cancel Website Plus at period end</button>}
-          {billing?.cancelAtPeriodEnd && <p className="mt-2 text-sm text-amber-700">Subscription scheduled to cancel at period end.</p>}
+          <p className="text-sm text-slate-600">Manage Website Plus payments and renewal in Billing &amp; Subscription.</p>
+          <a href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(organizationId)}#website-plus`} className="mt-2 inline-block text-sm font-semibold text-orange-700 hover:underline">{billing?.entitled ? "Manage Website Plus" : "Upgrade to Website Plus"} →</a>
         </div>
         <div className="mt-5 border-t pt-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -297,8 +274,7 @@ export default function DomainsManager({ organization, locations }) {
               </button>
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Connect your restaurant's domain to OrderXO. We register the hostname with Vercel and
-              check DNS verification.
+              Enter your domain, then follow the DNS instructions shown here. You do not need a Vercel account.
             </p>
             <label htmlFor="custom-domain" className="mt-5 block text-sm font-semibold">
               Domain hostname
@@ -313,8 +289,7 @@ export default function DomainsManager({ organization, locations }) {
             />
             {custom && clean(draft) !== custom && (
               <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-                Changing a live domain can interrupt customers. Keep your old Vercel project active
-                until the new domain is verified.
+                Changing a connected domain may interrupt customers. Your OrderXO address remains available during setup.
               </p>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
@@ -326,8 +301,8 @@ export default function DomainsManager({ organization, locations }) {
                 {busy
                   ? "Registering…"
                   : custom && clean(draft) !== custom
-                    ? "Register new domain"
-                    : "Register with Vercel"}
+                    ? "Continue with new domain"
+                    : "Continue to DNS setup"}
               </button>
               {custom && (
                 <button className={btn} disabled={checking || busy} onClick={() => getInfo()}>
@@ -352,8 +327,7 @@ export default function DomainsManager({ organization, locations }) {
                 )}
                 {!verified && (
                   <p className="mt-2 text-sm text-slate-600">
-                    Use the DNS and ownership records provided by Vercel. Changes may take time to
-                    propagate. Then click Verify DNS.
+                    Sign in to your domain provider and add the records below. DNS changes may take time to propagate. Then click Verify DNS.
                   </p>
                 )}
                 {dnsHints.map((r, i) => (
@@ -376,23 +350,11 @@ export default function DomainsManager({ organization, locations }) {
                     <p className="mt-1 break-all">
                       Value: <code>{r.value || "See Vercel"}</code>
                     </p>
-                    {r.value && (
-                      <button className="mt-2 text-orange-700" onClick={() => copy(r.value)}>
-                        Copy value
-                      </button>
-                    )}
+                    {r.name && <button className="mt-2 mr-4 text-orange-700" onClick={() => copy(r.name)}>Copy name</button>}
+                    {r.value && <button className="mt-2 text-orange-700" onClick={() => copy(r.value)}>Copy value</button>}
                   </div>
                 ))}
-                {!verified && (
-                  <a
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-orange-700"
-                    href="https://vercel.com/dashboard"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open Vercel to view DNS details <ExternalLink size={14} />
-                  </a>
-                )}
+
               </div>
             )}
             {custom && (
