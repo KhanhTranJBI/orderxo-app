@@ -984,12 +984,19 @@ export default function RestaurantSettings({
                 <h2 className="text-xl font-bold">SEO & Page Titles</h2>
                 <p className="mt-1 text-sm text-slate-500">Customize search results and social previews. Leave fields blank to use restaurant-specific defaults.</p>
               </div>
-              {[["home", "Home"], ["menu", "Menu"], ["contact", "Contact"], ["giftCard", "Gift Cards"]].map(([key, label]) => (
-                <div key={key} className="rounded-xl border p-5 space-y-4">
+              {[["home", "Home"], ["menu", "Menu"], ["contact", "Contact"], ["giftCard", "Gift Cards"], ["checkout", "Checkout"], ["privacy", "Privacy Policy"], ["terms", "Terms & Conditions"]].map(([key, label]) => (
+                <div key={key} className={`rounded-xl border p-5 space-y-4 ${(["giftCard", "checkout"].includes(key) && !["starter", "growth", "grow", "pro"].includes(plan)) ? "bg-slate-50" : ""}`}>
                   <h3 className="font-semibold">{label} page</h3>
+                  {["giftCard", "checkout"].includes(key) && !["starter", "growth", "grow", "pro"].includes(plan) && (
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <LockKeyhole size={16} aria-hidden="true" /> Available with an online ordering plan (Starter, Growth or Pro).
+                      <Link href={billingUrl} className="font-semibold text-orange-600 hover:underline">View Plans &amp; Upgrade</Link>
+                    </div>
+                  )}
                   {[["title", "Page title", 70], ["description", "Meta description", 320], ["socialTitle", "Social sharing title", 100], ["socialDescription", "Social sharing description", 320]].map(([field, title, maxLength]) => (
                     <Field key={field} label={title}>
                       <input className={input} maxLength={maxLength}
+                        disabled={["giftCard", "checkout"].includes(key) && !["starter", "growth", "grow", "pro"].includes(plan)}
                         value={org.website?.seo?.[key]?.[field] || ""}
                         placeholder={field === "title" ? `${label} | ${org.name || "Restaurant"}` : "Use automatic default"}
                         onChange={(e) => setOrg((old) => ({...old, website: {...old.website, seo: {...(old.website?.seo || {}), [key]: {...(old.website?.seo?.[key] || {}), [field]: e.target.value}}}}))}
