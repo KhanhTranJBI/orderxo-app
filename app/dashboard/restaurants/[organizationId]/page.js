@@ -27,6 +27,7 @@ const tools = [
   ["Manage Users", "users", "Customers, loyalty balances and email marketing preferences."],
   ["Gift Cards Dashboard", "gift-cards", "Gift card balances and activity."],
   ["Store Settings", "store", "Hours, notices, homepage slides and printer configuration."],
+  ["Custom Pages", "custom-pages", "Build and publish pages with draggable sections."],
   [
     "Printable Notices",
     "notices",
@@ -45,6 +46,7 @@ const toolIcons = {
   notices: Printer,
   promotions: Tags,
   store: Settings,
+  "custom-pages": BookOpen,
 };
 
 // Organization status is not the same as go-live or subscription status.
@@ -238,7 +240,7 @@ export default async function RestaurantManager({ params }) {
                 ? !can("store.manage") && !can("homepage.manage")
                 : managePermission && !can(managePermission));
             const ToolIcon = toolIcons[slug];
-            const locked = !hasOrderingPlan && !["store", "menu"].includes(slug);
+            const locked = !hasOrderingPlan && !["store", "menu", "custom-pages"].includes(slug);
             if (locked) {
               return (
                 <LockedToolCard
