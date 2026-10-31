@@ -131,7 +131,9 @@ export default async function Dashboard() {
             const id = String(org._id || org.id || "");
             const displayStatus = getOrganizationStatus(org);
             const isOwner = org.role === "owner";
-            const proTeam = planByOrg[id] === "pro";
+            const plan = String(planByOrg[id] || "").toLowerCase();
+            const orderingPlan = ["starter", "growth", "pro"].includes(plan);
+            const proTeam = plan === "pro";
             const isAdmin = isOwner || org.role === "admin";
             const roleLabel = isOwner
               ? "Owner"
@@ -169,23 +171,6 @@ export default async function Dashboard() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm text-slate-500">Role: {staffMode ? "Internal Staff · Setup Mode" : roleLabel}</p>
-                {displayStatus.kind === "setup" && (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                    <p className="font-semibold">Finish setting up your restaurant</p>
-                    <p className="mt-1">
-                      Complete the go-live checklist, connect Stripe, and confirm your subscription
-                      before accepting online orders.
-                    </p>
-                    {(isAdmin || staffMode) && (
-                      <Link
-                        href={`/dashboard/settings/go-live?organizationId=${encodeURIComponent(id)}`}
-                        className="mt-3 inline-block font-semibold underline"
-                      >
-                        Continue setup
-                      </Link>
-                    )}
-                  </div>
-                )}
                 {displayStatus.kind === "restricted" && (
                   <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
                     <p className="font-semibold">Your restaurant account needs attention</p>
@@ -229,7 +214,9 @@ export default async function Dashboard() {
                     <p className="mt-1 text-sm text-orange-800">
                       {staffMode
                         ? "Review progress and finish permitted setup tasks. Activation requires owner approval."
-                        : "Check required steps, connect Stripe, and activate online ordering."}
+                        : orderingPlan
+                          ? "Check required steps, connect Stripe, and activate online ordering."
+                          : "Complete your website setup and review the steps needed to publish your restaurant website."}
                     </p>
                   </Link>
                 )}

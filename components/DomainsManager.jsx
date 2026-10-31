@@ -197,7 +197,20 @@ export default function DomainsManager({ organization, locations, readOnly = fal
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Restaurant custom domain
           </p>
-          <p className="mt-1 break-all font-mono">{custom || "Not connected"}</p>
+          {custom && verified && clean(custom) ? (
+            <a
+              className="mt-1 inline-flex max-w-full items-center gap-2 break-all font-mono text-orange-700 hover:text-orange-800 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+              href={`https://${clean(custom)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open ${clean(custom)} in a new tab`}
+            >
+              {clean(custom)}
+              <Globe size={16} className="shrink-0" aria-hidden="true" />
+            </a>
+          ) : (
+            <p className="mt-1 break-all font-mono">{custom || "Not connected"}</p>
+          )}
           <div className="mt-2 flex items-center gap-2 text-sm">
             {verified ? (
               <CheckCircle2 size={17} className="text-green-600" />
