@@ -17,7 +17,6 @@ import {
   House,
   Star,
   Gift,
-  Mail,
   Megaphone,
   Search,
   ShoppingCart,
@@ -35,7 +34,6 @@ const TABS = [
   "Homepage",
   "Loyalty",
   "Gift Cards",
-  "Email",
   "Marketing Automations",
     "Ordering",
 ];
@@ -47,7 +45,6 @@ const TAB_ICONS = {
   Homepage: House,
   Loyalty: Star,
   "Gift Cards": Gift,
-  Email: Mail,
   "Marketing Automations": Megaphone,
   Ordering: ShoppingCart,
 };
@@ -60,7 +57,6 @@ const TAB_HASHES = {
   Homepage: "homepage",
   Loyalty: "loyalty",
   "Gift Cards": "gift-cards",
-  Email: "email",
   "Marketing Automations": "marketing-automations",
   Ordering: "ordering",
 };
@@ -602,19 +598,19 @@ function AppearancePreview({ branding, restaurantName }) {
   );
 }
 
-function PlanLocked({ title, required, href }) {
+function PlanLocked({ required, href }) {
   return (
-    <div className="rounded-2xl border border-orange-200 bg-orange-50 p-8 text-center">
-      <h2 className="text-xl font-bold text-slate-900">🔒 {title}</h2>
-      <p className="mt-2 text-slate-600">
-        Available on {required}. Your existing content is preserved.
-      </p>
-      <a
-        className="mt-5 inline-block rounded-lg bg-orange-600 px-5 py-3 font-semibold text-white"
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+        <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+        <span>Available on {required}.</span>
+      </div>
+      <Link
         href={href}
+        className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
       >
-        View plans & upgrade
-      </a>
+        View Plans &amp; Upgrade
+      </Link>
     </div>
   );
 }
@@ -658,9 +654,6 @@ export default function RestaurantSettings({
   const [org, setOrg] = useState(emptyOrg);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [testType, setTestType] = useState("orderReceipt");
-  const [testSending, setTestSending] = useState(false);
-  const [testFeedback, setTestFeedback] = useState("");
   const [entitlements, setEntitlements] = useState({
     loyalty: false,
     giftCards: false,
@@ -753,22 +746,6 @@ export default function RestaurantSettings({
 
   const setOrgPart = (part, key, value) =>
     setOrg((old) => ({ ...old, [part]: { ...old[part], [key]: value } }));
-  async function sendTestEmail() {
-    setTestSending(true);
-    setTestFeedback("");
-    try {
-      const result = await jsonFetch("/api/owner/organizations/test-email", {
-        method: "POST",
-        body: JSON.stringify({ organizationId, type: testType }),
-      });
-      setTestFeedback(result.message || "Test email submitted.");
-    } catch (e) {
-      setTestFeedback(e.message || "Unable to send test email.");
-    } finally {
-      setTestSending(false);
-    }
-  }
-
   async function saveOrganization() {
     setSaving(true);
     setError("");
@@ -934,7 +911,7 @@ export default function RestaurantSettings({
           {tab === "Appearance" && (
             <div className="space-y-8">
               {!staffMode && !entitlements.appearanceCustomization && (
-                <PlanLocked title="Website Appearance" required="Growth or Pro" href={billingUrl} />
+                <PlanLocked required="Growth and Pro" href={billingUrl} />
               )}
               <fieldset
                 disabled={
@@ -1001,7 +978,7 @@ export default function RestaurantSettings({
           {tab === "Homepage" && (
             <div className="space-y-5">
               {!staffMode && !entitlements.homepageBuilder && (
-                <PlanLocked title="Homepage Studio" required="Pro" href={billingUrl} />
+                <PlanLocked required="Pro" href={billingUrl} />
               )}
               <HomepageBuilder
                 organizationId={organizationId}
@@ -1143,74 +1120,10 @@ export default function RestaurantSettings({
             </div>
           )}
 
-          {tab === "Email" && (
-            <div className="space-y-7">
-              <div>
-                <h2 className="text-xl font-bold">Email</h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Preview transactional emails using your restaurant branding. OrderXO manages email
-                  delivery and templates.
-                </p>
-              </div>
-              {!staffMode && (
-                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 space-y-3">
-                  <h3 className="font-bold text-slate-900">Send test email</h3>
-                  <p className="text-sm text-slate-600">
-                    Preview a sample Mailgun template with your saved restaurant branding. Tests are
-                    sent only to your account email. Save changes first to preview updated settings.
-                  </p>
-                  <div className="flex flex-wrap gap-3 items-center">
-                    <select
-                      className={input + " max-w-sm"}
-                      value={testType}
-                      onChange={(e) => setTestType(e.target.value)}
-                    >
-                      {[
-                        ["orderReceipt", "Order receipt"],
-                        ["abandonedCart", "Abandoned cart"],
-                        ["giftCardBuyerReceipt", "Gift card buyer receipt"],
-                        ["giftCardRecipientReceipt", "Gift card recipient"],
-                        ["orderConfirmed", "Order confirmed"],
-                        ["orderReady", "Order ready"],
-                        ["orderCompleted", "Order completed"],
-                        ["orderCancelled", "Order cancelled"],
-                      ].map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={testSending}
-                      onClick={sendTestEmail}
-                      className="rounded-lg bg-orange-600 px-5 py-3 text-white font-semibold disabled:opacity-50"
-                    >
-                      {testSending ? "Sending…" : "Send test email"}
-                    </button>
-                  </div>
-                  {testFeedback && (
-                    <p role="status" className="text-sm text-slate-700">
-                      {testFeedback}
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-500">
-                    Sample orders and gift card codes are not real. Sending does not create orders
-                    or charges.
-                  </p>
-                </div>
-              )}
-              <p className="text-sm text-slate-600">
-                OrderXO manages sender addresses, email subjects, and message templates
-                automatically. Restaurant branding is applied from your saved settings.
-              </p>
-            </div>
-          )}
-
           {tab === "Marketing Automations" && (
             <div className="space-y-5">
               {!staffMode && (!entitlements.marketingAutomations || !!entitlementError) && (
-                <PlanLocked title="Marketing Automations" required="Pro" href={billingUrl} />
+                <PlanLocked required="Pro" href={billingUrl} />
               )}
               <fieldset
                 disabled={!staffMode && (!entitlements.marketingAutomations || !!entitlementError)}
