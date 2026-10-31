@@ -31,6 +31,7 @@ const TABS = [
   "General",
   "Nav & Footer Links",
   "Appearance",
+  "SEO & Page Titles",
   "Homepage",
   "Loyalty",
   "Gift Cards",
@@ -42,6 +43,7 @@ const TAB_ICONS = {
   General: Settings,
   "Nav & Footer Links": Link2,
   Appearance: Palette,
+  "SEO & Page Titles": Search,
   Homepage: House,
   Loyalty: Star,
   "Gift Cards": Gift,
@@ -54,6 +56,7 @@ const TAB_HASHES = {
   General: "general",
   "Nav & Footer Links": "social-links",
   Appearance: "appearance",
+  "SEO & Page Titles": "seo",
   Homepage: "homepage",
   Loyalty: "loyalty",
   "Gift Cards": "gift-cards",
@@ -68,7 +71,7 @@ const emptyOrg = {
   name: "",
   contactEmail: "",
   businessStartYear: "",
-  website: { social: {}, navigationLinks: [], footerLinks: [], footerGroups: [] },
+  website: { social: {}, navigationLinks: [], footerLinks: [], footerGroups: [], seo: {} },
   branding: {
     logoUrl: "",
     faviconUrl: "",
@@ -973,6 +976,29 @@ export default function RestaurantSettings({
               value={org.website}
               onChange={(website) => setOrg((old) => ({ ...old, website }))}
             />
+          )}
+
+          {tab === "SEO & Page Titles" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold">SEO & Page Titles</h2>
+                <p className="mt-1 text-sm text-slate-500">Customize search results and social previews. Leave fields blank to use restaurant-specific defaults.</p>
+              </div>
+              {[["home", "Home"], ["menu", "Menu"], ["contact", "Contact"], ["giftCard", "Gift Cards"]].map(([key, label]) => (
+                <div key={key} className="rounded-xl border p-5 space-y-4">
+                  <h3 className="font-semibold">{label} page</h3>
+                  {[["title", "Page title", 70], ["description", "Meta description", 320], ["socialTitle", "Social sharing title", 100], ["socialDescription", "Social sharing description", 320]].map(([field, title, maxLength]) => (
+                    <Field key={field} label={title}>
+                      <input className={input} maxLength={maxLength}
+                        value={org.website?.seo?.[key]?.[field] || ""}
+                        placeholder={field === "title" ? `${label} | ${org.name || "Restaurant"}` : "Use automatic default"}
+                        onChange={(e) => setOrg((old) => ({...old, website: {...old.website, seo: {...(old.website?.seo || {}), [key]: {...(old.website?.seo?.[key] || {}), [field]: e.target.value}}}}))}
+                      />
+                    </Field>
+                  ))}
+                </div>
+              ))}
+            </div>
           )}
 
           {tab === "Homepage" && (
