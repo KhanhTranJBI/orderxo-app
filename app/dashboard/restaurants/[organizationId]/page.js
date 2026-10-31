@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../../../lib/backend";
 import AddLocationButton from "../../../../components/AddLocationButton";
 import ManageLocations from "../../../../components/ManageLocations";
+import LockedToolCard from "../../../../components/LockedToolCard";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,18 @@ export default async function RestaurantManager({ params }) {
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
   const workspaceStatus = getWorkspaceStatus(org.status);
+  const subscriptionResult = await backendRequest(
+    `/api/subscriptions/current?organizationId=${encodeURIComponent(id)}`,
+    { authenticated: true },
+  );
+  const subscription = subscriptionResult.status === 200
+    ? subscriptionResult.data?.subscription
+    : null;
+  const hasOrderingPlan = ["starter", "growth", "pro"].includes(
+    String(subscription?.plan || "").toLowerCase(),
+  ) && ["active", "trialing"].includes(String(subscription?.status || "").toLowerCase());
+  // A failed subscription lookup must never unlock paid tools.
+
   const staffMode = org.role === "staff";
   const isAdmin = org.role === "admin" || org.role === "owner";
   const permissions = new Set(org.permissions || []);
@@ -225,6 +238,18 @@ export default async function RestaurantManager({ params }) {
                 ? !can("store.manage") && !can("homepage.manage")
                 : managePermission && !can(managePermission));
             const ToolIcon = toolIcons[slug];
+            const locked = !hasOrderingPlan && !["store", "menu"].includes(slug);
+            if (locked) {
+              return (
+                <LockedToolCard
+                  key={slug}
+                  title={name}
+                  description={description}
+                  iconName={slug}
+                  billingHref={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
+                />
+              );
+            }
             return (
               <Link
                 key={slug}
