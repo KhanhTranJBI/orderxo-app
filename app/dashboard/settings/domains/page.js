@@ -5,7 +5,7 @@ import { backendRequest, cookieName } from "../../../../lib/backend";
 import DomainsManager from "../../../../components/DomainsManager";
 export const dynamic = "force-dynamic";
 export default async function DomainsPage({ searchParams }) {
-  if (!cookies().get(cookieName)?.value) redirect("/login");
+  if (!cookies().get(cookieName)?.value && !cookies().get("orderxo_support_session")?.value) redirect("/login");
   const organizationId = searchParams?.organizationId;
   if (!organizationId)
     return (
@@ -39,6 +39,7 @@ export default async function DomainsPage({ searchParams }) {
         {organization.name} · Manage your OrderXO address and custom domain
       </p>
       <DomainsManager
+        readOnly={Boolean(cookies().get("orderxo_support_session")?.value)}
         organization={organization}
         locations={Array.isArray(locs.data.locations) ? locs.data.locations : []}
       />

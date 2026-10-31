@@ -14,7 +14,7 @@ const clean = (s) =>
 const btn =
   "rounded-xl border px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
 
-export default function DomainsManager({ organization, locations }) {
+export default function DomainsManager({ organization, locations, readOnly = false }) {
   const organizationId = String(organization._id || organization.id);
   const hostname = `${organization.slug}.orderxo.com`;
   const [custom, setCustom] = useState(organization.customDomain || "");
@@ -75,6 +75,7 @@ export default function DomainsManager({ organization, locations }) {
   }, [organizationId]);
   useEffect(() => { getInfo(true); refreshBilling(); refreshStorage(); }, [getInfo, refreshBilling, refreshStorage]);
   const save = async () => {
+    if (readOnly) return;
     const domain = clean(draft);
     if (!domain) return toast.error("Enter a domain, such as www.myrestaurant.com");
     setBusy(true);
@@ -115,6 +116,7 @@ export default function DomainsManager({ organization, locations }) {
     finally { setChecking(false); }
   };
   const remove = async () => {
+    if (readOnly) return;
     setBusy(true);
     try {
       const response = await ownerFetch("/api/owner/domains", {
@@ -205,7 +207,7 @@ export default function DomainsManager({ organization, locations }) {
             <span className={verified ? "text-green-700" : "text-amber-700"}>{statusText}</span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <button
+            {!readOnly && <button
               className={`${btn} border-orange-200 text-orange-700`}
               onClick={() => {
                 setDraft(custom);
@@ -213,7 +215,7 @@ export default function DomainsManager({ organization, locations }) {
               }}
             >
               {custom ? "Change custom domain" : "Connect custom domain"}
-            </button>
+            </button>}
             {custom && (
               <button className={btn} disabled={checking} onClick={() => getInfo()}>
                 <RefreshCw size={15} className="mr-2 inline" />
@@ -383,7 +385,7 @@ export default function DomainsManager({ organization, locations }) {
 
               </div>
             )}
-            {custom && (
+            {custom && !readOnly && (
               <div className="mt-6 border-t pt-4">
                 <button
                   className="text-sm font-semibold text-red-600"

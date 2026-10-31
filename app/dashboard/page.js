@@ -168,7 +168,7 @@ export default async function Dashboard() {
                     {displayStatus.label}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-slate-500">Role: {roleLabel}</p>
+                <p className="mt-2 text-sm text-slate-500">Role: {staffMode ? "Internal Staff · Setup Mode" : roleLabel}</p>
                 {displayStatus.kind === "setup" && (
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                     <p className="font-semibold">Finish setting up your restaurant</p>
@@ -241,12 +241,14 @@ export default async function Dashboard() {
                     Manage restaurant
                   </Link>
                   {staffMode && (
-                    <Link
-                      className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
-                      href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
-                    >
-                      Restaurant settings
-                    </Link>
+                    <>
+                      <Link className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}>
+                        Restaurant settings
+                      </Link>
+                      <Link className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}>
+                        Websites & domains
+                      </Link>
+                    </>
                   )}
                   {isAdmin && (
                     <>
