@@ -21,6 +21,7 @@ import {
   Megaphone,
   Search,
   ShoppingCart,
+  LockKeyhole,
   Instagram,
   Facebook,
   MapPin,
@@ -255,11 +256,12 @@ function Field({ label, hint, children }) {
 const input =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100";
 
-function Toggle({ checked, onChange, label }) {
+function Toggle({ checked, onChange, label, disabled = false }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3">
+    <label className={`flex items-center gap-3 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
       <input
         type="checkbox"
+        disabled={disabled}
         className="h-5 w-5 accent-orange-600"
         checked={!!checked}
         onChange={(e) => onChange(e.target.checked)}
@@ -1018,12 +1020,22 @@ export default function RestaurantSettings({
                 </p>
               </div>
               {!entitlements.loyalty && !entitlementError && (
-                <p className="text-sm text-orange-700">
-                  Available on Growth and Pro. Select the switch to see upgrade options.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+                    <span>Available on Growth and Pro.</span>
+                  </div>
+                  <Link
+                    href={billingUrl}
+                    className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                  >
+                    View Plans &amp; Upgrade
+                  </Link>
+                </div>
               )}
               <Toggle
                 label="Enable loyalty program"
+                disabled={!entitlements.loyalty || !!entitlementError}
                 checked={entitlements.loyalty && org.loyalty.enabled}
                 onChange={(v) => {
                   if (entitlementError) return setError(entitlementError);
@@ -1091,12 +1103,22 @@ export default function RestaurantSettings({
                 </p>
               </div>
               {!entitlements.giftCards && !entitlementError && (
-                <p className="text-sm text-orange-700">
-                  Available on Growth and Pro. Select the switch to see upgrade options.
-                </p>
+                <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+                    <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+                    <span>Available on Growth and Pro.</span>
+                  </div>
+                  <Link
+                    href={billingUrl}
+                    className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                  >
+                    View Plans &amp; Upgrade
+                  </Link>
+                </div>
               )}
               <Toggle
                 label="Enable gift cards"
+                disabled={!entitlements.giftCards || !!entitlementError}
                 checked={entitlements.giftCards && org.giftCards.enabled}
                 onChange={(v) => {
                   if (entitlementError) return setError(entitlementError);
