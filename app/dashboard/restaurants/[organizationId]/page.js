@@ -99,7 +99,8 @@ export default async function RestaurantManager({ params }) {
     redirect("/login");
   const id = params.organizationId;
   const result = await backendRequest("/api/organizations", { authenticated: true });
-  if (result.status === 401) redirect(cookies().get("orderxo_support_session")?.value ? "/dashboard" : "/login");
+  if (result.status === 401)
+    redirect(cookies().get("orderxo_support_session")?.value ? "/dashboard" : "/login");
   const organizations = Array.isArray(result.data?.organizations) ? result.data.organizations : [];
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
@@ -108,12 +109,11 @@ export default async function RestaurantManager({ params }) {
     `/api/subscriptions/current?organizationId=${encodeURIComponent(id)}`,
     { authenticated: true },
   );
-  const subscription = subscriptionResult.status === 200
-    ? subscriptionResult.data?.subscription
-    : null;
-  const hasOrderingPlan = ["starter", "growth", "pro"].includes(
-    String(subscription?.plan || "").toLowerCase(),
-  ) && ["active", "trialing"].includes(String(subscription?.status || "").toLowerCase());
+  const subscription =
+    subscriptionResult.status === 200 ? subscriptionResult.data?.subscription : null;
+  const hasOrderingPlan =
+    ["starter", "growth", "pro"].includes(String(subscription?.plan || "").toLowerCase()) &&
+    ["active", "trialing"].includes(String(subscription?.status || "").toLowerCase());
   // A failed subscription lookup must never unlock paid tools.
 
   const staffMode = org.role === "staff";
