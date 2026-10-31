@@ -98,7 +98,7 @@ export default async function RestaurantManager({ params }) {
     redirect("/login");
   const id = params.organizationId;
   const result = await backendRequest("/api/organizations", { authenticated: true });
-  if (result.status === 401) redirect(cookies().get("orderxo_support_session")?.value ? "/support" : "/login");
+  if (result.status === 401) redirect(cookies().get("orderxo_support_session")?.value ? "/dashboard" : "/login");
   const organizations = Array.isArray(result.data?.organizations) ? result.data.organizations : [];
   const org = organizations.find((o) => String(o._id || o.id) === id);
   if (!org) redirect("/dashboard");
