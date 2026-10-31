@@ -272,6 +272,7 @@ function ItemModal({
   categories,
   groups,
   allItems = [],
+  hasOrderingPlan = false,
   onClose,
   onSave,
   onSaveGroup,
@@ -502,6 +503,7 @@ function ItemModal({
             ))}
           </div>
         </div>
+        {hasOrderingPlan && (
         <div className="mt-6 rounded-xl border p-4">
           <h3 className="font-semibold">Smart Upsell recommendations</h3>
           <p className="text-sm text-slate-500 mb-3">
@@ -537,6 +539,7 @@ function ItemModal({
               })}
           </div>
         </div>
+        )}
         <div className="sticky bottom-0 bg-white py-4 flex justify-end gap-2">
           <button className="secondary" onClick={onClose}>
             Cancel
@@ -900,7 +903,7 @@ function MenuManagerSkeleton() {
   );
 }
 
-export default function MenuManager({ organizationId }) {
+export default function MenuManager({ organizationId, hasOrderingPlan = false }) {
   const loc = useRestaurantLocation(organizationId);
   // Menu Book Designer is available from the same restaurant workspace.
   const access = useRestaurantPermissions(organizationId);
@@ -1516,6 +1519,7 @@ export default function MenuManager({ organizationId }) {
             categories={categories}
             groups={groups}
             allItems={menuScope === "default" ? items : []}
+            hasOrderingPlan={hasOrderingPlan}
             onClose={() => {
               setEditing(null);
               setNewFor(null);

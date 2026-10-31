@@ -116,8 +116,8 @@ export default async function RestaurantManager({ params }) {
     ["active", "trialing"].includes(String(subscription?.status || "").toLowerCase());
   // A failed subscription lookup must never unlock paid tools.
 
-  const staffMode = org.role === "staff";
-  const isAdmin = org.role === "admin" || org.role === "owner";
+  const staffMode = org.role === "staff" || Boolean(cookies().get("orderxo_support_session")?.value);
+  const isAdmin = !staffMode && (org.role === "admin" || org.role === "owner");
   const permissions = new Set(org.permissions || []);
   const aliases = {
     "orders.manage": ["orders.manage", "orders.update"],

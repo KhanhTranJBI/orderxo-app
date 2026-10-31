@@ -57,7 +57,7 @@ export default async function Dashboard() {
   // can manage organizations they belong to, but cannot create new organizations.
   // A brand-new verified account with no memberships may create its first restaurant.
   const staffMode = Boolean(
-    cookies().get("orderxo_support_session")?.value && !cookies().get(cookieName)?.value,
+    cookies().get("orderxo_support_session")?.value,
   );
   const canCreateRestaurant =
     !staffMode && (organizations.length === 0 || organizations.some((org) => org.role === "owner"));
