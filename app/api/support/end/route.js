@@ -14,5 +14,6 @@ export async function POST() {
   }
   const response = NextResponse.json({ success: true });
   response.cookies.set("orderxo_support_session", "", { httpOnly: true, path: "/", maxAge: 0 });
+  response.cookies.set("orderxo_staff_ui", "", { path: "/", maxAge: 0 });
   return response;
 }

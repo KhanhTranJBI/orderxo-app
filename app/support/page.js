@@ -27,7 +27,7 @@ export default function SupportWorkspace() {
         const response = await fetch("/api/support/workspace", { cache: "no-store" });
         const result = await response.json();
         if (!response.ok) throw Error(result.error || "Unable to load workspace");
-        if (active) router.replace("/dashboard");
+        if (active) setData(result);
       } catch (e) {
         if (active) setError(e.message);
       } finally {

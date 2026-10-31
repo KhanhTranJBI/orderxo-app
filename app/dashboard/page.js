@@ -48,7 +48,7 @@ export default async function Dashboard() {
   if (!cookies().get(cookieName)?.value && !cookies().get("orderxo_support_session")?.value)
     redirect("/login");
   const result = await backendRequest("/api/organizations", { authenticated: true });
-  if (result.status === 401) redirect("/login");
+  if (result.status === 401) redirect(cookies().get("orderxo_support_session")?.value ? "/support" : "/login");
   const organizations =
     result.status === 200 && Array.isArray(result.data.organizations)
       ? result.data.organizations

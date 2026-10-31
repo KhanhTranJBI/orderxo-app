@@ -18,5 +18,12 @@ export async function POST(req) {
     path: "/",
     maxAge: 1800,
   });
+  response.cookies.set("orderxo_staff_ui", "1", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 1800,
+  });
   return response;
 }
