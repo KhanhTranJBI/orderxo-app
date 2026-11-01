@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   Printer,
+  LockKeyhole,
   ReceiptText,
   TabletSmartphone,
   Trash2,
@@ -177,7 +178,23 @@ function StoreReviews({ organizationId, locationId, location, onEdit }) {
   );
 }
 
-export default function StoreSettingsManager({ organizationId }) {
+function OrderingPlanNotice({ billingUrl }) {
+  return (
+    <div className="my-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
+        <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+        <span>Available on Starter, Growth and Pro.</span>
+      </div>
+      <Link href={billingUrl} className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700">
+        View Plans &amp; Upgrade
+      </Link>
+    </div>
+  );
+}
+
+export default function StoreSettingsManager({ organizationId, hasOrderingPlan = false }) {
+  const billingUrl = `/dashboard/restaurants/${organizationId}/settings/billing`;
+  const orderingLocked = !hasOrderingPlan;
   const loc = useRestaurantLocation(organizationId);
   const searchParams = useSearchParams();
   const requestedLocationId = searchParams.get("locationId");
@@ -412,12 +429,11 @@ export default function StoreSettingsManager({ organizationId }) {
         selectedLocationId,
         "PATCH",
         scope === "default"
-          ? { hours, onlineOrderCutoffMinutes, scheduledOrdering }
+          ? { hours, ...(!orderingLocked ? { onlineOrderCutoffMinutes, scheduledOrdering } : {}) }
           : {
               isOpenManual: manual,
               hours,
-              onlineOrderCutoffMinutes,
-              scheduledOrdering,
+              ...(!orderingLocked ? { onlineOrderCutoffMinutes, scheduledOrdering } : {}),
             },
       );
 
@@ -648,7 +664,7 @@ export default function StoreSettingsManager({ organizationId }) {
     }));
 
   const savePrinting = async () => {
-    if (!canManage || !selectedLocationId) return;
+    if (!canManage || !selectedLocationId || (tab === "printing" && orderingLocked)) return;
 
     setPrintingSaving(true);
     setError("");
@@ -689,7 +705,7 @@ export default function StoreSettingsManager({ organizationId }) {
   };
 
   const saveTax = async () => {
-    if (!canManage || !selectedLocationId) return;
+    if (!canManage || !selectedLocationId || orderingLocked) return;
     const rate = Number(locationOrdering.taxRate);
     if (!Number.isFinite(rate) || rate < 0 || rate > 1) {
       toast.error("Enter a valid sales tax rate between 0% and 100%.");
@@ -977,6 +993,8 @@ export default function StoreSettingsManager({ organizationId }) {
                   </section>
 
                   <section className="mt-4 rounded-2xl border bg-white p-6">
+                    {orderingLocked && <OrderingPlanNotice billingUrl={billingUrl} />}
+                    <fieldset disabled={orderingLocked} className="min-w-0 disabled:opacity-50">
                     <h2 className="text-xl font-bold">Online Ordering Cutoff</h2>
                     <p className="mt-1 text-sm text-slate-500">
                       Stop accepting online orders this many minutes before closing.
@@ -999,9 +1017,12 @@ export default function StoreSettingsManager({ organizationId }) {
                         ))}
                       </select>
                     </label>
+                    </fieldset>
                   </section>
 
                   <section className="mt-4 rounded-2xl border bg-white p-6">
+                    {orderingLocked && <OrderingPlanNotice billingUrl={billingUrl} />}
+                    <fieldset disabled={orderingLocked} className="min-w-0 disabled:opacity-50">
                     <h2 className="text-xl font-bold">Scheduled Pickup Orders</h2>
                     <p className="mt-1 text-sm text-slate-500">
                       Allow customers to order ahead for a future pickup time. Settings are saved
@@ -1082,6 +1103,7 @@ export default function StoreSettingsManager({ organizationId }) {
                         ))}
                       </div>
                     </div>
+                    </fieldset>
                   </section>
 
                   <button
@@ -1225,6 +1247,8 @@ export default function StoreSettingsManager({ organizationId }) {
                   <p className="mt-1 text-sm text-slate-500">
                     Configure the sales tax rate for {selectedLocation?.name || "this location"}.
                   </p>
+                  {orderingLocked && <OrderingPlanNotice billingUrl={billingUrl} />}
+                  <fieldset disabled={orderingLocked} className="min-w-0 disabled:opacity-50">
                   {printingLoading ? (
                     <LoadingSpinner compact label="Loading tax settings…" />
                   ) : (
@@ -1258,6 +1282,7 @@ export default function StoreSettingsManager({ organizationId }) {
                       )}
                     </div>
                   )}
+                  </fieldset>
                 </section>
               )}
 
@@ -1275,6 +1300,8 @@ export default function StoreSettingsManager({ organizationId }) {
                     </p>
                   </div>
 
+                  {tab === "printing" && orderingLocked && <OrderingPlanNotice billingUrl={billingUrl} />}
+                  <fieldset disabled={tab === "printing" && orderingLocked} className="min-w-0 disabled:opacity-50">
                   {printingLoading ? (
                     <LoadingSpinner compact label="Loading printer settings…" />
                   ) : (
@@ -1439,6 +1466,7 @@ export default function StoreSettingsManager({ organizationId }) {
                       )}
                     </>
                   )}
+                  </fieldset>
                 </section>
               )}
             </>
