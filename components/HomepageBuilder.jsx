@@ -118,6 +118,12 @@ const makeSection = (type) => ({
   googlePlaceId: "",
   layout: "default",
   backgroundColor: "",
+  backgroundImageUrl: "",
+  backgroundPosition: "center",
+  backgroundSize: "cover",
+  backgroundOverlay: 30,
+  backgroundFixed: false,
+  animation: "fadeUp",
   textColor: "",
   overlay: 45,
   entries: [],
@@ -298,6 +304,10 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
   const baseStyle = {
     backgroundColor: s.backgroundColor || undefined,
     color: s.textColor || undefined,
+    ...(validUrl(s.backgroundImageUrl) && s.backgroundImageUrl ? {
+      backgroundImage: `linear-gradient(rgba(0,0,0,${(s.backgroundOverlay ?? 30)/100}), rgba(0,0,0,${(s.backgroundOverlay ?? 30)/100})), url("${s.backgroundImageUrl}")`,
+      backgroundPosition: s.backgroundPosition || "center", backgroundSize: s.backgroundSize || "cover", backgroundRepeat: "no-repeat",
+    } : {}),
   };
   if (s.type === "slideshow")
     return (
@@ -989,6 +999,37 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                     )}
                   </div>
                 )}
+                {!["slideshow", "hero", "featuredMenu"].includes(active.type) && <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+                  <h4 className="text-sm font-semibold">Section background image &amp; animation</h4>
+                  <label className="block text-xs font-semibold text-slate-600">Background image URL
+                    <input type="url" value={active.backgroundImageUrl || ""} placeholder="https://example.com/background.jpg"
+                      onChange={(e) => edit(active.id, "backgroundImageUrl", e.target.value)}
+                      className="mt-1 w-full rounded border border-slate-200 bg-white px-3 py-2 text-sm" />
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="text-xs font-semibold">Image position
+                      <select value={active.backgroundPosition || "center"} onChange={(e) => edit(active.id, "backgroundPosition", e.target.value)} className="mt-1 w-full rounded border p-2">
+                        {["center", "top", "bottom", "left", "right"].map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </label>
+                    <label className="text-xs font-semibold">Background size
+                      <select value={active.backgroundSize || "cover"} onChange={(e) => edit(active.id, "backgroundSize", e.target.value)} className="mt-1 w-full rounded border p-2">
+                        {["cover", "contain"].map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                  <label className="block text-xs font-semibold">Dark overlay: {active.backgroundOverlay ?? 30}%
+                    <input type="range" min="0" max="90" step="5" value={active.backgroundOverlay ?? 30} onChange={(e) => edit(active.id, "backgroundOverlay", Number(e.target.value))} className="mt-2 w-full accent-orange-600" />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!active.backgroundFixed} onChange={(e) => edit(active.id, "backgroundFixed", e.target.checked)} /> Fixed background on desktop</label>
+                </div>}
+                <div className="rounded-xl border border-slate-200 p-3">
+                  <label className="block text-xs font-semibold">Section entrance animation
+                    <select value={active.animation || "fadeUp"} onChange={(e) => edit(active.id, "animation", e.target.value)} className="mt-1 w-full rounded border p-2">
+                      {[["none","None"],["fadeUp","Fade Up"],["fade","Fade"],["slideLeft","Slide Left"],["slideRight","Slide Right"],["zoom","Zoom"]].map(([v,l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </label>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   {["backgroundColor", "textColor"].map((key) => (
                     <label key={key} className="text-xs font-semibold text-slate-600">
