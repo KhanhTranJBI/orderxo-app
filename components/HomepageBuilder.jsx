@@ -125,6 +125,7 @@ const makeSection = (type) => ({
   backgroundFixed: false,
   animation: "fadeUp",
   textColor: "",
+  headingColor: "",
   overlay: 45,
   entries: [],
 });
@@ -257,7 +258,7 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
     );
   const heading = (
     <>
-      <h3 className={`${compact ? "text-xl" : "text-2xl md:text-3xl"} font-bold tracking-tight`}>
+      <h3 className={`${compact ? "text-xl" : "text-2xl md:text-3xl"} font-bold tracking-tight`} style={{ color: s.headingColor || undefined }}>
         {title}
       </h3>
       {s.subtitle && <p className="mt-2 text-sm leading-relaxed opacity-75">{s.subtitle}</p>}
@@ -333,7 +334,7 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
           <p className="mb-3 text-xs font-bold uppercase tracking-[.25em] opacity-80">
             Fresh • Local • Delicious
           </p>
-          <h3 className={`${compact ? "text-3xl" : "text-4xl"} font-black leading-tight`}>
+          <h3 className={`${compact ? "text-3xl" : "text-4xl"} font-black leading-tight`} style={{ color: s.headingColor || undefined }}>
             {slide.title || title}
           </h3>
           <p className="mt-3 text-sm opacity-90">{slide.subtitle || s.subtitle}</p>
@@ -965,6 +966,9 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                     />
                   </label>
                 )}
+                <details className="rounded-xl border border-slate-200 p-3" open={false}>
+                  <summary className="cursor-pointer text-sm font-semibold">Section Appearance &amp; Animation</summary>
+                  <div className="mt-4 space-y-4">
                 {["hero", "about", "featured", "cta", "newItems", "fanFavourites", "googleReviews"].includes(active.type) && (
                   <div className="rounded-xl border border-slate-200 p-3">
                     <label className="flex items-center gap-2 text-sm font-semibold">
@@ -1000,7 +1004,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                   </div>
                 )}
                 {!["slideshow", "hero", "featuredMenu"].includes(active.type) && <div className="space-y-3 rounded-xl border border-slate-200 p-3">
-                  <h4 className="text-sm font-semibold">Section background image &amp; animation</h4>
+                  <h4 className="text-sm font-semibold">Background image</h4>
                   <label className="block text-xs font-semibold text-slate-600">Background image URL
                     <input type="url" value={active.backgroundImageUrl || ""} placeholder="https://example.com/background.jpg"
                       onChange={(e) => edit(active.id, "backgroundImageUrl", e.target.value)}
@@ -1031,13 +1035,13 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                   </label>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {["backgroundColor", "textColor"].map((key) => (
+                  {["backgroundColor", "headingColor", "textColor"].map((key) => (
                     <label key={key} className="text-xs font-semibold text-slate-600">
-                      {key === "backgroundColor" ? "Background" : "Text color"}
+                      {key === "backgroundColor" ? "Background" : key === "headingColor" ? "Heading color" : "Text color"}
                       <div className="mt-1 flex gap-2">
                         <input
                           type="color"
-                          aria-label={`${key === "backgroundColor" ? "Background" : "Text"} color picker`}
+                          aria-label={`${key === "backgroundColor" ? "Background" : key === "headingColor" ? "Heading" : "Text"} color picker`}
                           value={
                             /^#[0-9a-fA-F]{6}$/.test(active[key] || "")
                               ? active[key]
@@ -1048,7 +1052,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                         />
                         <input
                           type="text"
-                          aria-label={`${key === "backgroundColor" ? "Background" : "Text"} HEX color`}
+                          aria-label={`${key === "backgroundColor" ? "Background" : key === "headingColor" ? "Heading" : "Text"} HEX color`}
                           value={active[key] || ""}
                           placeholder={defaultSectionColor(active.type, key)}
                           maxLength={7}
@@ -1069,6 +1073,8 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                     </label>
                   ))}
                 </div>
+                  </div>
+                </details>
               </div>
             )}
           </aside>
