@@ -1315,7 +1315,15 @@ export default function MenuManager({ organizationId, hasOrderingPlan = false })
                                                   />
                                                 )}
                                                 <div>
-                                                  <div className="font-semibold">{i.name}</div>
+                                                  <div className="flex flex-wrap items-center gap-2">
+                                                    <span className="font-semibold">{i.name}</span>
+                                                    {i.bestSeller && (
+                                                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">★ Best Seller</span>
+                                                    )}
+                                                    {i.newItem && (
+                                                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">New</span>
+                                                    )}
+                                                  </div>
                                                   <div className="text-sm text-gray-500">
                                                     {money(i.priceCents)} ·{" "}
                                                     {i.isActive !== false ? "Active" : "Inactive"}
