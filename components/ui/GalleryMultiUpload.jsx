@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { uploadFiles } from "@uploadthing/react";
+import { generateReactHelpers } from "@uploadthing/react";
+
+const { useUploadThing } = generateReactHelpers();
 import { toast } from "react-toastify";
 
 export default function GalleryMultiUpload({ organizationId, onUploaded }) {
   const inputRef = useRef(null);
+  const { startUpload } = useUploadThing("menuImage");
   const [allowed, setAllowed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
@@ -32,9 +35,7 @@ export default function GalleryMultiUpload({ organizationId, onUploaded }) {
       for (const [index, file] of files.entries()) {
         setProgress(`Uploading ${index + 1} of ${files.length}…`);
         try {
-          const result = await uploadFiles("menuImage", {
-            files: [file], input: { organizationId },
-          });
+          const result = await startUpload([file], { organizationId });
           const url = result?.[0]?.serverData?.url || result?.[0]?.ufsUrl || result?.[0]?.url;
           if (!url) throw new Error("Upload returned no image URL");
           onUploaded(url);
