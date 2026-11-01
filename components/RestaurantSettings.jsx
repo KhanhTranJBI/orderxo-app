@@ -796,7 +796,11 @@ export default function RestaurantSettings({
             entitlements.appearanceCustomization
               ? org.branding
               : { logoUrl: org.branding.logoUrl, faviconUrl: org.branding.faviconUrl },
-          website: org.website,
+          // Custom pages are saved separately and require a paid entitlement.
+          // Do not submit them when saving navigation or other general settings.
+          website: Object.fromEntries(
+            Object.entries(org.website || {}).filter(([key]) => key !== "customPages")
+          ),
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
           ordering: org.ordering,
@@ -824,7 +828,14 @@ export default function RestaurantSettings({
           }
         }
       }
-      setOrg(mergeOrg(data.settings));
+      setOrg((previous) => {
+        const next = mergeOrg(data.settings);
+        // Preserve loaded pages if the general settings response omits them.
+        if (next.website.customPages === undefined && previous.website?.customPages !== undefined) {
+          next.website.customPages = previous.website.customPages;
+        }
+        return next;
+      });
       setMessage("Restaurant settings saved.");
     } catch (e) {
       setError(e.message);
