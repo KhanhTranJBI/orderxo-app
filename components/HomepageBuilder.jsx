@@ -892,14 +892,20 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                   <div className="space-y-3">
                     <GalleryMultiUpload
                       organizationId={organizationId}
-                      onUploaded={(url) => {
-                        const current = draft.sections.find((section) => section.id === active.id);
-                        const next = [...(current?.images || []), url];
-                        setMultilineDrafts((old) => ({
+                      onUploaded={(urls) => {
+                        const sectionId = active.id;
+                        update((old) => ({
                           ...old,
-                          [`${active.id}:images`]: next.join("\n"),
+                          sections: old.sections.map((section) => {
+                            if (section.id !== sectionId) return section;
+                            const next = [...new Set([...(section.images || []), ...urls])];
+                            setMultilineDrafts((previous) => ({
+                              ...previous,
+                              [`${sectionId}:images`]: next.join("\n"),
+                            }));
+                            return { ...section, images: next };
+                          }),
                         }));
-                        edit(active.id, "images", next);
                       }}
                     />
                     {active.images?.length > 0 && (

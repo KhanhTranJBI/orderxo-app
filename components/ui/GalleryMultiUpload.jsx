@@ -28,7 +28,7 @@ export default function GalleryMultiUpload({ organizationId, onUploaded }) {
     event.target.value = "";
     if (!files.length || busy) return;
     setBusy(true);
-    let success = 0;
+    const uploadedUrls = [];
     try {
       // The existing endpoint reserves storage for one file at a time.
       // Upload sequentially so each image has its own reservation/finalization.
@@ -38,13 +38,15 @@ export default function GalleryMultiUpload({ organizationId, onUploaded }) {
           const result = await startUpload([file], { organizationId });
           const url = result?.[0]?.serverData?.url || result?.[0]?.ufsUrl || result?.[0]?.url;
           if (!url) throw new Error("Upload returned no image URL");
-          onUploaded(url);
-          success++;
+          uploadedUrls.push(url);
         } catch (error) {
           toast.error(`${file.name}: ${error?.message || "Upload failed"}`);
         }
       }
-      if (success) toast.success(`${success} gallery image${success === 1 ? "" : "s"} uploaded. Save your changes.`);
+      if (uploadedUrls.length) {
+        onUploaded(uploadedUrls);
+        toast.success(`${uploadedUrls.length} gallery image${uploadedUrls.length === 1 ? "" : "s"} uploaded. Save your changes.`);
+      }
     } finally {
       setProgress("");
       setBusy(false);
