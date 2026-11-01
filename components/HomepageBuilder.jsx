@@ -308,6 +308,7 @@ function PreviewSection({ section: s, branding, compact, previewSlides }) {
     ...(validUrl(s.backgroundImageUrl) && s.backgroundImageUrl ? {
       backgroundImage: `linear-gradient(rgba(0,0,0,${(s.backgroundOverlay ?? 30)/100}), rgba(0,0,0,${(s.backgroundOverlay ?? 30)/100})), url("${s.backgroundImageUrl}")`,
       backgroundPosition: s.backgroundPosition || "center", backgroundSize: s.backgroundSize || "cover", backgroundRepeat: "no-repeat",
+      backgroundAttachment: s.backgroundFixed && !compact ? "fixed" : "scroll",
     } : {}),
   };
   if (s.type === "slideshow")
@@ -1105,7 +1106,7 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
             </div>
             <div className="rounded-2xl bg-slate-100 p-3 sm:p-5">
               <div
-                className={`mx-auto overflow-hidden rounded-xl bg-white shadow-xl transition-all ${mobile ? "max-w-[375px]" : "w-full"}`}
+                className={`mx-auto max-h-[70vh] overflow-y-auto overscroll-contain rounded-xl bg-white shadow-xl transition-all ${mobile ? "max-w-[375px]" : "w-full"}`}
                 style={{ backgroundColor: branding?.backgroundColor || "#fff" }}
               >
                 <div className="flex items-center justify-between border-b bg-white px-5 py-4">
