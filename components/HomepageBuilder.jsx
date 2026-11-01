@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { useEffect, useMemo, useRef, useState } from "react";
 import HomepageSlidesManager from "./management/HomepageSlidesManager";
 import ImageUploadButton from "./ui/ImageUploadButton";
+import GalleryMultiUpload from "./ui/GalleryMultiUpload";
 import {
   Plus,
   Trash2,
@@ -889,8 +890,8 @@ export default function HomepageBuilder({ organizationId, readOnly = false, canP
                 )}
                 {active.type === "gallery" && (
                   <div className="space-y-3">
-                    <ImageUploadButton
-                      label="Upload gallery image"
+                    <GalleryMultiUpload
+                      organizationId={organizationId}
                       onUploaded={(url) => {
                         const current = draft.sections.find((section) => section.id === active.id);
                         const next = [...(current?.images || []), url];
