@@ -1,8 +1,22 @@
 "use client";
 
 import ImageUploadButton from "./ui/ImageUploadButton";
+import { icons as lucideIcons } from "lucide-react";
 
 const input = "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm";
+
+const NAV_ICON_OPTIONS = ["none", "house", "utensils-crossed", "contact", "gift", "shopping-bag", "phone", "mail", "info", "star", "heart", "map-pin", "calendar-days", "image", "book-open", "coffee", "leaf", "menu", "users", "clock", "external-link"];
+function IconChoice({ value, onChange }) {
+  const name = value || "none";
+  const Icon = lucideIcons[name.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("")];
+  return <div className="flex items-center gap-2">
+    <select aria-label="Navigation icon" className={input} value={name} onChange={(e) => onChange(e.target.value)}>
+      {NAV_ICON_OPTIONS.map((option) => <option key={option} value={option}>{option === "none" ? "No icon" : option.replace(/-/g, " ")}</option>)}
+    </select>
+    {Icon && <Icon aria-hidden="true" className="h-5 w-5 shrink-0" />}
+  </div>;
+}
+
 function LinkEditor({ title, value = [], onChange, allowImages = false, organizationId }) {
   const links = Array.isArray(value) ? value : [];
   const edit = (index, key, val) =>
@@ -37,6 +51,7 @@ function LinkEditor({ title, value = [], onChange, allowImages = false, organiza
               onChange={(e) => edit(index, "url", e.target.value)}
             />
           </div>
+          {allowImages && <label className="block space-y-1 text-sm"><span className="font-medium">Navigation icon</span><IconChoice value={link.icon || "none"} onChange={(icon) => edit(index, "icon", icon)} /></label>}
           {allowImages && (
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Image URL (optional)</span>
@@ -99,6 +114,17 @@ export default function RestaurantLinksSettings({ value = {}, onChange, organiza
         <p className="mt-1 text-sm text-slate-500">
           Shared across all locations. Manage social links in Store Settings.
         </p>
+      </div>
+      <div className="rounded-xl border p-4 space-y-3">
+        <h3 className="font-semibold">Default navigation icons</h3>
+        <p className="text-sm text-slate-500">Choose an icon for each built-in navigation link. No icon hides it.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[["home", "Home", "house"], ["menu", "Menu", "utensils-crossed"], ["contact", "Contact Us", "contact"], ["giftCard", "E-Gift Card", "gift"]].map(([key, label, fallback]) => (
+            <label key={key} className="space-y-1 text-sm"><span className="font-medium">{label}</span>
+              <IconChoice value={value.navIcons?.[key] ?? fallback} onChange={(icon) => change("navIcons", { ...(value.navIcons || {}), [key]: icon })} />
+            </label>
+          ))}
+        </div>
       </div>
       <LinkEditor
         title="Navigation links (DoorDash, delivery, etc.)"
