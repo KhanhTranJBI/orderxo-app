@@ -30,13 +30,13 @@ import {
 const TABS = [
   "General",
   "Nav & Footer Links",
-  "Appearance",
   "SEO & Page Titles",
+  "Appearance",
   "Homepage",
   "Loyalty",
   "Gift Cards",
   "Marketing Automations",
-    "Ordering",
+  "Ordering",
 ];
 
 const TAB_ICONS = {
@@ -257,7 +257,9 @@ const input =
 
 function Toggle({ checked, onChange, label, disabled = false }) {
   return (
-    <label className={`flex items-center gap-3 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}>
+    <label
+      className={`flex items-center gap-3 ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+    >
       <input
         type="checkbox"
         disabled={disabled}
@@ -571,10 +573,18 @@ function AppearancePreview({ branding, restaurantName }) {
               tabIndex={0}
               className="cursor-pointer transition-colors"
               style={{ color: c("footerLinkColor") }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}
-              onFocus={(e) => { e.currentTarget.style.color = c("footerLinkHoverColor"); }}
-              onBlur={(e) => { e.currentTarget.style.color = c("footerLinkColor"); }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = c("footerLinkHoverColor");
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = c("footerLinkColor");
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.color = c("footerLinkHoverColor");
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.color = c("footerLinkColor");
+              }}
             >
               {label}
             </span>
@@ -584,13 +594,28 @@ function AppearancePreview({ branding, restaurantName }) {
               key={index}
               tabIndex={0}
               role="img"
-              aria-label={["Instagram icon preview", "Facebook icon preview", "Location icon preview", "Phone icon preview"][index]}
+              aria-label={
+                [
+                  "Instagram icon preview",
+                  "Facebook icon preview",
+                  "Location icon preview",
+                  "Phone icon preview",
+                ][index]
+              }
               className="inline-flex cursor-pointer items-center transition-colors"
               style={{ color: c("footerIconColor") }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = c("footerIconHoverColor"); }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = c("footerIconColor"); }}
-              onFocus={(e) => { e.currentTarget.style.color = c("footerIconHoverColor"); }}
-              onBlur={(e) => { e.currentTarget.style.color = c("footerIconColor"); }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = c("footerIconHoverColor");
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = c("footerIconColor");
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.color = c("footerIconHoverColor");
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.color = c("footerIconColor");
+              }}
             >
               <Icon size={17} aria-hidden="true" />
             </span>
@@ -737,7 +762,12 @@ export default function RestaurantSettings({
           );
         }
         setPlan(activePlan || null);
-        setOrderingSeoEnabled(["starter", "growth", "grow", "pro"].includes(activePlan) && ["active", "trialing"].includes(String(resolvedSubscription?.status || "").toLowerCase()));
+        setOrderingSeoEnabled(
+          ["starter", "growth", "grow", "pro"].includes(activePlan) &&
+            ["active", "trialing"].includes(
+              String(resolvedSubscription?.status || "").toLowerCase(),
+            ),
+        );
       } catch (e) {
         setError(e.message);
       } finally {
@@ -761,9 +791,11 @@ export default function RestaurantSettings({
         body: JSON.stringify({
           organizationId,
           businessStartYear: org.businessStartYear,
-          branding: (staffMode && staffPermissions.includes("setup:settings")) || entitlements.appearanceCustomization
-            ? org.branding
-            : { logoUrl: org.branding.logoUrl, faviconUrl: org.branding.faviconUrl },
+          branding:
+            (staffMode && staffPermissions.includes("setup:settings")) ||
+            entitlements.appearanceCustomization
+              ? org.branding
+              : { logoUrl: org.branding.logoUrl, faviconUrl: org.branding.faviconUrl },
           website: org.website,
           loyalty: { ...org.loyalty, enabled: entitlements.loyalty && org.loyalty.enabled },
           giftCards: { ...org.giftCards, enabled: entitlements.giftCards && org.giftCards.enabled },
@@ -775,11 +807,19 @@ export default function RestaurantSettings({
           notifications: org.notifications,
         }),
       });
-      if (!data?.settings) throw new Error("Settings response missing; please reload and verify your changes.");
-      if (tab === "Appearance" && ((staffMode && staffPermissions.includes("setup:settings")) || entitlements.appearanceCustomization)) {
+      if (!data?.settings)
+        throw new Error("Settings response missing; please reload and verify your changes.");
+      if (
+        tab === "Appearance" &&
+        ((staffMode && staffPermissions.includes("setup:settings")) ||
+          entitlements.appearanceCustomization)
+      ) {
         for (const [key, value] of Object.entries(org.branding)) {
-          if (key.endsWith("Color") && typeof value === "string" &&
-              data.settings.branding?.[key]?.toLowerCase() !== value.toLowerCase()) {
+          if (
+            key.endsWith("Color") &&
+            typeof value === "string" &&
+            data.settings.branding?.[key]?.toLowerCase() !== value.toLowerCase()
+          ) {
             throw new Error(`Appearance setting ${key} was not saved. Please retry.`);
           }
         }
@@ -898,7 +938,11 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "logoUrl", e.target.value)}
                     placeholder="https://..."
                   />
-                  <ImageUploadButton organizationId={organizationId} onUploaded={(url) => setOrgPart("branding", "logoUrl", url)} label="Upload logo" />
+                  <ImageUploadButton
+                    organizationId={organizationId}
+                    onUploaded={(url) => setOrgPart("branding", "logoUrl", url)}
+                    label="Upload logo"
+                  />
                 </Field>
                 <Field label="Favicon URL (browser tab icon)">
                   <input
@@ -907,7 +951,11 @@ export default function RestaurantSettings({
                     onChange={(e) => setOrgPart("branding", "faviconUrl", e.target.value)}
                     placeholder="https://.../favicon.png (falls back to logo)"
                   />
-                  <ImageUploadButton organizationId={organizationId} onUploaded={(url) => setOrgPart("branding", "faviconUrl", url)} label="Upload favicon" />
+                  <ImageUploadButton
+                    organizationId={organizationId}
+                    onUploaded={(url) => setOrgPart("branding", "faviconUrl", url)}
+                    label="Upload favicon"
+                  />
                 </Field>
               </div>
             </div>
@@ -974,7 +1022,8 @@ export default function RestaurantSettings({
           )}
 
           {tab === "Nav & Footer Links" && (
-            <RestaurantLinksSettings organizationId={organizationId}
+            <RestaurantLinksSettings
+              organizationId={organizationId}
               value={org.website}
               onChange={(website) => setOrg((old) => ({ ...old, website }))}
             />
@@ -984,31 +1033,79 @@ export default function RestaurantSettings({
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-bold">SEO & Page Titles</h2>
-                <p className="mt-1 text-sm text-slate-500">Customize search results and social previews. Leave fields blank to use restaurant-specific defaults.</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Customize search results and social previews. Leave fields blank to use
+                  restaurant-specific defaults.
+                </p>
               </div>
-              {[["home", "Home"], ["menu", "Menu"], ["contact", "Contact"], ["giftCard", "Gift Cards"], ["checkout", "Checkout"], ["privacy", "Privacy Policy"], ["terms", "Terms & Conditions"]].map(([key, label]) => {
-                const locked = ["giftCard", "checkout"].includes(key) && (!orderingSeoEnabled || !!entitlementError);
+              {[
+                ["home", "Home"],
+                ["menu", "Menu"],
+                ["contact", "Contact"],
+                ["giftCard", "Gift Cards"],
+                ["checkout", "Checkout"],
+                ["privacy", "Privacy Policy"],
+                ["terms", "Terms & Conditions"],
+              ].map(([key, label]) => {
+                const locked =
+                  ["giftCard", "checkout"].includes(key) &&
+                  (!orderingSeoEnabled || !!entitlementError);
                 return (
-                  <div key={key} className={`rounded-xl border p-5 space-y-4 ${locked ? "bg-slate-50" : ""}`}>
+                  <div
+                    key={key}
+                    className={`rounded-xl border p-5 space-y-4 ${locked ? "bg-slate-50" : ""}`}
+                  >
                     <h3 className="font-semibold">{label} page</h3>
                     {locked && (
                       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
                         <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                          <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+                          <LockKeyhole
+                            size={18}
+                            className="shrink-0 text-orange-600"
+                            aria-hidden="true"
+                          />
                           <span>Available on Starter, Growth and Pro.</span>
                         </div>
-                        <Link href={billingUrl} className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600">View Plans &amp; Upgrade</Link>
+                        <Link
+                          href={billingUrl}
+                          className="inline-flex items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+                        >
+                          View Plans &amp; Upgrade
+                        </Link>
                       </div>
                     )}
                     <fieldset disabled={locked} className="space-y-4 disabled:opacity-50">
-                      {[["title", "Page title", 70], ["description", "Meta description", 320], ["socialTitle", "Social sharing title", 100], ["socialDescription", "Social sharing description", 320]].map(([field, title, maxLength]) => (
+                      {[
+                        ["title", "Page title", 70],
+                        ["description", "Meta description", 320],
+                        ["socialTitle", "Social sharing title", 100],
+                        ["socialDescription", "Social sharing description", 320],
+                      ].map(([field, title, maxLength]) => (
                         <Field key={field} label={title}>
-                          <input className={input} maxLength={maxLength}
+                          <input
+                            className={input}
+                            maxLength={maxLength}
                             value={org.website?.seo?.[key]?.[field] || ""}
-                            placeholder={field === "title" ? `${label} | ${org.name || "Restaurant"}` : "Use automatic default"}
+                            placeholder={
+                              field === "title"
+                                ? `${label} | ${org.name || "Restaurant"}`
+                                : "Use automatic default"
+                            }
                             onChange={(e) => {
                               if (locked) return;
-                              setOrg((old) => ({...old, website: {...old.website, seo: {...(old.website?.seo || {}), [key]: {...(old.website?.seo?.[key] || {}), [field]: e.target.value}}}}));
+                              setOrg((old) => ({
+                                ...old,
+                                website: {
+                                  ...old.website,
+                                  seo: {
+                                    ...(old.website?.seo || {}),
+                                    [key]: {
+                                      ...(old.website?.seo?.[key] || {}),
+                                      [field]: e.target.value,
+                                    },
+                                  },
+                                },
+                              }));
                             }}
                           />
                         </Field>
@@ -1044,7 +1141,11 @@ export default function RestaurantSettings({
               {!entitlements.loyalty && !entitlementError && (
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+                    <LockKeyhole
+                      size={18}
+                      className="shrink-0 text-orange-600"
+                      aria-hidden="true"
+                    />
                     <span>Available on Growth and Pro.</span>
                   </div>
                   <Link
@@ -1127,7 +1228,11 @@ export default function RestaurantSettings({
               {!entitlements.giftCards && !entitlementError && (
                 <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-orange-200 bg-orange-50 p-4">
                   <div className="flex items-center gap-2 text-sm font-medium text-slate-800">
-                    <LockKeyhole size={18} className="shrink-0 text-orange-600" aria-hidden="true" />
+                    <LockKeyhole
+                      size={18}
+                      className="shrink-0 text-orange-600"
+                      aria-hidden="true"
+                    />
                     <span>Available on Growth and Pro.</span>
                   </div>
                   <Link
