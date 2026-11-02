@@ -315,6 +315,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
     phone: "",
     googleMapUrl: "",
     pickupInstructions: "",
+    directory: { listedPublicly: false, lat: null, lng: null },
   });
   const [locationOrdering, setLocationOrdering] = useState({
     taxRate: 0,
@@ -622,6 +623,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
           phone: d.settings?.phone || "",
           googleMapUrl: d.settings?.googleMapUrl || "",
           pickupInstructions: d.settings?.pickupInstructions || "",
+          directory: { listedPublicly: false, lat: null, lng: null, ...d.settings?.directory },
         });
         setLocationOrdering({
           taxRate: Number(d.settings?.ordering?.taxRate ?? 0),
@@ -671,7 +673,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
 
     try {
       const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
-        ...(tab === "printing" ? { printing } : { ...locationDetails }),
+        ...(tab === "printing" ? { printing } : { ...locationDetails, directory: { listedPublicly: locationDetails.directory?.listedPublicly === true } }),
       });
 
       setPrinting({
@@ -692,6 +694,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
         phone: d.settings?.phone || "",
         googleMapUrl: d.settings?.googleMapUrl || "",
         pickupInstructions: d.settings?.pickupInstructions || "",
+        directory: { listedPublicly: false, lat: null, lng: null, ...d.settings?.directory },
       });
 
       setMessage(`Location settings saved for ${selectedLocation?.name || "location"}.`);
@@ -1451,6 +1454,26 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
                             </div>
                           )}
 
+                          {tab === "locationDetails" && (
+                            <section className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+                              <h3 className="text-lg font-semibold text-slate-900">OrderXO Restaurant Directory</h3>
+                              <p className="mt-1 text-sm text-slate-600">Allow customers to discover this location on orderxo.com/restaurants. Only active, published restaurants are eligible.</p>
+                              <label className="mt-4 flex items-center gap-3 text-sm font-medium text-slate-800">
+                                <input type="checkbox" disabled={!canManage}
+                                  checked={locationDetails.directory?.listedPublicly === true}
+                                  onChange={(e) => setLocationDetails((v) => ({ ...v, directory: { ...v.directory, listedPublicly: e.target.checked } }))} />
+                                List this location publicly
+                              </label>
+                              <p className="mt-3 text-sm text-slate-600">
+                                OrderXO automatically verifies the street address above with Google Maps when you enable public listing and save. You do not need to enter coordinates.
+                              </p>
+                              {Number.isFinite(locationDetails.directory?.lat) && Number.isFinite(locationDetails.directory?.lng) && (
+                                <p className="mt-2 text-xs text-slate-500">
+                                  Verified map position: {locationDetails.directory.lat.toFixed(6)}, {locationDetails.directory.lng.toFixed(6)}
+                                </p>
+                              )}
+                            </section>
+                          )}
                           <button
                             disabled={printingSaving}
                             onClick={savePrinting}
