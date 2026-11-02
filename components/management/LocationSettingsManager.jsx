@@ -88,6 +88,7 @@ export default function LocationSettingsManager({ organizationId }) {
     try {
       const d = await request(organizationId, locationId, "PATCH", {
         printing: settings.printing,
+        directory: settings.directory,
       });
       setSettings(d.settings);
       setMessage("Location settings saved.");
@@ -212,6 +213,25 @@ export default function LocationSettingsManager({ organizationId }) {
                     </div>
                   </div>
                 ))}
+              </section>
+              <section className="rounded-2xl border bg-white p-6">
+                <h2 className="text-xl font-bold">OrderXO restaurant directory</h2>
+                <p className="mt-2 text-sm text-slate-600">Show this location on the public OrderXO restaurant map. Only active, published restaurants can appear.</p>
+                <label className="mt-4 flex items-center gap-3">
+                  <input type="checkbox" disabled={!canManage} checked={settings.directory?.listedPublicly === true}
+                    onChange={(e) => setSettings((v) => ({ ...v, directory: { ...v.directory, listedPublicly: e.target.checked } }))} />
+                  List this location publicly
+                </label>
+                <p className="mt-4 text-sm text-slate-600">Enter the map coordinates of this location. These are public business coordinates, not your personal location.</p>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  {[["lat", "Latitude (-90 to 90)"], ["lng", "Longitude (-180 to 180)"]].map(([key, label]) => (
+                    <label key={key} className="block text-sm font-medium">{label}
+                      <input className="field mt-1 w-full" type="number" step="any" disabled={!canManage}
+                        value={settings.directory?.[key] ?? ""}
+                        onChange={(e) => setSettings((v) => ({ ...v, directory: { ...v.directory, [key]: e.target.value === "" ? null : Number(e.target.value) } }))} />
+                    </label>
+                  ))}
+                </div>
               </section>
               {canManage && (
                 <button disabled={saving} onClick={save} className="primary">
