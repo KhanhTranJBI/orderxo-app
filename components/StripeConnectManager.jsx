@@ -76,6 +76,26 @@ export default function StripeConnectManager({ organizationId, locations, initia
       setBusy(false);
     }
   }
+  async function reconnect() {
+    if (!window.confirm("The saved Stripe account is not accessible from OrderXO production. Clear this location's old connection and connect a live Stripe account?")) return;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await ownerFetch("/api/owner/connect/stripe/reconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId, locationId, confirmReconnect: true }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw Error(d.error || "Unable to reset stale Stripe connection");
+      setSuccess("Old Stripe connection cleared. Connect your live Stripe account below.");
+      setReload((v) => v + 1);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   async function share() {
     if (!confirmSource) return;
     setBusy(true);
@@ -136,7 +156,17 @@ export default function StripeConnectManager({ organizationId, locations, initia
           )}
         </div>
       )}
-      {status && !status.connected && sources.length > 0 && (
+      {status?.reconnectRequired && (
+        <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm">
+          <p className="font-semibold">Stripe account needs reconnection</p>
+          <p>The saved Stripe account is not accessible to the current OrderXO Stripe platform. This can happen after moving test data to production. Existing payments and accounts are not deleted.</p>
+          <button type="button" onClick={reconnect} disabled={busy}
+            className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50">
+            {busy ? "Checking…" : "Clear old connection and reconnect"}
+          </button>
+        </div>
+      )}
+      {status && !status.connected && !status.reconnectRequired && sources.length > 0 && (
         <div className="space-y-3 rounded-xl border p-4">
           <h3 className="font-semibold">Use an existing organization Stripe account</h3>
           <p className="text-sm text-slate-600">
@@ -163,7 +193,7 @@ export default function StripeConnectManager({ organizationId, locations, initia
           </button>
         </div>
       )}
-      {status && !status.connected && (
+      {status && !status.connected && !status.reconnectRequired && (
         <button
           onClick={connect}
           disabled={busy}
