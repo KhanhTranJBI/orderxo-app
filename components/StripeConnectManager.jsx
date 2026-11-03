@@ -18,6 +18,7 @@ export default function StripeConnectManager({ organizationId, locations, initia
   const [sources, setSources] = useState([]);
   const [sourceId, setSourceId] = useState("");
   const [confirmSource, setConfirmSource] = useState(null);
+  const [confirmReconnect, setConfirmReconnect] = useState(false);
   const [success, setSuccessState] = useState("");
   const setSuccess = (value) => {
     setSuccessState(value);
@@ -77,7 +78,7 @@ export default function StripeConnectManager({ organizationId, locations, initia
     }
   }
   async function reconnect() {
-    if (!window.confirm("The saved Stripe account is not accessible from OrderXO production. Clear this location's old connection and connect a live Stripe account?")) return;
+    setConfirmReconnect(false);
     setBusy(true);
     setError("");
     try {
@@ -163,7 +164,7 @@ export default function StripeConnectManager({ organizationId, locations, initia
         <div className="space-y-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm">
           <p className="font-semibold">Stripe account needs reconnection</p>
           <p>The saved Stripe account is not accessible to the current OrderXO Stripe platform. This can happen after moving test data to production. Existing payments and accounts are not deleted.</p>
-          <button type="button" onClick={reconnect} disabled={busy}
+          <button type="button" onClick={() => setConfirmReconnect(true)} disabled={busy}
             className="rounded-xl bg-orange-600 px-5 py-3 font-semibold text-white disabled:opacity-50">
             {busy ? "Checking…" : "Clear old connection and reconnect"}
           </button>
@@ -204,6 +205,46 @@ export default function StripeConnectManager({ organizationId, locations, initia
         >
           {busy ? "Redirecting…" : "Connect existing Stripe account"}
         </button>
+      )}
+      {confirmReconnect && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="stripe-reconnect-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busy) setConfirmReconnect(false);
+          }}
+        >
+          <div className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl">
+            <h3 id="stripe-reconnect-title" className="text-xl font-bold">
+              Reconnect Stripe account?
+            </h3>
+            <p className="text-sm text-slate-700">
+              The saved Stripe account is not accessible to the current OrderXO platform.
+              Clearing this location's saved connection will let you connect a live Stripe
+              account. This will not delete your Stripe account or past payments.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={busy}
+                className="rounded-lg border px-4 py-2 disabled:opacity-50"
+                onClick={() => setConfirmReconnect(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                className="rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50"
+                onClick={reconnect}
+              >
+                {busy ? "Checking…" : "Clear and reconnect"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {confirmSource && (
         <div
