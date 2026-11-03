@@ -86,7 +86,10 @@ export default function StripeConnectManager({ organizationId, locations, initia
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ organizationId, locationId, confirmReconnect: true }),
       });
-      const d = await r.json();
+      const contentType = r.headers.get("content-type") || "";
+      const d = contentType.includes("application/json")
+        ? await r.json()
+        : { error: `Stripe reconnect request failed (HTTP ${r.status}). Check the deployed Owner Portal API route.` };
       if (!r.ok) throw Error(d.error || "Unable to reset stale Stripe connection");
       setSuccess("Old Stripe connection cleared. Connect your live Stripe account below.");
       setReload((v) => v + 1);
