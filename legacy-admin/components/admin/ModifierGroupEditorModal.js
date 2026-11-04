@@ -61,6 +61,7 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
 
   /* ---------------- SAVE ---------------- */
   const saveGroup = async () => {
+    if (saving) return;
     const error = validateGroup();
     if (error) {
       toast.error(error);
@@ -119,16 +120,17 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
 
   /* ---------------- UI ---------------- */
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-2xl rounded-2xl px-2 md:px-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+      <div aria-busy={saving} className="relative flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[90dvh]">
         {/* Header */}
-        <div className="flex justify-between items-center sticky top-0 bg-white z-10 py-2">
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
           <h2 className="text-lg font-bold">{form._id ? "Edit Modifier" : "New Modifier"}</h2>
-          <button onClick={onClose}>
+          <button type="button" onClick={onClose} disabled={saving} aria-label="Close modifier" className="disabled:cursor-not-allowed disabled:opacity-50">
             <X />
           </button>
         </div>
 
+        <fieldset disabled={saving} className="min-h-0 min-w-0 flex-1 space-y-4 overflow-y-auto overscroll-contain border-0 px-4 py-4 sm:px-6 disabled:opacity-60">
         {/* Title */}
         <div className="flex flex-col gap-1">
           <label className="text-sm text-gray-500 font-medium">Modifier Name</label>
@@ -239,18 +241,22 @@ export default function ModifierGroupEditorModal({ group, onClose }) {
           showImage
         />
 
+        </fieldset>
+
         {/* Footer */}
-        <div className="flex justify-end gap-3 sticky bottom-0 bg-white z-10 py-2 mt-4">
-          <button onClick={onClose} className="btn-secondary">
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
+          <button type="button" onClick={onClose} disabled={saving} className="btn-secondary disabled:cursor-not-allowed disabled:opacity-50">
             Cancel
           </button>
           <button
+            type="button"
             onClick={saveGroup}
             disabled={saving}
-            className="flex gap-2 items-center px-3 py-1 btn-primary font-bold bg-primary text-white rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg"
+            aria-disabled={saving}
+            className="flex min-w-28 justify-center gap-2 items-center px-3 py-2 btn-primary font-bold bg-primary text-white rounded-xl hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg disabled:cursor-wait disabled:opacity-70"
           >
             {saving && <Loader2 size={16} className="animate-spin" />}
-            Save
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
