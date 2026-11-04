@@ -76,18 +76,40 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
           options: [],
         },
   );
+  const [saving, setSaving] = useState(false);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave({
+        ...f,
+        options: f.options
+          .filter((o) => o.name.trim())
+          .map((o, i) => ({
+            ...o,
+            priceCents: Math.round(Number(o.price || 0) * 100),
+            order: i,
+          })),
+      });
+    } catch (error) {
+      toast.error(error?.message || "Unable to save modifier. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
   const add = () =>
     setF({ ...f, options: [...f.options, { name: "", image: "", price: "0", isActive: true }] });
   return (
-    <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto p-6">
-        <div className="flex justify-between">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-3 sm:p-4">
+      <div className="flex w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[90dvh]">
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <h2 className="text-xl font-bold">{group ? "Edit Modifier" : "New Modifier"}</h2>
-          <button onClick={onClose}>
+          <button type="button" onClick={onClose} disabled={saving} aria-label="Close modifier editor" className="rounded-lg p-1 hover:bg-slate-100 disabled:opacity-50">
             <X />
           </button>
         </div>
-        <div className="grid md:grid-cols-2 gap-3 mt-5">
+        <fieldset disabled={saving} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 disabled:opacity-70 sm:px-6 sm:py-5">
+        <div className="grid md:grid-cols-2 gap-3">
           <input
             className="field"
             placeholder="Modifier title"
@@ -239,26 +261,26 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
             );
           })}
         </div>
-        <div className="flex justify-end gap-2 mt-6">
-          <button className="secondary" onClick={onClose}>
+        </fieldset>
+        <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+          <button type="button" className="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </button>
           <button
-            className="primary"
-            onClick={() =>
-              onSave({
-                ...f,
-                options: f.options
-                  .filter((o) => o.name.trim())
-                  .map((o, i) => ({
-                    ...o,
-                    priceCents: Math.round(Number(o.price || 0) * 100),
-                    order: i,
-                  })),
-              })
-            }
+            type="button"
+            className="primary inline-flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={handleSave}
+            disabled={saving}
+            aria-busy={saving}
           >
-            Save modifier
+            {saving ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" aria-hidden="true" />
+                Saving...
+              </>
+            ) : (
+              "Save modifier"
+            )}
           </button>
         </div>
       </div>
