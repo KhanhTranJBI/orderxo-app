@@ -17,12 +17,13 @@ import {
   SlidersHorizontal,
   Menu as MenuIcon,
 } from "lucide-react";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import { DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import useRestaurantLocation from "./useRestaurantLocation";
@@ -56,6 +57,21 @@ function Sortable({ id, children }) {
   );
 }
 
+// Drag only from the grip so editing fields and scrolling the modal stay natural.
+function SortableModifierOption({ id, disabled, children }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id, disabled });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={isDragging ? "relative z-20 opacity-80" : ""}
+    >
+      {children({ ...attributes, ...listeners })}
+    </div>
+  );
+}
+
 function ModifierEditor({ group, onClose, onSave, organizationId }) {
   const [f, setF] = useState(
     group
@@ -76,6 +92,26 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
           options: [],
         },
   );
+  // IDs are stable across reorders, including options that have not been saved yet.
+  const [optionKeys, setOptionKeys] = useState(() =>
+    (group?.options || []).map((o, i) => String(o._id || `new-${i}`)),
+  );
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 7 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+  const reorderOptions = ({ active, over }) => {
+    if (!over || active.id === over.id) return;
+    const from = optionKeys.indexOf(String(active.id));
+    const to = optionKeys.indexOf(String(over.id));
+    if (from < 0 || to < 0) return;
+    setOptionKeys((keys) => arrayMove(keys, from, to));
+    setF((previous) => ({
+      ...previous,
+      options: arrayMove(previous.options, from, to),
+    }));
+  };
   const [saving, setSaving] = useState(false);
   const handleSave = async () => {
     if (saving) return;
@@ -158,6 +194,8 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
             + Add option
           </button>
         </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={reorderOptions}>
+          <SortableContext items={optionKeys} strategy={verticalListSortingStrategy}>
         <div className="space-y-3 mt-3">
           {f.options.map((o, i) => {
             const update = (changes) =>
@@ -168,7 +206,19 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
                 ),
               }));
             return (
-              <div key={o._id || i} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <SortableModifierOption key={optionKeys[i]} id={optionKeys[i]} disabled={saving}>
+                {(dragHandleProps) => (
+              <div className="flex overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <button
+                  type="button"
+                  {...dragHandleProps}
+                  aria-label={`Drag to reorder ${o.name || "option"}`}
+                  title="Drag to reorder"
+                  className="flex w-9 shrink-0 touch-none cursor-grab items-center justify-center border-r border-slate-200 bg-slate-50 text-slate-400 hover:bg-orange-50 hover:text-orange-600 active:cursor-grabbing sm:w-11"
+                >
+                  <GripVertical size={20} />
+                </button>
+                <div className="min-w-0 flex-1 p-3 sm:p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                   <div className="flex shrink-0 items-center gap-3 sm:block">
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-24 sm:w-24">
@@ -255,22 +305,28 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
                         type="button"
                         className="ml-auto rounded-lg p-2 text-red-500 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500"
                         aria-label={`Delete ${o.name || "option"}`}
-                        onClick={() =>
+                        onClick={() => {
+                          setOptionKeys((keys) => keys.filter((_, x) => x !== i));
                           setF((previous) => ({
                             ...previous,
                             options: previous.options.filter((_, x) => x !== i),
-                          }))
-                        }
+                          }));
+                        }}
                       >
                         <Trash2 size={19} />
                       </button>
                     </div>
                   </div>
                 </div>
+                </div>
               </div>
+                )}
+              </SortableModifierOption>
             );
           })}
         </div>
+          </SortableContext>
+        </DndContext>
         </fieldset>
         </div>
         <div className="relative z-10 flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-6px_18px_rgba(15,23,42,0.04)] sm:px-6">
