@@ -101,14 +101,14 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
     setF({ ...f, options: [...f.options, { name: "", image: "", price: "0", isActive: true }] });
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-3 sm:p-4">
-      <div className="flex w-full max-w-2xl max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[90dvh]">
+      <div className="flex w-full max-w-3xl max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[90dvh]">
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <h2 className="text-xl font-bold">{group ? "Edit Modifier" : "New Modifier"}</h2>
           <button type="button" onClick={onClose} disabled={saving} aria-label="Close modifier editor" className="rounded-lg p-1 hover:bg-slate-100 disabled:opacity-50">
             <X />
           </button>
         </div>
-        <fieldset disabled={saving} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 disabled:opacity-70 sm:px-6 sm:py-5">
+        <fieldset disabled={saving} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-6 disabled:opacity-70 sm:px-6 sm:py-5 sm:pb-8">
         <div className="grid md:grid-cols-2 gap-3">
           <input
             className="field"
@@ -167,102 +167,111 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
                 ),
               }));
             return (
-              <div key={o._id || i} className="rounded-2xl border border-slate-200 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-slate-50">
-                    {o.image ? (
-                      <img
-                        src={o.image}
-                        alt={o.name || "Option"}
-                        className="h-full w-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.visibility = "hidden";
-                        }}
-                      />
-                    ) : (
-                      <span className="text-xs text-slate-400">No image</span>
-                    )}
+              <div key={o._id || i} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                  <div className="flex shrink-0 items-center gap-3 sm:block">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 sm:h-24 sm:w-24">
+                      {o.image ? (
+                        <img
+                          src={o.image}
+                          alt={o.name || "Option"}
+                          className="h-full w-full object-cover"
+                          onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+                        />
+                      ) : (
+                        <span className="text-center text-xs text-slate-400">No image</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-slate-500 sm:hidden">Option image</span>
                   </div>
-                  <div className="min-w-[180px] flex-1 space-y-2">
-                    <label className="block text-xs font-semibold text-slate-500">
-                      Name
-                      <input
-                        className="field mt-1"
-                        value={o.name}
-                        placeholder="Option name"
-                        onChange={(e) => update({ name: e.target.value })}
-                      />
-                    </label>
-                    <label className="block text-xs font-semibold text-slate-500">
+                  <div className="min-w-0 flex-1 space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_7rem]">
+                      <label className="block min-w-0 text-xs font-semibold text-slate-500">
+                        Name
+                        <input
+                          className="field mt-1 w-full"
+                          value={o.name}
+                          placeholder="Option name"
+                          onChange={(e) => update({ name: e.target.value })}
+                        />
+                      </label>
+                      <label className="block text-xs font-semibold text-slate-500">
+                        Price ($)
+                        <input
+                          className="field mt-1 w-full"
+                          type="number"
+                          step=".01"
+                          min="0"
+                          value={o.price}
+                          onChange={(e) => update({ price: e.target.value })}
+                        />
+                      </label>
+                    </div>
+                    <label className="block min-w-0 text-xs font-semibold text-slate-500">
                       Image URL
                       <input
-                        className="field mt-1"
+                        className="field mt-1 w-full"
                         value={o.image || ""}
-                        placeholder="/images/options/example.png"
+                        placeholder="https://example.com/option.jpg"
                         onChange={(e) => update({ image: e.target.value })}
                       />
                     </label>
-                    <UploadButton organizationId={organizationId}
-                      endpoint="menuImage"
-                      onClientUploadComplete={(files) => {
-                        const url = files?.[0]?.ufsUrl || files?.[0]?.url;
-                        if (!url) {
-                          toast.error("Upload completed but no image URL was returned.");
-                          return;
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="min-w-0 max-w-full overflow-hidden rounded-lg">
+                        <UploadButton
+                          organizationId={organizationId}
+                          endpoint="menuImage"
+                          onClientUploadComplete={(files) => {
+                            const url = files?.[0]?.ufsUrl || files?.[0]?.url;
+                            if (!url) {
+                              toast.error("Upload completed but no image URL was returned.");
+                              return;
+                            }
+                            update({ image: url });
+                            toast.success("Option image uploaded. Save the modifier to keep it.");
+                          }}
+                          onUploadError={(error) => {
+                            toast.error(error?.message || "Option image upload failed.");
+                          }}
+                          appearance={{
+                            container: "!flex !w-auto !max-w-full !items-center !gap-2",
+                            button: "!h-auto !min-h-0 !w-auto !max-w-full !rounded-lg !border !border-orange-200 !bg-orange-50 !px-3 !py-2 !text-sm !font-semibold !text-orange-700 hover:!bg-orange-100",
+                            allowedContent: "!hidden",
+                          }}
+                          content={{ button: "Choose / upload image" }}
+                          className="!w-auto !max-w-full"
+                        />
+                      </div>
+                      <label className="inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
+                        <input
+                          type="checkbox"
+                          checked={o.isActive !== false}
+                          onChange={(e) => update({ isActive: e.target.checked })}
+                        />
+                        {o.isActive !== false ? "Active" : "Inactive"}
+                      </label>
+                      <button
+                        type="button"
+                        className="ml-auto rounded-lg p-2 text-red-500 hover:bg-red-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-500"
+                        aria-label={`Delete ${o.name || "option"}`}
+                        onClick={() =>
+                          setF((previous) => ({
+                            ...previous,
+                            options: previous.options.filter((_, x) => x !== i),
+                          }))
                         }
-                        update({ image: url });
-                        toast.success("Option image uploaded. Save the modifier to keep it.");
-                      }}
-                      onUploadError={(error) => {
-                        toast.error(error?.message || "Option image upload failed.");
-                      }}
-                      appearance={{
-                        button:
-                          "!bg-orange-600 !text-white !rounded-lg !px-3 !py-2 !text-xs !font-semibold",
-                        allowedContent: "!hidden",
-                      }}
-                      content={{ button: "Upload image" }}
-                      className="ut-button:w-auto"
-                    />
+                      >
+                        <Trash2 size={19} />
+                      </button>
+                    </div>
                   </div>
-                  <label className="w-28 text-xs font-semibold text-slate-500">
-                    Price ($)
-                    <input
-                      className="field mt-1"
-                      type="number"
-                      step=".01"
-                      min="0"
-                      value={o.price}
-                      onChange={(e) => update({ price: e.target.value })}
-                    />
-                  </label>
-                  <label className="flex items-center gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
-                    <input
-                      type="checkbox"
-                      checked={o.isActive !== false}
-                      onChange={(e) => update({ isActive: e.target.checked })}
-                    />
-                    {o.isActive !== false ? "Active" : "Inactive"}
-                  </label>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${o.name || "option"}`}
-                    onClick={() =>
-                      setF((previous) => ({
-                        ...previous,
-                        options: previous.options.filter((_, x) => x !== i),
-                      }))
-                    }
-                  >
-                    <Trash2 className="text-red-500" size={19} />
-                  </button>
                 </div>
               </div>
             );
           })}
         </div>
         </fieldset>
-        <div className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+        <div className="relative z-10 flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-6px_18px_rgba(15,23,42,0.04)] sm:px-6">
           <button type="button" className="secondary" onClick={onClose} disabled={saving}>
             Cancel
           </button>
