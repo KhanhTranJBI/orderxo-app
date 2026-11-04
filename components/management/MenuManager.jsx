@@ -101,14 +101,15 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
     setF({ ...f, options: [...f.options, { name: "", image: "", price: "0", isActive: true }] });
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-3 sm:p-4">
-      <div className="flex w-full max-w-3xl max-h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:max-h-[90dvh]">
+      <div className="flex h-[calc(100dvh-1.5rem)] w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-xl sm:h-[90dvh]">
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <h2 className="text-xl font-bold">{group ? "Edit Modifier" : "New Modifier"}</h2>
           <button type="button" onClick={onClose} disabled={saving} aria-label="Close modifier editor" className="rounded-lg p-1 hover:bg-slate-100 disabled:opacity-50">
             <X />
           </button>
         </div>
-        <fieldset disabled={saving} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-6 disabled:opacity-70 sm:px-6 sm:py-5 sm:pb-8">
+        <div className="min-h-0 flex-1 overflow-y-scroll overscroll-contain px-4 py-4 pb-6 sm:px-6 sm:py-5 sm:pb-8" style={{ WebkitOverflowScrolling: "touch" }}>
+        <fieldset disabled={saving} className="min-w-0 border-0 p-0 disabled:opacity-70">
         <div className="grid md:grid-cols-2 gap-3">
           <input
             className="field"
@@ -271,6 +272,7 @@ function ModifierEditor({ group, onClose, onSave, organizationId }) {
           })}
         </div>
         </fieldset>
+        </div>
         <div className="relative z-10 flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-4 py-4 shadow-[0_-6px_18px_rgba(15,23,42,0.04)] sm:px-6">
           <button type="button" className="secondary" onClick={onClose} disabled={saving}>
             Cancel
