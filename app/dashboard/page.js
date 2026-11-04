@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { Store, LayoutDashboard, Users, Settings, Globe, CreditCard } from "lucide-react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { backendRequest, cookieName } from "../../lib/backend";
@@ -222,17 +222,20 @@ export default async function Dashboard() {
                 )}
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link
-                    className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                    className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
                     href={`/dashboard/restaurants/${encodeURIComponent(id)}`}
                   >
+                    <LayoutDashboard size={16} aria-hidden="true" />
                     Manage restaurant
                   </Link>
                   {staffMode && (
                     <>
-                      <Link className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}>
+                      <Link className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}>
+                        <Settings size={16} aria-hidden="true" />
                         Restaurant settings
                       </Link>
-                      <Link className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}>
+                      <Link className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50" href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}>
+                        <Globe size={16} aria-hidden="true" />
                         Websites & domains
                       </Link>
                     </>
@@ -240,27 +243,31 @@ export default async function Dashboard() {
                   {isAdmin && (
                     <>
                       <Link
-                        className={`rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50 ${!proTeam ? "border-orange-200 bg-orange-50 text-orange-800" : ""}`}
+                        className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50 ${!proTeam ? "border-orange-200 bg-orange-50 text-orange-800" : ""}`}
                         href={`/dashboard/restaurants/${encodeURIComponent(id)}/team`}
                       >
-                        {proTeam ? "Admins & Managers" : "🔒 Admins & Managers · Pro"}
+                        <Users size={16} aria-hidden="true" />
+                        Admins & Managers
                       </Link>
                       <Link
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                         href={`/dashboard/restaurants/${encodeURIComponent(id)}/settings`}
                       >
+                        <Settings size={16} aria-hidden="true" />
                         Restaurant settings
                       </Link>
                       <Link
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                         href={`/dashboard/settings/domains?organizationId=${encodeURIComponent(id)}`}
                       >
+                        <Globe size={16} aria-hidden="true" />
                         Websites & domains
                       </Link>
                       <Link
-                        className="rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
+                        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold hover:bg-slate-50"
                         href={`/dashboard/settings/billing?organizationId=${encodeURIComponent(id)}`}
                       >
+                        <CreditCard size={16} aria-hidden="true" />
                         Billing & subscription
                       </Link>
                     </>
