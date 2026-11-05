@@ -57,6 +57,8 @@ export default function BillingManager({
     if (typeof value === "string" && value.trim()) toast.info(value);
   };
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReconnectModal, setShowReconnectModal] = useState(false);
+  const [reconnectAvailable, setReconnectAvailable] = useState(false);
   const [confirmPlan, setConfirmPlan] = useState(null);
   const [newLocationName, setNewLocationName] = useState("");
   const [showLocationModal, setShowLocationModal] = useState(initialAddLocation);
@@ -119,7 +121,12 @@ export default function BillingManager({
         body: JSON.stringify(body),
       });
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "Billing request failed");
+      if (!r.ok) {
+        if (key === "portal" && r.status === 409 && /saved Stripe customer is not accessible/i.test(d.error || "")) {
+          setReconnectAvailable(true);
+        }
+        throw new Error(d.error || "Billing request failed");
+      }
       if (expectUrl) {
         if (!d.url) throw new Error("Stripe did not return a billing URL");
         window.location.assign(d.url);
@@ -257,6 +264,15 @@ export default function BillingManager({
               </p>
             )}
           </div>
+          {reconnectAvailable && (
+            <button
+              disabled={!!busy}
+              onClick={() => setShowReconnectModal(true)}
+              className="rounded-xl border border-amber-400 px-4 py-2.5 font-semibold text-amber-900 hover:bg-amber-50 disabled:opacity-50"
+            >
+              Reconnect Stripe Billing
+            </button>
+          )}
           {subscription?.stripeCustomerId && (
             <button
               disabled={!!busy}
@@ -702,6 +718,25 @@ export default function BillingManager({
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {showReconnectModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="billing-reconnect-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h2 id="billing-reconnect-title" className="text-xl font-bold">Reconnect Stripe Billing</h2>
+            <p className="mt-3 text-sm text-slate-700">
+              The saved Stripe customer is unavailable in this Stripe account. Continue to Stripe Checkout to authorize billing for the existing plan. Your saved billing references will not change until Stripe confirms the new subscription.
+            </p>
+            <p className="mt-3 text-sm font-medium text-amber-800">
+              {trialEnd ? `Current trial deadline: ${formatDate(trialEnd)}. The existing deadline will not be extended.` : "No confirmed trial deadline is available. Stripe may begin billing immediately after checkout."}
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" disabled={!!busy} onClick={() => setShowReconnectModal(false)} className="rounded-lg border px-4 py-2">Cancel</button>
+              <button type="button" disabled={!!busy} onClick={() => post("/api/owner/billing/reconnect", { organizationId, confirm: true }, "reconnect", true)} className="rounded-lg bg-orange-600 px-4 py-2 font-semibold text-white disabled:opacity-50">
+                {busy === "reconnect" ? "Connecting…" : "Continue to Stripe"}
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </div>
