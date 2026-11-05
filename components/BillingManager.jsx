@@ -57,6 +57,7 @@ export default function BillingManager({
     if (typeof value === "string" && value.trim()) toast.info(value);
   };
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [downgradeTarget, setDowngradeTarget] = useState(null);
   const [showReconnectModal, setShowReconnectModal] = useState(false);
   const [reconnectAvailable, setReconnectAvailable] = useState(false);
   const [confirmPlan, setConfirmPlan] = useState(null);
@@ -623,6 +624,14 @@ export default function BillingManager({
           </div>
         </div>
       </div>}
+      <section className="rounded-2xl border bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-bold">Switch to website-only</h2>
+        <p className="mt-2 text-sm text-slate-600">Keep your restaurant website and menu without online ordering. Active subscriptions continue until the current billing period ends. Website Plus can be purchased after ordering benefits expire.</p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button type="button" disabled={!!busy} onClick={() => setDowngradeTarget("free")} className="rounded-xl border px-4 py-2.5 font-semibold disabled:opacity-50">Switch to Free Website</button>
+          <button type="button" disabled={!!busy} onClick={() => setDowngradeTarget("website_plus")} className="rounded-xl border border-orange-500 px-4 py-2.5 font-semibold text-orange-700 disabled:opacity-50">Switch to Website Plus</button>
+        </div>
+      </section>
       {active && (
         <section className="rounded-2xl border bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold">Subscription cancellation</h2>
@@ -663,6 +672,19 @@ export default function BillingManager({
         recovery are handled by Stripe.
       </p>
 
+      {downgradeTarget && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-slate-950/50 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="downgrade-title" className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h2 id="downgrade-title" className="text-xl font-bold">Switch to {downgradeTarget === "free" ? "Free Website" : "Website Plus"}?</h2>
+            <p className="mt-3 text-sm text-slate-700">Online ordering will be disabled after your current paid billing period ends. Your restaurant website, menu and content remain saved. A custom domain and new image uploads require Website Plus or an eligible paid ordering plan.</p>
+            {downgradeTarget === "website_plus" && <p className="mt-2 text-sm text-amber-700">Website Plus is billed separately using the current pricing version. You can subscribe after the ordering subscription ends; this action does not start Website Plus billing.</p>}
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" disabled={!!busy} onClick={() => setDowngradeTarget(null)} className="rounded-xl border px-4 py-2.5">Keep current plan</button>
+              <button type="button" disabled={!!busy} onClick={async () => { const target = downgradeTarget; setDowngradeTarget(null); await post("/api/owner/billing/downgrade", { organizationId, target }, "downgrade"); await loadPlus(); }} className="rounded-xl bg-orange-600 px-4 py-2.5 font-semibold text-white disabled:opacity-50">Confirm switch</button>
+            </div>
+          </section>
+        </div>
+      )}
       {showCancelModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
