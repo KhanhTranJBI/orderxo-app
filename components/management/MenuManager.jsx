@@ -1324,7 +1324,7 @@ export default function MenuManager({ organizationId, hasOrderingPlan = false })
                               {...attrs}
                               className="rounded-2xl border bg-white overflow-hidden"
                             >
-                              <div className="p-4 flex items-center justify-between bg-slate-50">
+                              <div className="flex flex-col gap-3 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-3">
                                   {canManage && (
                                     <span {...listeners} className="cursor-grab text-gray-400">
@@ -1332,20 +1332,20 @@ export default function MenuManager({ organizationId, hasOrderingPlan = false })
                                     </span>
                                   )}
                                   <button
-                                    className="flex items-center gap-2 font-bold text-lg"
+                                    className="flex min-w-0 flex-1 items-center gap-2 text-left text-lg font-bold"
                                     onClick={() =>
                                       setCollapsed((v) => ({ ...v, [c.slug]: !v[c.slug] }))
                                     }
                                   >
-                                    {collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}
-                                    {c.name}
-                                    <span className="text-sm font-normal text-gray-400">
+                                    <span className="shrink-0">{collapsed[c.slug] ? <ChevronDown /> : <ChevronUp />}</span>
+                                    <span className="min-w-0 flex-1 break-words leading-snug">{c.name}</span>
+                                    <span className="shrink-0 text-sm font-normal text-gray-400">
                                       ({its.length})
                                     </span>
                                   </button>
                                 </div>
                                 {canManage && menuScope === "default" && (
-                                  <div className="flex gap-2">
+                                  <div className="flex w-full items-center justify-end gap-2 border-t border-slate-200 pt-3 sm:w-auto sm:shrink-0 sm:border-0 sm:pt-0">
                                     <button className="secondary" onClick={() => setNewFor(c._id)}>
                                       + Item
                                     </button>
