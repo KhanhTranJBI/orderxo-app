@@ -77,6 +77,7 @@ export default function BillingManager({
   }
   const current = subscription?.plan || "starter";
   const active = activeStatuses.has(subscription?.status);
+  const needsSetup = !subscription;
   const pending = subscription?.pendingPlan;
   const isTrialing = subscription?.status === "trialing";
   const trialEnd = subscription?.trialEnd;
@@ -84,10 +85,11 @@ export default function BillingManager({
   const trialOfferDays = !active && Number(subscription?.trialOffer?.days || 0);
   const hasTrialOffer = trialOfferDays > 0;
 
-  const monthlyPrices = { starter: 2900, growth: 6900, pro: 12900 };
+  const monthlyPrices = billing?.planMonthlyCents || { starter: 2900, growth: 6900, pro: 12900 };
   const count = Math.max(1, Number(billing?.locationCount) || 1);
   const estimatedMonthly = (planId) => {
     const base = monthlyPrices[planId];
+    if (!Number.isInteger(base)) return 0;
     return base + Math.round(base * 0.8) * (count - 1);
   };
   const currentMonthly =
@@ -184,7 +186,12 @@ export default function BillingManager({
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border bg-white p-6 shadow-sm">
-        <p className="text-sm text-slate-500">Current plan</p>
+        {needsSetup && (
+          <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+            No billing subscription is on file. Choose a plan below to set up Stripe Billing. If your previous subscription included a trial, special pricing, or a promotion, contact OrderXO support to restore it before continuing; deleted benefits cannot be recovered automatically.
+          </p>
+        )}
+        <p className="text-sm text-slate-500">{needsSetup ? "Subscription setup" : "Current plan"}</p>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-bold capitalize">{current}</h2>
