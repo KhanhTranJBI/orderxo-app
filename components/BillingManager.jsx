@@ -603,7 +603,7 @@ export default function BillingManager({
       )}
       <section id="website-plus" className="rounded-2xl border bg-white p-6 shadow-sm scroll-mt-24">
         <h2 className="text-lg font-bold">Website Plus</h2>
-        <p className="mt-2 text-sm text-slate-600">Custom domain and image uploads with 100 MB storage · $5/month when purchased separately.</p>
+        <p className="mt-2 text-sm text-slate-600">Custom domain and image uploads with 100 MB storage · {plus?.price ? `${usd(plus.price.monthlyPriceCents)}/month when purchased separately.` : "Pricing currently unavailable."}</p>
         <p className="mt-3 font-medium">{plus?.included ? "Included with your restaurant plan" : plus?.cancelAtPeriodEnd ? "Cancellation scheduled" : plus?.entitled ? "Active" : "Not subscribed"}</p>
         {plus?.cancelAtPeriodEnd && <p className="mt-2 text-sm text-amber-700">Your benefits remain active until {plus.currentPeriodEnd ? new Date(plus.currentPeriodEnd).toLocaleDateString() : "the end of the billing period"}.</p>}
         <div className="mt-4 flex flex-wrap gap-3">
