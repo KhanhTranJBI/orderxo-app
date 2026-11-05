@@ -135,7 +135,7 @@ export default function BillingManager({
         window.location.assign(d.url);
         return;
       }
-      setNotice(d.message || "Subscription updated.");
+      setNoticeState(d.message || "Subscription updated.");
       toast.success(
         key === "add-location"
           ? "Location added and billing updated."
@@ -169,8 +169,7 @@ export default function BillingManager({
       // Re-fetch server component data without a full browser reload.
       router.refresh();
     } catch (e) {
-      setError(e.message);
-      toast.error(e.message || "Billing request failed");
+      setError(e.message || "Billing request failed");
       setBusy("");
     }
   }
