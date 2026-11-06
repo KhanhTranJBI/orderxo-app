@@ -456,7 +456,14 @@ function ModifierSelections({ item }) {
           <span className="font-bold uppercase text-slate-600">
             {group?.title || "Modifiers"}:{" "}
           </span>
-          {(group?.selections || []).map((selection) => selection.name).join(", ") || "—"}
+          {(group?.selections || []).map((selection) => {
+            const cents = Number.isFinite(Number(selection?.priceCents)) && selection?.priceCents != null
+              ? Number(selection.priceCents)
+              : Number.isFinite(Number(selection?.price)) && selection?.price != null
+                ? Math.round(Number(selection.price) * 100)
+                : 0;
+            return `${selection?.name || ""}${cents > 0 ? ` (+${usd(cents)})` : ""}`;
+          }).join(", ") || "—"}
         </div>
       ))}
     </div>
