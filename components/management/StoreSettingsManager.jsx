@@ -669,7 +669,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
       },
     }));
 
-  const savePrinting = async () => {
+  const savePrinting = async (refreshMapPosition = false) => {
     if (!canManage || !selectedLocationId || (tab === "printing" && orderingLocked)) return;
 
     setPrintingSaving(true);
@@ -677,7 +677,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
 
     try {
       const d = await printerReq(organizationId, selectedLocationId, "PATCH", {
-        ...(tab === "printing" ? { printing } : { ...locationDetails, directory: { listedPublicly: locationDetails.directory?.listedPublicly === true } }),
+        ...(tab === "printing" ? { printing } : { ...locationDetails, directory: { listedPublicly: locationDetails.directory?.listedPublicly === true }, ...(refreshMapPosition ? { refreshMapPosition: true } : {}) }),
       });
 
       setPrinting({
@@ -1471,6 +1471,12 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
                               <p className="mt-3 text-sm text-slate-600">
                                 OrderXO automatically verifies the street address above with Google Maps when you enable public listing and save. You do not need to enter coordinates.
                               </p>
+                              {locationDetails.directory?.listedPublicly === true && canManage && (
+                                <button type="button" disabled={printingSaving} onClick={() => savePrinting(true)}
+                                  className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50">
+                                  {printingSaving ? "Verifying…" : "Refresh map position"}
+                                </button>
+                              )}
                               {Number.isFinite(locationDetails.directory?.lat) && Number.isFinite(locationDetails.directory?.lng) && (
                                 <p className="mt-2 text-xs text-slate-500">
                                   Verified map position: {locationDetails.directory.lat.toFixed(6)}, {locationDetails.directory.lng.toFixed(6)}
@@ -1480,7 +1486,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
                           )}
                           <button
                             disabled={printingSaving}
-                            onClick={savePrinting}
+                            onClick={() => savePrinting()}
                             className="primary mt-6"
                           >
                             {printingSaving
