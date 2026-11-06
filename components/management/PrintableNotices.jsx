@@ -104,7 +104,7 @@ const palette = {
   dark: { bg: "#192433", text: "#ffffff", accent: "#fbbf24" },
   botanical: { bg: "#f1f7ed", text: "#213b2a", accent: "#39744b" },
 };
-export default function PrintableNotices({ organizationId, restaurantName = "Our Restaurant" }) {
+export default function PrintableNotices({ organizationId, restaurantName = "Our Restaurant", canManage = false }) {
   const [data, setData] = useState(initial);
   const [drafts, setDrafts] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
@@ -128,6 +128,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
     setReady(true);
   }, [key]);
   const save = () => {
+    if (!canManage) return;
     const name = draftName.trim() || "Untitled Notice";
     const id = selectedId || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const next = [
@@ -154,6 +155,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
     }
   };
   const remove = () => {
+    if (!canManage) return;
     if (!selectedId) return;
     const next = drafts.filter((x) => x.id !== selectedId);
     setDrafts(next);
@@ -201,7 +203,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
           <div className="flex gap-2">
             <button
               onClick={save}
-              disabled={!ready}
+              disabled={!ready || !canManage}
               className="rounded-lg border bg-white px-4 py-2 font-semibold"
             >
               Save Notice
@@ -214,7 +216,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
             </button>
           </div>
           <div className="mx-auto grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)] print:block">
-            <aside className="space-y-4 rounded-xl border bg-white p-5 print:hidden">
+            <fieldset disabled={!canManage} className="space-y-4 rounded-xl border bg-white p-5 print:hidden disabled:opacity-80">
               <label className="block text-sm font-semibold">
                 Notice type
                 <select
@@ -411,7 +413,7 @@ export default function PrintableNotices({ organizationId, restaurantName = "Our
                 Notices are saved in this browser, not on the OrderXO server. Use your browser's
                 Save as PDF option when printing.
               </p>
-            </aside>
+            </fieldset>
             <div className="min-w-0 overflow-x-auto print:overflow-visible">
               <div
                 id="orderxo-notice-sheet"

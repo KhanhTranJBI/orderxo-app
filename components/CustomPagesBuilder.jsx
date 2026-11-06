@@ -8,14 +8,14 @@ const types = ["hero", "text", "image", "textImage", "cta", "faq"];
 const emptyPage = () => ({ title: "New page", slug: `page-${Date.now()}`, description: "", seoTitle: "", published: false, showInNav: false, sections: [] });
 const newSection = (type) => ({ id: `s-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, type, heading: "", body: "", imageUrl: "", buttonLabel: "", buttonUrl: "", imageSide: "right", textWidth: "50", verticalAlign: "center", mobileFirst: "text", appearance: { animation: "fade-up" } });
 const inputClass = "w-full rounded-lg border border-slate-300 p-2 text-slate-900";
-export default function CustomPagesBuilder({ organizationId }) {
+export default function CustomPagesBuilder({ organizationId, canManage = false }) {
   const [pages, setPages] = useState([]), [selected, setSelected] = useState(0);
   const [allowed, setAllowed] = useState(false), [loading, setLoading] = useState(true), [saving, setSaving] = useState(false), [message, setMessage] = useState("");
   const [drag, setDrag] = useState(null);
   useEffect(() => {
     Promise.all([
-      ownerFetch(`/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`).then(r => r.json()),
-      ownerFetch(`/api/owner/website-plus/entitlement?organizationId=${encodeURIComponent(organizationId)}`).then(r => r.json()),
+      ownerFetch(`/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}&customPagesOnly=1`).then(r => r.json()),
+      ownerFetch(`/api/owner/website-plus/entitlement?organizationId=${encodeURIComponent(organizationId)}&customPagesOnly=1`).then(r => r.json()),
     ]).then(([settings, ent]) => {
       setPages(settings.settings?.website?.customPages || []);
       setAllowed(Boolean(ent.websitePlus || ent.paidPlan));
@@ -29,11 +29,12 @@ export default function CustomPagesBuilder({ organizationId }) {
     const list = [...page.sections]; const [item] = list.splice(from, 1); list.splice(to, 0, item); patch({ sections: list });
   };
   const save = async () => {
+    if (!canManage) return;
     setSaving(true); setMessage("");
     try {
       const response = await ownerFetch("/api/owner/organizations/settings", {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationId, website: { customPages: pages } }),
+        body: JSON.stringify({ organizationId, customPagesOnly: true, website: { customPages: pages } }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Unable to save pages");
@@ -43,9 +44,11 @@ export default function CustomPagesBuilder({ organizationId }) {
   if (loading) return <p className="p-6">Loading page builder...</p>;
   if (!allowed) return <div className="rounded-xl border border-orange-200 bg-orange-50 p-6"><p className="font-semibold">Custom Pages are available with Website Plus or an active ordering plan.</p><Link className="mt-3 inline-block text-orange-700 underline" href={`/dashboard/settings/billing?organizationId=${organizationId}`}>View Plans & Upgrade</Link></div>;
   return <div className="space-y-5">
-    <div className="flex flex-wrap items-center gap-3"><h1 className="mr-auto text-2xl font-bold">Custom Page Builder</h1><button className="rounded-lg border px-4 py-2" onClick={() => { setPages([...pages, emptyPage()]); setSelected(pages.length); }}>+ New page</button><button disabled={saving} onClick={save} className="rounded-lg bg-orange-600 px-5 py-2 font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : "Save pages"}</button></div>
+    <div className="flex flex-wrap items-center gap-3"><h1 className="mr-auto text-2xl font-bold">Custom Page Builder</h1><button disabled={!canManage} className="rounded-lg border px-4 py-2 disabled:opacity-50" onClick={() => { setPages([...pages, emptyPage()]); setSelected(pages.length); }}>+ New page</button><button disabled={saving || !canManage} onClick={save} className="rounded-lg bg-orange-600 px-5 py-2 font-semibold text-white disabled:opacity-50">{saving ? "Saving..." : "Save pages"}</button></div>
     {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
     <div className="flex flex-wrap gap-2">{pages.map((p, i) => <button key={i} onClick={() => setSelected(i)} className={`rounded-lg border px-3 py-2 ${selected === i ? "border-orange-500 bg-orange-50" : ""}`}>{p.title || p.slug} {p.published ? "●" : "○"}</button>)}</div>
+    {!canManage && <p className="rounded-lg bg-slate-100 p-3 text-sm">Read-only access: ask an administrator for Manage custom pages permission.</p>}
+    <fieldset disabled={!canManage} className="disabled:opacity-80">
     {page && <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
       <div className="space-y-4 rounded-xl border bg-white p-5">
         <label className="block">Page name<input className={inputClass} value={page.title} onChange={e => patch({ title: e.target.value })}/></label>
@@ -91,5 +94,6 @@ export default function CustomPagesBuilder({ organizationId }) {
         {s.type === "textImage" ? <div className="grid gap-4 md:grid-cols-2" style={{gridTemplateColumns: s.imageSide === "left" ? `${100 - Number(s.textWidth || 50)}fr ${Number(s.textWidth || 50)}fr` : `${Number(s.textWidth || 50)}fr ${100 - Number(s.textWidth || 50)}fr`}}><div className={s.imageSide === "left" ? "order-2" : "order-1"}><h2 className="text-2xl font-bold" style={{color:s.appearance?.headingColor || undefined}}>{s.heading}</h2><p className="whitespace-pre-wrap">{s.body}</p></div><div className={s.imageSide === "left" ? "order-1" : "order-2"}>{s.imageUrl && <img src={s.imageUrl} alt={s.heading || "Page image"} className="w-full rounded object-cover"/>}</div></div> : <>{s.heading && <h2 className="text-2xl font-bold" style={{color:s.appearance?.headingColor || undefined}}>{s.heading}</h2>}{s.body && <p className="whitespace-pre-wrap">{s.body}</p>}{s.imageUrl && /^https:\/\//.test(s.imageUrl) && <img src={s.imageUrl} alt={s.heading || "Page image"} className="max-h-72 w-full rounded object-cover"/>}{s.buttonLabel && <span className="inline-block rounded px-4 py-2 text-white" style={{backgroundColor:s.appearance?.buttonColor || "#ea580c",color:s.appearance?.buttonTextColor || "#ffffff"}}>{s.buttonLabel}</span>}</>}
       </section>)}</div><p className="mt-3 text-sm text-slate-500">Preview only. Save to publish changes at /pages/{page.slug}.</p></div>
     </div>}
+    </fieldset>
   </div>;
 }

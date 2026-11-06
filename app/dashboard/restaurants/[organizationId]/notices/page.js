@@ -10,5 +10,10 @@ export default async function Page({ params }) {
   if (result.status === 401) redirect(cookies().get("orderxo_support_session")?.value ? "/dashboard" : "/login");
   const org = (result.data?.organizations || []).find((o) => String(o._id || o.id) === params.organizationId);
   if (!org) redirect("/dashboard");
-  return <PrintableNotices organizationId={params.organizationId} restaurantName={org.name || org.restaurantName || "Our Restaurant"} />;
+  const admin = ["owner", "admin"].includes(org.role);
+  const permissions = new Set(org.permissions || []);
+  const canManage = admin || permissions.has("*") || permissions.has("notices.manage");
+  const canRead = canManage || permissions.has("notices.read");
+  if (!canRead) redirect(`/dashboard/restaurants/${params.organizationId}`);
+  return <PrintableNotices organizationId={params.organizationId} restaurantName={org.name || org.restaurantName || "Our Restaurant"} canManage={canManage} />;
 }

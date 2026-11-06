@@ -20,6 +20,10 @@ const PERMS = [
   ["store.manage", "Manage store settings"],
   ["homepage.read", "View homepage"],
   ["homepage.manage", "Manage homepage"],
+  ["custom-pages.read", "View custom pages"],
+  ["custom-pages.manage", "Manage custom pages"],
+  ["notices.read", "View printable notices"],
+  ["notices.manage", "Manage printable notices"],
 ];
 const defaultPermissions = PERMS.map((x) => x[0]);
 const normalizePermissions = (ps = []) => {
