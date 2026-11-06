@@ -78,7 +78,7 @@ export default function MenuBookDesigner({ organizationId }) {
     (async () => {
       try {
         const response = await ownerFetch(
-          `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}`,
+          `/api/owner/organizations/settings?organizationId=${encodeURIComponent(organizationId)}&brandingOnly=1`,
           { cache: "no-store" },
         );
         if (!response.ok) throw new Error("Unable to load restaurant branding");
