@@ -369,7 +369,11 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
   const selectedLocation = loc.locations.find((l) => String(l._id || l.id) === selectedLocationId);
 
   const load = useCallback(async () => {
+    // Never request restaurant-wide defaults before permissions and location scope resolve.
+    if (permission.loading || loc.loading || !canReadStore) return;
+    if (!canEditRestaurantDefault && scope === "default") return;
     if (scope !== "default" && !selectedLocationId) return;
+    if (requestedLocationId && loc.locations.some((l) => String(l._id || l.id) === requestedLocationId) && selectedLocationId !== requestedLocationId) return;
 
     setLoading(true);
     setError("");
@@ -411,7 +415,7 @@ export default function StoreSettingsManager({ organizationId, hasOrderingPlan =
     } finally {
       setLoading(false);
     }
-  }, [organizationId, scope, selectedLocationId]);
+  }, [organizationId, scope, selectedLocationId, permission.loading, loc.loading, canReadStore, canEditRestaurantDefault, requestedLocationId, loc.locations]);
 
   useEffect(() => {
     load();
