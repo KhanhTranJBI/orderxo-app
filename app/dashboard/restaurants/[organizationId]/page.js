@@ -108,14 +108,13 @@ export default async function RestaurantManager({ params }) {
   if (!org) redirect("/dashboard");
   const workspaceStatus = getWorkspaceStatus(org.status);
   const subscriptionResult = await backendRequest(
-    `/api/subscriptions/current?organizationId=${encodeURIComponent(id)}`,
+    `/api/subscriptions/entitlements?organizationId=${encodeURIComponent(id)}`,
     { authenticated: true },
   );
-  const subscription =
-    subscriptionResult.status === 200 ? subscriptionResult.data?.subscription : null;
   const hasOrderingPlan =
-    ["starter", "growth", "pro"].includes(String(subscription?.plan || "").toLowerCase()) &&
-    ["active", "trialing"].includes(String(subscription?.status || "").toLowerCase());
+    subscriptionResult.status === 200 &&
+    subscriptionResult.data?.active === true &&
+    subscriptionResult.data?.features?.onlineOrdering === true;
   // A failed subscription lookup must never unlock paid tools.
 
   const staffMode = org.role === "staff" || Boolean(cookies().get("orderxo_support_session")?.value);
